@@ -1,0 +1,61 @@
+# This is the startup script
+Executable = "/alice/cern.ch/user/s/saiola/FastSim/FastSim.sh";
+
+# List of requested packages
+Packages = {
+   "VO_ALICE@AliRoot::vAN-20140617",
+   "VO_ALICE@ROOT::v5-34-08-6",
+   "VO_ALICE@APISCONFIG::V1.1x",
+   "VO_ALICE@fastjet::v2.4.2"
+};
+
+# List of input files to be uploaded to workers
+InputFile = {
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/FastSim.C",
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/FastSim.root",
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/AliFastSimulationTask.cxx",
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/AliFastSimulationTask.h",
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/AliAnalysisTaskHFexploration.cxx",
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/AliAnalysisTaskHFexploration.h"
+};
+
+#"LF:/alice/cern.ch/user/s/saiola/FastSim/esdempty.root,nodownload"
+# Input data
+InputData = {
+   "LF:/alice/cern.ch/user/s/saiola/FastSim/esdempty.root"
+};
+
+# List of output files and archives
+Output = {
+   "log_archive.zip:std*@disk=2",
+   "root_archive.zip:AnalysisResults.root,*.stat@disk=2"
+};
+
+# Output directory
+OutputDir = "/alice/cern.ch/user/s/saiola/FastSim/20140612/#alien_counter_03i#";
+
+# Validation script to be run for each subjob
+Validationcommand = "/alice/cern.ch/user/s/saiola/FastSim/FastSim_validation.sh";
+
+# We split per SE or file
+Split = "production:1-10";
+
+# Resubmit failed jobs until DONE rate reaches this percentage
+MasterResubmitThreshold = "90%";
+
+# Time after which the job is killed (833 min.)
+TTL = "14000";
+
+# AliEn price for this job
+Price = "1";
+
+User = "saiola";
+
+# JDL variables
+JDLVariables = 
+{
+   "Packages",
+   "OutputDir"
+};
+
+Workdirectorysize = {"5000MB"};
