@@ -129,11 +129,13 @@ Bool_t AliFastSimulationTask::ExecOnce()
 
   TFolder *folder = new TFolder(GetName(),GetName());
   AliRunLoader *rl = new AliRunLoader(folder);
+  gAlice->SetRunLoader(rl);
   rl->MakeHeader();
   rl->MakeStack();
   fStack = rl->Stack();
   fGen->SetStack(fStack);
   fGen->Init();
+
 
   if (!(InputEvent()->FindListObject(fMCParticlesName))) {
     fMCParticles = new TClonesArray("AliMCParticle", 1000);
