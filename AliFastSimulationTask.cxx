@@ -125,7 +125,6 @@ Bool_t AliFastSimulationTask::ExecOnce()
   fGen->SetRandom(gRandom);
 
   AliGenPythia *genPythia = dynamic_cast<AliGenPythia*>(fGen);
-  if (genPythia) genPythia->SetEventListRange(0,1);
 
   TFolder *folder = new TFolder(GetName(),GetName());
   AliRunLoader *rl = new AliRunLoader(folder);
@@ -194,3 +193,53 @@ void AliFastSimulationTask::FillPythiaHistograms()
     fHistPtHard->Fill(pthard);
   }
 }
+
+//________________________________________________________________________
+AliGenerator* AliFastSimulationTask::CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc,
+    ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax,
+    Bool_t forceHadronicDecay, Float_t ptWeight)
+{
+  AliGenPythia* genP = new AliGenPythia(1);
+
+  // vertex position and smearing
+  genP->SetVertexSmear(kPerEvent);
+  genP->SetProcess(proc);
+
+  if (ptHardMin > 0.) {
+    genP->SetPtHard(ptHardMin, ptHardMax);
+    if (ptWeight > 0) genP->SetWeightPower(ptWeight);
+  }
+
+  if (specialPart == kccbar) {
+    genP->SetHeavyQuarkYRange(-5, 5);
+    Float_t randcharge = gRandom->Rndm();
+    if (randcharge > 0.5) {
+      genP->SetTriggerParticle(4, 3., -1., 1000);
+    }
+    else {
+      genP->SetTriggerParticle(-4, 3., -1., 1000);
+    }
+  }
+  else if (specialPart == kbbbar) {
+    genP->SetHeavyQuarkYRange(-5, 5);
+    Float_t randcharge = gRandom->Rndm();
+    if (randcharge > 0.5) {
+      genP->SetTriggerParticle(5, 3., -1., 1000);
+    }
+    else {
+      genP->SetTriggerParticle(-5, 3., -1., 1000);
+    }
+  }
+
+  if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4BodiesWithV0);
+
+  //   Center of mass energy
+  genP->SetEnergyCMS(e_cms); // in GeV
+
+  genP->UseNewMultipleInteractionsScenario(); // for all Pythia versions >= 6.3
+  genP->SetTune(tune);
+
+  genP->Print();
+  return genP;
+}
+

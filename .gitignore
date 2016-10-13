@@ -1,4 +1,7 @@
 *.so
 *.d
 FastSim.*
-AnalysisResults.root
+AnalysisResults*.root
+*_ACLiC_*
+fort.97
+pwgevents.lhe

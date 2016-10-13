@@ -3,6 +3,8 @@
 
 #include "AliAnalysisTaskSE.h"
 
+#include "PythiaProcesses.h"
+
 class AliGenerator;
 class TClonesArray;
 class TProfile;
@@ -13,6 +15,23 @@ class AliStack;
 
 class AliFastSimulationTask : public AliAnalysisTaskSE {
  public:
+  // PYTHIA6 tunes: https://arxiv.org/pdf/1005.3457v5.pdf
+  enum EPythiaTune_t {
+    kPerugia0 = 320,
+    kPerugio0NOCR = 324,
+    kPerugia2010 = 327,
+    kPerugia2011 = 350,
+    kPerugia2011NOCR = 354,
+    kPerugia2012 = 370,
+    kPerugia2012NOCR = 375
+  };
+
+  enum ESpecialParticle_t {
+    kNoSpecialParticle = 0,
+    kccbar = 1,
+    kbbbar = 2
+  };
+
   AliFastSimulationTask();
   AliFastSimulationTask(const char *name, Bool_t drawqa);
   virtual ~AliFastSimulationTask();
@@ -23,6 +42,10 @@ class AliFastSimulationTask : public AliAnalysisTaskSE {
 
   void           SetGen(AliGenerator *gen)             { fGen             = gen; }
   void           SetMCParticlesName(const char *n)     { fMCParticlesName = n  ; }
+
+  static AliGenerator* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune=kPerugia2012, Process_t proc=kPyMb,
+      ESpecialParticle_t specialPart = kNoSpecialParticle, Int_t ptHardMin=0, Int_t ptHardMax=1,
+      Bool_t forceHadronicDecay=kFALSE, Float_t ptWeight=0);
 
  protected:
   Bool_t         ExecOnce();

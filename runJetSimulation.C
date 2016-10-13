@@ -48,10 +48,24 @@ void runJetSimulation(
 
   AliESDInputHandler* esdH = AddESDHandler();
 
-  AliGenPythia *gen = AddMCGenPythia(7000.);
+  /*
+  kPyCharm, kPyBeauty, kPyCharmUnforced, kPyBeautyUnforced,
+  kPyJpsi, kPyJpsiChi, kPyMb, kPyMbWithDirectPhoton, kPyMbNonDiffr, kPyJets, kPyDirectGamma,
+  kPyCharmPbPbMNR, kPyD0PbPbMNR, kPyDPlusPbPbMNR, kPyDPlusStrangePbPbMNR, kPyBeautyPbPbMNR,
+  kPyCharmpPbMNR, kPyD0pPbMNR, kPyDPluspPbMNR, kPyDPlusStrangepPbMNR, kPyBeautypPbMNR,
+  kPyCharmppMNR, kPyCharmppMNRwmi, kPyD0ppMNR, kPyDPlusppMNR, kPyDPlusStrangeppMNR,
+  kPyBeautyppMNR, kPyBeautyppMNRwmi, kPyBeautyJets, kPyW, kPyZ, kPyLambdacppMNR, kPyMbMSEL1,
+  kPyOldUEQ2ordered, kPyOldUEQ2ordered2, kPyOldPopcorn,
+  kPyLhwgMb, kPyMbDefault, kPyMbAtlasTuneMC09, kPyMBRSingleDiffraction, kPyMBRDoubleDiffraction,
+  kPyMBRCentralDiffraction, kPyJetsPWHG, kPyCharmPWHG, kPyBeautyPWHG, kPyWPWHG, kPyZgamma
+  */
+  Process_t proc = kPyCharmPWHG;
+  AliGenPythia* gen = AliFastSimulationTask::CreatePythia6Gen(7000., AliFastSimulationTask::kPerugia2012, proc);
+  if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG || proc ==  kPyWPWHG) {
+    gen->SetReadLHEF("pwgevents.lhe");
+  }
   
   AddTaskFastSimulation(gen);
-
   AddTaskHFexploration();
 	
   if (!mgr->InitAnalysis()) return;
