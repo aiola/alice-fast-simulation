@@ -9,6 +9,8 @@
 #include <TArrayI.h>
 #include <TChain.h>
 
+#include <PythiaProcesses.h>
+
 void LoadLibs();
 void LoadMacros();
 AliAnalysisGrid* CreateAlienHandler(const char *taskname, const char *gridmode);
@@ -18,6 +20,7 @@ void runJetSimulation(
     const char   *runtype      = "local",                     // local or grid
     const char   *gridmode     = "offline",                   // set the grid run mode (can be "full", "test", "offline", "submit" or "terminate")
     const Int_t   numevents    = 50000,                       // number of events
+    Process_t     proc         = kPyMb,
     const char   *taskname     = "FastSim"                    // sets name of grid generated macros
   )
 {
@@ -59,7 +62,6 @@ void runJetSimulation(
   kPyLhwgMb, kPyMbDefault, kPyMbAtlasTuneMC09, kPyMBRSingleDiffraction, kPyMBRDoubleDiffraction,
   kPyMBRCentralDiffraction, kPyJetsPWHG, kPyCharmPWHG, kPyBeautyPWHG, kPyWPWHG, kPyZgamma
   */
-  Process_t proc = kPyCharmPWHG;
   AliGenPythia* gen = AliFastSimulationTask::CreatePythia6Gen(7000., AliFastSimulationTask::kPerugia2012, proc);
   if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG || proc ==  kPyWPWHG) {
     gen->SetReadLHEF("pwgevents.lhe");
