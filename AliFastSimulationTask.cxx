@@ -21,11 +21,14 @@
 #include "AliGenPythia.h"
 #include "AliHeader.h"
 #include "AliLog.h"
+#include "AliMCEvent.h"
+#include "AliHeader.h"
 #include "AliMCParticle.h"
 #include "AliRun.h"
 #include "AliRunLoader.h"
 #include "AliStack.h"
 #include "AliGenPythiaEventHeader.h"
+#include "AliEmcalMCTrackSelector.h"
 
 ClassImp(AliFastSimulationTask)
 
@@ -34,7 +37,10 @@ AliFastSimulationTask::AliFastSimulationTask() :
 AliAnalysisTaskSE("AliFastSimulationTask"),
   fQAhistos(kFALSE),
   fGen(0),
-  fMCParticlesName("GenParticles"),
+  fHeader(0),
+  fMCTrackSelector(0),
+  fMCEvent(0),
+  fMCParticlesName("mcparticles"),
   fIsInit(kFALSE),
   fStack(0),
   fMCParticles(0),
@@ -52,7 +58,10 @@ AliFastSimulationTask::AliFastSimulationTask(const char *name, Bool_t drawqa) :
   AliAnalysisTaskSE(name),
   fQAhistos(drawqa),
   fGen(0),
-  fMCParticlesName("GenParticles"),
+  fHeader(0),
+  fMCTrackSelector(0),
+  fMCEvent(0),
+  fMCParticlesName("mcparticles"),
   fIsInit(kFALSE),
   fStack(0),
   fMCParticles(0),
@@ -115,6 +124,7 @@ void AliFastSimulationTask::UserExec(Option_t *)
 Bool_t AliFastSimulationTask::ExecOnce() 
 {
   // Exec only once.
+  AliInfo("Initializing...");
 
   if (!gAlice) {
     new AliRun("gAlice","The ALICE Off-line Simulation Framework");
@@ -131,13 +141,20 @@ Bool_t AliFastSimulationTask::ExecOnce()
   gAlice->SetRunLoader(rl);
   rl->MakeHeader();
   rl->MakeStack();
+  fHeader = rl->GetHeader();
   fStack = rl->Stack();
+  fHeader->SetStack(fStack);
   fGen->SetStack(fStack);
   fGen->Init();
 
+  fMCEvent = new AliMCEvent();
+
+  fMCTrackSelector = new AliEmcalMCTrackSelector();
+  fMCTrackSelector->SetOnlyPhysPrim(kFALSE);
+  fMCTrackSelector->SetEtaMax(-1);
 
   if (!(InputEvent()->FindListObject(fMCParticlesName))) {
-    fMCParticles = new TClonesArray("AliMCParticle", 1000);
+    fMCParticles = new TClonesArray("AliAODMCParticle", 1000);
     fMCParticles->SetName(fMCParticlesName);
     InputEvent()->AddObject(fMCParticles);
   }
@@ -146,6 +163,12 @@ Bool_t AliFastSimulationTask::ExecOnce()
     InputEvent()->AddObject(fStack);
   }
   
+  if (!(InputEvent()->FindListObject(fHeader->GetName()))) {
+    InputEvent()->AddObject(fHeader);
+  }
+
+  AliInfo("Initialization succeeded!");
+
   return kTRUE;
 }
 
@@ -154,10 +177,16 @@ void AliFastSimulationTask::Run()
 {
   // Run simulation.
 
+  AliDebug(3,"Resetting event...");
   fMCParticles->Clear("C");
-
   fStack->Reset();
+  AliDebug(3,"Generating new event...");
   fGen->Generate();
+  AliDebug(3,"Setting MC event object...");
+  fMCEvent->ConnectHeaderAndStack(fHeader);
+  AliDebug(3,"Converting MC particles to AOD MC particles...");
+  fMCTrackSelector->ConvertMCParticles(fMCEvent, fMCParticles);
+  /*
   const Int_t nprim = fStack->GetNprimary();
   Int_t nParticles = 0;
   for (Int_t i=0; i < nprim; i++) {
@@ -169,7 +198,8 @@ void AliFastSimulationTask::Run()
 
     nParticles++;
   }
-
+  */
+  AliDebug(3,"Plotting some general histograms...");
   FillPythiaHistograms();
 }
 

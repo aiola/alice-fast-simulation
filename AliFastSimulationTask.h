@@ -12,6 +12,9 @@ class TH1;
 class TString;
 class TList;
 class AliStack;
+class AliHeader;
+class AliMCEvent;
+class AliEmcalMCTrackSelector;
 
 class AliFastSimulationTask : public AliAnalysisTaskSE {
  public:
@@ -53,6 +56,9 @@ class AliFastSimulationTask : public AliAnalysisTaskSE {
 
   Bool_t         fQAhistos;               // draw qa plots
   AliGenerator  *fGen;                    // generator
+  AliHeader     *fHeader;                 //!event header
+  AliEmcalMCTrackSelector* fMCTrackSelector; //!MC track selector
+  AliMCEvent    *fMCEvent;                //!MC event
   TString        fMCParticlesName;        // name of MC particle collection
   Bool_t         fIsInit;                 //!=true if initialized
   AliStack      *fStack;                  //!stack

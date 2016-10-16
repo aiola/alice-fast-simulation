@@ -1,8 +1,6 @@
-// $Id$
-
 AliFastSimulationTask* AddTaskFastSimulation(
   AliGenerator   *genGen,
-  const char     *partName     = "GenParticles",
+  const char     *partName     = "mcparticles",
   const char     *taskName     = "FastSimulationTask",
   const Bool_t    drawQA       = kTRUE
 )
@@ -13,7 +11,7 @@ AliFastSimulationTask* AddTaskFastSimulation(
   if (!mgr)
   {
     ::Error("AddTaskFastSimulation", "No analysis manager to connect to.");
-    return NULL;
+    return 0;
   }  
   
   // Check the analysis type using the event handlers connected to the analysis manager.
@@ -21,7 +19,7 @@ AliFastSimulationTask* AddTaskFastSimulation(
   if (!mgr->GetInputEventHandler())
   {
     ::Error("AddTaskFastSimulation", "This task requires an input event handler");
-    return NULL;
+    return 0;
   }
   
   //-------------------------------------------------------

@@ -10,6 +10,12 @@
 #include <TChain.h>
 
 #include <PythiaProcesses.h>
+#include <AliESDInputHandler.h>
+
+#include <AliAnalysisTaskDmesonJets.h>
+#include <AliEmcalJetTask.h>
+#include <AliAnalysisTaskEmcalJetTree.h>
+#include <AliAnalysisTaskEmcalJetQA.h>
 
 void LoadLibs();
 void LoadMacros();
@@ -62,14 +68,52 @@ void runJetSimulation(
   kPyLhwgMb, kPyMbDefault, kPyMbAtlasTuneMC09, kPyMBRSingleDiffraction, kPyMBRDoubleDiffraction,
   kPyMBRCentralDiffraction, kPyJetsPWHG, kPyCharmPWHG, kPyBeautyPWHG, kPyWPWHG, kPyZgamma
   */
-  AliGenPythia* gen = AliFastSimulationTask::CreatePythia6Gen(7000., AliFastSimulationTask::kPerugia2012, proc);
+  AliGenPythia* gen = AliFastSimulationTask::CreatePythia6Gen(7000., AliFastSimulationTask::kPerugia2012, proc,
+      AliFastSimulationTask::kNoSpecialParticle, 0, 1, kTRUE);
   if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG || proc ==  kPyWPWHG) {
     gen->SetReadLHEF("pwgevents.lhe");
   }
-  
+
   AddTaskFastSimulation(gen);
-  AddTaskHFexploration();
-	
+  //AddTaskHFexploration();
+
+  AliAnalysisTaskEmcalJetQA* pJetQA = AddTaskEmcalJetQA("mcparticles","","");
+  pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pJetQA->SetMC(kTRUE);
+  pJetQA->SetParticleLevel(kTRUE);
+  pJetQA->SetVzRange(-999,999);
+
+  AliAnalysisTaskDmesonJets* pDMesonJetsTask = AddTaskDmesonJets("", "", "usedefault", 2);
+  pDMesonJetsTask->SetVzRange(-999,999);
+  pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
+  pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
+  pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+  pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+  pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+  pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+  pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+  pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+
+  AliEmcalJetTask* pJetTaskCh04 = AddTaskEmcalJet("mcparticles", "", 1, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  pJetTaskCh04->SetVzRange(-999,999);
+  pJetTaskCh04->SetNeedEmcalGeom(kFALSE);
+  AliEmcalJetTask* pJetTaskCh06 = AddTaskEmcalJet("mcparticles", "", 1, 0.6, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  pJetTaskCh06->SetVzRange(-999,999);
+  pJetTaskCh06->SetNeedEmcalGeom(kFALSE);
+  AliEmcalJetTask* pJetTaskFu04 = AddTaskEmcalJet("mcparticles", "", 1, 0.4, AliJetContainer::kFullJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  pJetTaskFu04->SetVzRange(-999,999);
+  pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
+
+  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AddTaskEmcalJetTree("mcparticles", "");
+  pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pJetSpectraTask->SetVzRange(-999,999);
+  pJetSpectraTask->SetNeedEmcalGeom(kFALSE);
+  pJetSpectraTask->GetParticleContainer("mcparticles")->SetMinPt(0.);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+
   if (!mgr->InitAnalysis()) return;
   mgr->PrintStatus();
 
@@ -111,7 +155,11 @@ void LoadMacros()
   // Aliroot macros
   gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/train/AddESDHandler.C");
   gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/train/AddAODOutputHandler.C");
-  gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/train/AddMCGenPythia.C");
+  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/EMCALJetTasks/macros/AddTaskEmcalJetQA.C");
+  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/FlavourJetTasks/macros/AddTaskDmesonJets.C");
+  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/EMCALJetTasks/macros/AddTaskEmcalJet.C");
+  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/EMCALJetTasks/macros/AddTaskEmcalJetTree.C");
+
 
   gROOT->LoadMacro("AddTaskFastSimulation.C");
   gROOT->LoadMacro("AddTaskHFexploration.C");
