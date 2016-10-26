@@ -8,17 +8,21 @@
 #include <TString.h>
 #include <TArrayI.h>
 #include <TChain.h>
+#include <TFile.h>
 
 #include <PythiaProcesses.h>
+#include <AliGenPythia.h>
 #include <AliESDInputHandler.h>
+#include <AliAnalysisAlien.h>
+#include <AliAnalysisManager.h>
 
 #include <AliAnalysisTaskDmesonJets.h>
 #include <AliEmcalJetTask.h>
 #include <AliAnalysisTaskEmcalJetTree.h>
 #include <AliAnalysisTaskEmcalJetQA.h>
 
-void LoadLibs();
-void LoadMacros();
+#include "AliFastSimulationTask.h"
+
 AliAnalysisGrid* CreateAlienHandler(const char *taskname, const char *gridmode);
 
 //______________________________________________________________________________
@@ -27,6 +31,8 @@ void runJetSimulation(
     const char   *gridmode     = "offline",                   // set the grid run mode (can be "full", "test", "offline", "submit" or "terminate")
     const Int_t   numevents    = 50000,                       // number of events
     Process_t     proc         = kPyMb,
+    Int_t         specialPart  = 0,
+    Bool_t        forceHadDecay=kFALSE,
     const char   *taskname     = "FastSim"                    // sets name of grid generated macros
   )
 {
@@ -49,13 +55,10 @@ void runJetSimulation(
 
   std::cout << runtype << " analysis chosen" << std::endl;
 
-  LoadLibs();
-  LoadMacros();
-
   // analysis manager
   AliAnalysisManager* mgr = new AliAnalysisManager(taskname);
 
-  AliESDInputHandler* esdH = AddESDHandler();
+  AliESDInputHandler* esdH = AliAnalysisTaskEmcal::AddESDHandler();
 
   /*
   kPyCharm, kPyBeauty, kPyCharmUnforced, kPyBeautyUnforced,
@@ -69,21 +72,21 @@ void runJetSimulation(
   kPyMBRCentralDiffraction, kPyJetsPWHG, kPyCharmPWHG, kPyBeautyPWHG, kPyWPWHG, kPyZgamma
   */
   AliGenPythia* gen = AliFastSimulationTask::CreatePythia6Gen(7000., AliFastSimulationTask::kPerugia2012, proc,
-      AliFastSimulationTask::kNoSpecialParticle, 0, 1, kTRUE);
+      (AliFastSimulationTask::ESpecialParticle_t)specialPart, 0, 1, forceHadDecay);
   if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG || proc ==  kPyWPWHG) {
     gen->SetReadLHEF("pwgevents.lhe");
   }
 
-  AddTaskFastSimulation(gen);
+  AliFastSimulationTask::AddTaskFastSimulation(gen);
   //AddTaskHFexploration();
 
-  AliAnalysisTaskEmcalJetQA* pJetQA = AddTaskEmcalJetQA("mcparticles","","");
+  AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetQA->SetMC(kTRUE);
   pJetQA->SetParticleLevel(kTRUE);
   pJetQA->SetVzRange(-999,999);
 
-  AliAnalysisTaskDmesonJets* pDMesonJetsTask = AddTaskDmesonJets("", "", "usedefault", 2);
+  AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
   pDMesonJetsTask->SetVzRange(-999,999);
   pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
   pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
@@ -95,17 +98,17 @@ void runJetSimulation(
   pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
   pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
 
-  AliEmcalJetTask* pJetTaskCh04 = AddTaskEmcalJet("mcparticles", "", 1, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  AliEmcalJetTask* pJetTaskCh04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
   pJetTaskCh04->SetVzRange(-999,999);
   pJetTaskCh04->SetNeedEmcalGeom(kFALSE);
-  AliEmcalJetTask* pJetTaskCh06 = AddTaskEmcalJet("mcparticles", "", 1, 0.6, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  AliEmcalJetTask* pJetTaskCh06 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.6, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
   pJetTaskCh06->SetVzRange(-999,999);
   pJetTaskCh06->SetNeedEmcalGeom(kFALSE);
-  AliEmcalJetTask* pJetTaskFu04 = AddTaskEmcalJet("mcparticles", "", 1, 0.4, AliJetContainer::kFullJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  AliEmcalJetTask* pJetTaskFu04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kFullJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
   pJetTaskFu04->SetVzRange(-999,999);
   pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
 
-  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AddTaskEmcalJetTree("mcparticles", "");
+  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
   pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetSpectraTask->SetVzRange(-999,999);
   pJetSpectraTask->SetNeedEmcalGeom(kFALSE);
@@ -147,32 +150,6 @@ void runJetSimulation(
     //mgr->AddClassDebug("AliJetTriggerSelectionTask",AliLog::kDebug+100);
     mgr->StartAnalysis("local", chain, numevents);
   }
-}
-
-//______________________________________________________________________________
-void LoadMacros()
-{
-  // Aliroot macros
-  gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/train/AddESDHandler.C");
-  gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/train/AddAODOutputHandler.C");
-  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/EMCALJetTasks/macros/AddTaskEmcalJetQA.C");
-  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/FlavourJetTasks/macros/AddTaskDmesonJets.C");
-  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/EMCALJetTasks/macros/AddTaskEmcalJet.C");
-  gROOT->LoadMacro("$ALICE_PHYSICS/PWGJE/EMCALJetTasks/macros/AddTaskEmcalJetTree.C");
-
-
-  gROOT->LoadMacro("AddTaskFastSimulation.C");
-  gROOT->LoadMacro("AddTaskHFexploration.C");
-}
-
-//______________________________________________________________________________
-void LoadLibs()
-{
-  // Pythia
-  gSystem->Load("libpythia6_4_28.so");
-
-  gROOT->ProcessLine(".L AliAnalysisTaskHFexploration.cxx+g");
-  gROOT->ProcessLine(".L AliFastSimulationTask.cxx+g");
 }
 
 //______________________________________________________________________________
