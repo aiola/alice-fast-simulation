@@ -13,7 +13,7 @@ export CONFIG_SEED=$RANDOM
 echo "Setting PYTHIA seed to $CONFIG_SEED"
 
 echo "Running simulation..."
-./runJetSimulation.py --runtype local --gridmode offline --numevents ${NEVT} --proc ${PYTHIAPROC} >& sim.log 
+./runJetSimulation.py --runtype local --gridmode offline --numevents ${NEVT} --proc ${PYTHIAPROC} --gen pythia >& sim.log 
 
 echo "Done"
 echo "...see results in the log file"

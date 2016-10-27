@@ -26,7 +26,7 @@ then
 
 	cp "${PWHGPROC}-powheg.input" "powheg.input"
 	
-	NE="$(echo "scale=0; $NEVT+0.1*$NEVT" | bc)"
+	NE="$(echo "scale=0; $PYNEVT+0.1*$PYNEVT" | bc)"
 	PWHGNEVT="$(echo "($NE+0.5)/1" | bc)"
 
 	echo "iseed $RANDOM" >> powheg.input
@@ -40,7 +40,7 @@ export CONFIG_SEED=$RANDOM
 echo "Setting PYTHIA seed to $CONFIG_SEED"
 
 echo "Running simulation..."
-./runJetSimulation.py --runtype local --gridmode offline --numevents ${PYNEVT} --proc ${PWHGPROC} >& sim.log 
+./runJetSimulation.py --runtype local --gridmode offline --numevents ${PYNEVT} --proc ${PWHGPROC} --gen powheg >& sim.log 
 
 echo "Done"
 echo "...see results in the log file"

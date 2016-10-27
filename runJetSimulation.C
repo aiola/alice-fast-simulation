@@ -60,6 +60,8 @@ void runJetSimulation(
 
   AliESDInputHandler* esdH = AliAnalysisTaskEmcal::AddESDHandler();
 
+  AliAnalysisManager::SetCommonFileName(Form("AnalysisResults_%s.root",taskname));
+
   /*
   kPyCharm, kPyBeauty, kPyCharmUnforced, kPyBeautyUnforced,
   kPyJpsi, kPyJpsiChi, kPyMb, kPyMbWithDirectPhoton, kPyMbNonDiffr, kPyJets, kPyDirectGamma,
@@ -78,7 +80,6 @@ void runJetSimulation(
   }
 
   AliFastSimulationTask::AddTaskFastSimulation(gen);
-  //AddTaskHFexploration();
 
   AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
@@ -190,7 +191,7 @@ AliAnalysisGrid* CreateAlienHandler(const char *taskname, const char *gridmode)
   // To only save certain files, use SetDefaultOutputs(kFALSE), and then
   // SetOutputFiles("list.root other.filename") to choose which files to save
   plugin->SetDefaultOutputs(kFALSE);
-  plugin->SetOutputFiles("AnalysisResults.root std*");
+  plugin->SetOutputFiles("AnalysisResults*.root std*");
   
   // Optionally set a name for the generated analysis macro (default MyAnalysis.C)
   plugin->SetAnalysisMacro(Form("%s.C",taskname));

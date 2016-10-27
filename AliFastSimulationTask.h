@@ -51,12 +51,7 @@ class AliFastSimulationTask : public AliAnalysisTaskSE {
       ESpecialParticle_t specialPart = kNoSpecialParticle, Int_t ptHardMin=0, Int_t ptHardMax=1,
       Bool_t forceHadronicDecay=kFALSE, Float_t ptWeight=0);
 
-  static AliFastSimulationTask* AddTaskFastSimulation(
-      AliGenerator   *genGen,
-      const char     *partName     = "mcparticles",
-      const char     *taskName     = "FastSimulationTask",
-      const Bool_t    drawQA       = kTRUE
-    );
+  static AliFastSimulationTask* AddTaskFastSimulation(AliGenerator* genGen, TString partName = "mcparticles", TString taskName = "FastSimulationTask", const Bool_t drawQA = kTRUE);
 
  protected:
   Bool_t         ExecOnce();

@@ -273,41 +273,32 @@ AliGenPythia* AliFastSimulationTask::CreatePythia6Gen(Float_t e_cms, EPythiaTune
   return genP;
 }
 
-AliFastSimulationTask* AliFastSimulationTask::AddTaskFastSimulation(AliGenerator* genGen, const char* partName, const char* taskName, const Bool_t drawQA)
+//________________________________________________________________________
+AliFastSimulationTask* AliFastSimulationTask::AddTaskFastSimulation(AliGenerator* genGen, TString partName, TString taskName, const Bool_t drawQA)
 {
   // Get the pointer to the existing analysis manager via the static access method.
-  //==============================================================================
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
-  if (!mgr)
-  {
+  if (!mgr) {
     ::Error("AddTaskFastSimulation", "No analysis manager to connect to.");
     return 0;
   }
 
   // Check the analysis type using the event handlers connected to the analysis manager.
-  //==============================================================================
-  if (!mgr->GetInputEventHandler())
-  {
+  if (!mgr->GetInputEventHandler()) {
     ::Error("AddTaskFastSimulation", "This task requires an input event handler");
     return 0;
   }
 
-  //-------------------------------------------------------
   // Init the task and do settings
-  //-------------------------------------------------------
-
   AliFastSimulationTask *fastSimTask = new AliFastSimulationTask(taskName,drawQA);
   fastSimTask->SetGen(genGen);
   fastSimTask->SetMCParticlesName(partName);
 
-  //-------------------------------------------------------
   // Final settings, pass to manager and set the containers
-  //-------------------------------------------------------
-
   mgr->AddTask(fastSimTask);
 
   // Create containers for input/output
-  mgr->ConnectInput(fastSimTask, 0, mgr->GetCommonInputContainer() );
+  mgr->ConnectInput(fastSimTask, 0, mgr->GetCommonInputContainer());
 
   if (drawQA) {
     TString contName = taskName;
@@ -315,7 +306,7 @@ AliFastSimulationTask* AliFastSimulationTask::AddTaskFastSimulation(AliGenerator
     AliAnalysisDataContainer *outc = mgr->CreateContainer(contName,
                                                           TList::Class(),
                                                           AliAnalysisManager::kOutputContainer,
-                                                          "AnalysisResults.root");
+                                                          AliAnalysisManager::GetCommonFileName());
     mgr->ConnectOutput(fastSimTask, 1, outc);
   }
 
