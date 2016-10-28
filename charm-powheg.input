@@ -11,11 +11,11 @@ ih1   1        ! hadron 1
 ih2   1        ! hadron 2
 #ndns1 131      ! pdf for hadron 1 (hvqpdf numbering)
 #ndns2 131      ! pdf for hadron 2
-lhans1  10550         ! pdf set for hadron 1 (LHA numbering)
-lhans2  10550         ! pdf set for hadron 2 (LHA numbering)	
+lhans1  11000         ! pdf set for hadron 1 (LHA numbering)
+lhans2  11000         ! pdf set for hadron 2 (LHA numbering)	
 ebeam1 3500    ! energy of beam 1
 ebeam2 3500    ! energy of beam 2
-qmass  1.5     ! mass of heavy quark in GeV
+qmass  1.2     ! mass of heavy quark in GeV
 facscfact 1    ! factorization scale factor: mufact=muref*facscfact 
 renscfact 1    ! renormalization scale factor: muren=muref*renscfact 
 #fixedscale 1    ! use ref. scale=qmass (default 0, use running scale)
