@@ -229,7 +229,8 @@ AliGenPythia* AliFastSimulationTask::CreatePythia6Gen(Float_t e_cms, EPythiaTune
     ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax,
     Bool_t forceHadronicDecay, Float_t ptWeight)
 {
-  AliGenPythia* genP = new AliGenPythia(1);
+  AliGenPythia* genP = new AliGenPythia(-1);
+  genP->SetTune(tune);
 
   // vertex position and smearing
   genP->SetVertexSmear(kPerEvent);
@@ -267,7 +268,15 @@ AliGenPythia* AliFastSimulationTask::CreatePythia6Gen(Float_t e_cms, EPythiaTune
   genP->SetEnergyCMS(e_cms); // in GeV
 
   genP->UseNewMultipleInteractionsScenario(); // for all Pythia versions >= 6.3
-  genP->SetTune(tune);
+
+  // Additional settings from A. Rossi
+  genP->SetProjectile("p", 1, 1);
+  genP->SetTarget(    "p", 1, 1);
+  genP->SetMomentumRange(0, 999999.);
+  genP->SetThetaRange(0., 180.);
+  genP->SetYRange(-12.,12.);
+  genP->SetPtRange(0,1000.);
+  genP->SetTrackingFlag(0);
 
   genP->Print();
   return genP;

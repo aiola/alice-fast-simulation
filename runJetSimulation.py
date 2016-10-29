@@ -3,68 +3,72 @@
 import ROOT
 import argparse
 
-ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
-ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
-ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
-ROOT.gInterpreter.AddIncludePath("/opt/alicesw/RooUnfold/src")
+def main(runtype, gridmode, pythiaEvents, procStr, gen):
+    ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
+    ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
+    ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
+    ROOT.gInterpreter.AddIncludePath("/opt/alicesw/RooUnfold/src")
+        
+    #load fastjet libraries 3.x
+    ROOT.gSystem.Load("libCGAL")
+        
+    ROOT.gSystem.Load("libfastjet")
+    ROOT.gSystem.Load("libsiscone")
+    ROOT.gSystem.Load("libsiscone_spherical")
+    ROOT.gSystem.Load("libfastjetplugins")
+    ROOT.gSystem.Load("libfastjetcontribfragile")
     
-#load fastjet libraries 3.x
-ROOT.gSystem.Load("libCGAL")
-    
-ROOT.gSystem.Load("libfastjet")
-ROOT.gSystem.Load("libsiscone")
-ROOT.gSystem.Load("libsiscone_spherical")
-ROOT.gSystem.Load("libfastjetplugins")
-ROOT.gSystem.Load("libfastjetcontribfragile")
+    ROOT.gSystem.Load("libpythia6_4_28.so")
+    ROOT.gROOT.ProcessLine(".L AliFastSimulationTask.cxx+g")
+    ROOT.gROOT.ProcessLine(".L runJetSimulation.C+g")
 
-ROOT.gSystem.Load("libpythia6_4_28.so")
-ROOT.gROOT.ProcessLine(".L AliFastSimulationTask.cxx+g")
-ROOT.gROOT.ProcessLine(".L runJetSimulation.C+g")
+    if gen == "pythia":
+        if procStr == "dijet":
+            proc = ROOT.kPyJets
+            trainName = "FastSim_PyJets"
+            forceDecay = False
+            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+        elif procStr == "charm":
+            proc = ROOT.kPyCharm
+            trainName = "FastSim_PyCharm"
+            forceDecay = False
+            specialPart = ROOT.AliFastSimulationTask.kccbar
+        elif procStr == "beauty":
+            proc = ROOT.kPyBeauty
+            trainName = "FastSim_PyBeauty"
+            forceDecay = False
+            specialPart = ROOT.AliFastSimulationTask.kbbbar
+    elif gen == "powheg":
+        if procStr == "dijet":
+            proc = ROOT.kPyJetsPWHG
+            trainName = "FastSim_PyJets"
+            forceDecay = False
+            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+        elif procStr == "charm":
+            proc = ROOT.kPyCharmPWHG
+            trainName = "FastSim_PyCharm"
+            forceDecay = False
+            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+        elif procStr == "beauty":
+            proc = ROOT.kPyBeautyPWHG
+            trainName = "FastSim_PyBeauty"
+            forceDecay = False
+            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
 
-parser = argparse.ArgumentParser(description='Run fast simulation.')
-parser.add_argument('--runtype', metavar='RUNTYPE',
-                    default='local')
-parser.add_argument('--gridmode', metavar='GRIDMODE',
-                    default='offline')
-parser.add_argument('--numevents', metavar='NEVT',
-                    default=50000, type=int)
-parser.add_argument('--gen', metavar='GEN',
-                    default='pythia')
-parser.add_argument('--proc', metavar='PROC',
-                    default='charm')
-args = parser.parse_args()
+    ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName)
 
-if args.gen == "pythia":
-    if args.proc == "dijet":
-        proc = ROOT.kPyJets
-        trainName = "FastSim_PyJets"
-        forceDecay = False
-        specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
-    elif args.proc == "charm":
-        proc = ROOT.kPyCharm
-        trainName = "FastSim_PyCharm"
-        forceDecay = True
-        specialPart = ROOT.AliFastSimulationTask.kccbar
-    elif args.proc == "beauty":
-        proc = ROOT.kPyBeauty
-        trainName = "FastSim_PyBeauty"
-        forceDecay = True
-        specialPart = ROOT.AliFastSimulationTask.kbbbar
-elif args.gen == "powheg":
-    if args.proc == "dijet":
-        proc = ROOT.kPyJetsPWHG
-        trainName = "FastSim_PyJets"
-        forceDecay = False
-        specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
-    elif args.proc == "charm":
-        proc = ROOT.kPyCharmPWHG
-        trainName = "FastSim_PyCharm"
-        forceDecay = True
-        specialPart = ROOT.AliFastSimulationTask.kccbar
-    elif args.proc == "beauty":
-        proc = ROOT.kPyBeautyPWHG
-        trainName = "FastSim_PyBeauty"
-        forceDecay = True
-        specialPart = ROOT.AliFastSimulationTask.kbbbar
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run jet simulation.')
+    parser.add_argument('--runtype', metavar='RUNTYPE',
+                        default='local')
+    parser.add_argument('--gridmode', metavar='GRIDMODE',
+                        default='offline')
+    parser.add_argument('--numevents', metavar='NEVT',
+                        default=50000, type=int)
+    parser.add_argument('--gen', metavar='GEN',
+                        default='pythia')
+    parser.add_argument('--proc', metavar='PROC',
+                        default='charm')
+    args = parser.parse_args()
 
-ROOT.runJetSimulation(args.runtype, args.gridmode, args.numevents, proc, specialPart, forceDecay, trainName)
+    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen)
