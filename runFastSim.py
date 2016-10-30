@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 
+import time
 import datetime
 import platform
 import os
 import shutil
 import subprocess
-import runJetSimulation
+import argparse
+import random
+import sys
 
 def main(runtype, gridmode, pythiaEvents, proc, gen):
 	print("------------------ job starts ---------------------")
-	dateNow = datetime.now()
+	dateNow = datetime.datetime.now()
 	print(dateNow)
 	
-	print("Running {0} MC production on: {1}".format(proc, platform.uname()))
+	print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
 	
 	if gen == "powheg":
 		runPOWHEG = True
@@ -25,11 +28,11 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 		
 		powhegEvents = int(pythiaEvents * 1.1)
 		shutil.copy("{0}-powheg.input".format(proc),"powheg_new.input")
-		rnd = atoi(os.urandom(32))
+		rnd = random.randint(0, sys.maxint)
 		
 		with open("powheg_new.input", "a") as myfile:
-		    myfile.write("iseed {0}".format(rnd))
-		    myfile.write("numevts {0}".format(powhegEvents))
+		    myfile.write("iseed {0}\n".format(rnd))
+		    myfile.write("numevts {0}\n".format(powhegEvents))
 		
 		with open("powheg_new.input", 'r') as fin:
 		    powheg_new_input = fin.read().splitlines()
@@ -50,13 +53,14 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 				runPOWHEG = True
 				break
 		if runPOWHEG:
-			os.rename("powheg.input","powheg_{0}.input".format(dateNow.time()))
-			print("Old POWHEG configuration backed up in {0}".format("powheg_{0}.input".format(dateNow.time())))
-			os.rename("pwgevents.lhe","pwgevents_{0}.lhe".format(dateNow.time()))
-			print("Old POWHEG events backed up in {0}".format("pwgevents_{0}.lhe".format(dateNow.time())))
+			unixTS = int(time.time())
+			os.rename("powheg.input","powheg_{0}.input".format(unixTS))
+			print("Old POWHEG configuration backed up in {0}".format("powheg_{0}.input".format(unixTS)))
+			os.rename("pwgevents.lhe","pwgevents_{0}.lhe".format(unixTS))
+			print("Old POWHEG events backed up in {0}".format("pwgevents_{0}.lhe".format(unixTS)))
 			if os.path.isfile("powheg.log"):
-				os.rename("powheg.log","powheg_{0}.log".format(dateNow.time()))
-				print("Old POWHEG log backed up in {0}".format("powheg_{0}.log".format(dateNow.time())))
+				os.rename("powheg.log","powheg_{0}.log".format(unixTS))
+				print("Old POWHEG log backed up in {0}".format("powheg_{0}.log".format(unixTS)))
 			print("Running new POWHEG simulation!")
 		else:
 			os.remove("powheg_new.input")
@@ -75,16 +79,18 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 	
 		if not os.path.isfile("pwgevents.lhe"):
 			print("Could not find POWHEG output pwgevents.lhe. Something went wrong, aborting...")
+			print("Check log file below.")
 			print(powhegOutput)
 			exit(1)
 	
-	rnd = atoi(os.urandom(32))
+	rnd = random.randint(0, sys.maxint)
 	print("Setting PYTHIA seed to {0}".format(rnd))
 	
 	print("Running PYTHIA simulation...")
-	simOutput = runJetSimulation.main(runtype, gridmode, pythiaEvents, proc, gen)
-	#./runJetSimulation.py --runtype local --gridmode offline --numevents ${PYNEVT} --proc ${PWHGPROC} --gen powheg >& sim.log 
-	
+	simOutput = subprocess.check_output(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen]) 
+	with open("sim.log", "w") as myfile:
+		myfile.write(simOutput)
+
 	print("Done")
 	print("...see results in the log files")
 	
@@ -94,7 +100,7 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 	subprocess.call(["du", "-sh"])
 	
 	print("------------------ job ends ----------------------")
-	dateNow = datetime.now()
+	dateNow = datetime.datetime.now()
 	print(dateNow)
 
 if __name__ == '__main__':

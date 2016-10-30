@@ -41,17 +41,17 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen):
     elif gen == "powheg":
         if procStr == "dijet":
             proc = ROOT.kPyJetsPWHG
-            trainName = "FastSim_PyJets"
+            trainName = "FastSim_PyJetsPWHG"
             forceDecay = False
             specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharmPWHG
-            trainName = "FastSim_PyCharm"
+            trainName = "FastSim_PyCharmPWHG"
             forceDecay = False
             specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
         elif procStr == "beauty":
             proc = ROOT.kPyBeautyPWHG
-            trainName = "FastSim_PyBeauty"
+            trainName = "FastSim_PyBeautyPWHG"
             forceDecay = False
             specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
 

@@ -1,5 +1,6 @@
 *.so
 *.d
+*.pyc
 FastSim*
 AnalysisResults*.root
 *_ACLiC_*
@@ -8,6 +9,7 @@ fort.97
 POWHEG_bins
 *.log
 powheg.input
+powheg_*.input
 *.dat
 pwhg_checklimits
 realequiv
