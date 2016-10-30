@@ -37,7 +37,7 @@ class AliFastSimulationTask : public AliAnalysisTaskSE {
   };
 
   AliFastSimulationTask();
-  AliFastSimulationTask(const char *name, Bool_t drawqa);
+  AliFastSimulationTask(const char *name, Int_t seed, Bool_t drawqa);
   virtual ~AliFastSimulationTask();
 
   void           UserCreateOutputObjects();
@@ -51,12 +51,13 @@ class AliFastSimulationTask : public AliAnalysisTaskSE {
       ESpecialParticle_t specialPart = kNoSpecialParticle, Int_t ptHardMin=0, Int_t ptHardMax=1,
       Bool_t forceHadronicDecay=kFALSE, Float_t ptWeight=0);
 
-  static AliFastSimulationTask* AddTaskFastSimulation(AliGenerator* genGen, TString partName = "mcparticles", TString taskName = "FastSimulationTask", const Bool_t drawQA = kTRUE);
+  static AliFastSimulationTask* AddTaskFastSimulation(AliGenerator* genGen, Int_t seed = 0, TString partName = "mcparticles", TString taskName = "FastSimulationTask", const Bool_t drawQA = kTRUE);
 
  protected:
   Bool_t         ExecOnce();
   void           Run();
 
+  Int_t          fSeed;                   // seed for event generator
   Bool_t         fQAhistos;               // draw qa plots
   AliGenerator  *fGen;                    // generator
   AliHeader     *fHeader;                 //!event header

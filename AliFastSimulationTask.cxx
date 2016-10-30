@@ -35,6 +35,7 @@ ClassImp(AliFastSimulationTask)
 //________________________________________________________________________
 AliFastSimulationTask::AliFastSimulationTask() : 
 AliAnalysisTaskSE("AliFastSimulationTask"),
+  fSeed(0),
   fQAhistos(kFALSE),
   fGen(0),
   fHeader(0),
@@ -54,8 +55,9 @@ AliAnalysisTaskSE("AliFastSimulationTask"),
 }
 
 //________________________________________________________________________
-AliFastSimulationTask::AliFastSimulationTask(const char *name, Bool_t drawqa) :
+AliFastSimulationTask::AliFastSimulationTask(const char *name, Int_t seed, Bool_t drawqa) :
   AliAnalysisTaskSE(name),
+  fSeed(seed),
   fQAhistos(drawqa),
   fGen(0),
   fHeader(0),
@@ -129,7 +131,7 @@ Bool_t AliFastSimulationTask::ExecOnce()
   if (!gAlice) {
     new AliRun("gAlice","The ALICE Off-line Simulation Framework");
     delete gRandom;
-    gRandom = new TRandom3(0);
+    gRandom = new TRandom3(fSeed);
   }
   
   fGen->SetRandom(gRandom);
@@ -186,19 +188,6 @@ void AliFastSimulationTask::Run()
   fMCEvent->ConnectHeaderAndStack(fHeader);
   AliDebug(3,"Converting MC particles to AOD MC particles...");
   fMCTrackSelector->ConvertMCParticles(fMCEvent, fMCParticles);
-  /*
-  const Int_t nprim = fStack->GetNprimary();
-  Int_t nParticles = 0;
-  for (Int_t i=0; i < nprim; i++) {
-    TParticle *part = fStack->Particle(i);
-    if (!part) continue;
-
-    AliMCParticle *mcpart = new ((*fMCParticles)[nParticles]) AliMCParticle(part, 0, i);
-    mcpart->SetMother(part->GetFirstMother());
-
-    nParticles++;
-  }
-  */
   AliDebug(3,"Plotting some general histograms...");
   FillPythiaHistograms();
 }
@@ -283,7 +272,7 @@ AliGenPythia* AliFastSimulationTask::CreatePythia6Gen(Float_t e_cms, EPythiaTune
 }
 
 //________________________________________________________________________
-AliFastSimulationTask* AliFastSimulationTask::AddTaskFastSimulation(AliGenerator* genGen, TString partName, TString taskName, const Bool_t drawQA)
+AliFastSimulationTask* AliFastSimulationTask::AddTaskFastSimulation(AliGenerator* genGen, Int_t seed, TString partName, TString taskName, const Bool_t drawQA)
 {
   // Get the pointer to the existing analysis manager via the static access method.
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
@@ -299,7 +288,7 @@ AliFastSimulationTask* AliFastSimulationTask::AddTaskFastSimulation(AliGenerator
   }
 
   // Init the task and do settings
-  AliFastSimulationTask *fastSimTask = new AliFastSimulationTask(taskName,drawQA);
+  AliFastSimulationTask *fastSimTask = new AliFastSimulationTask(taskName,seed,drawQA);
   fastSimTask->SetGen(genGen);
   fastSimTask->SetMCParticlesName(partName);
 

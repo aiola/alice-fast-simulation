@@ -33,7 +33,8 @@ void runJetSimulation(
     Process_t     proc         = kPyMb,
     Int_t         specialPart  = 0,
     Bool_t        forceHadDecay=kFALSE,
-    const char   *taskname     = "FastSim"                    // sets name of grid generated macros
+    const char   *taskname     = "FastSim",                    // sets name of grid generated macros
+    Int_t         seed         = 0
   )
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
@@ -89,7 +90,7 @@ void runJetSimulation(
 
   rejectOrigin |= AliAnalysisTaskDmesonJets::EMesonOrigin_t::kUnknownQuark;
 
-  AliFastSimulationTask::AddTaskFastSimulation(gen);
+  AliFastSimulationTask::AddTaskFastSimulation(gen, seed);
 
   AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);

@@ -3,7 +3,7 @@
 import ROOT
 import argparse
 
-def main(runtype, gridmode, pythiaEvents, procStr, gen):
+def main(runtype, gridmode, pythiaEvents, procStr, gen, seed):
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
     ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
@@ -55,7 +55,7 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen):
             forceDecay = False
             specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
 
-    ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName)
+    ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName, seed)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run jet simulation.')
@@ -69,6 +69,8 @@ if __name__ == '__main__':
                         default='pythia')
     parser.add_argument('--proc', metavar='PROC',
                         default='charm')
+    parser.add_argument('--seed', metavar='SEED',
+                        default=0, type=int)
     args = parser.parse_args()
 
-    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen)
+    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen, args.seed)

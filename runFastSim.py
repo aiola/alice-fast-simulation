@@ -28,7 +28,7 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 		
 		powhegEvents = int(pythiaEvents * 1.1)
 		shutil.copy("{0}-powheg.input".format(proc),"powheg_new.input")
-		rnd = random.randint(0, sys.maxint)
+		rnd = random.randint(0, 65535)
 		
 		with open("powheg_new.input", "a") as myfile:
 		    myfile.write("iseed {0}\n".format(rnd))
@@ -67,6 +67,8 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 			print("Will use the same POWHEG events from previous simulation!")
 	
 	if runPOWHEG:
+		print("Cleaning up working directory...")
+		subprocess.call(["./clean_powheg.sh"])
 		os.rename("powheg_new.input","powheg.input")
 		print("Running POWHEG...")
 	
@@ -83,11 +85,11 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 			print(powhegOutput)
 			exit(1)
 	
-	rnd = random.randint(0, sys.maxint)
+	rnd = random.randint(0, 65535)
 	print("Setting PYTHIA seed to {0}".format(rnd))
 	
 	print("Running PYTHIA simulation...")
-	simOutput = subprocess.check_output(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen]) 
+	simOutput = subprocess.check_output(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", rnd]) 
 	with open("sim.log", "w") as myfile:
 		myfile.write(simOutput)
 
