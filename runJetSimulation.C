@@ -75,9 +75,19 @@ void runJetSimulation(
   */
   AliGenPythia* gen = AliFastSimulationTask::CreatePythia6Gen(7000., AliFastSimulationTask::kPerugia2012, proc,
       (AliFastSimulationTask::ESpecialParticle_t)specialPart, 0, 1, forceHadDecay);
-  if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG || proc ==  kPyWPWHG) {
+  if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG) {
     gen->SetReadLHEF("pwgevents.lhe");
   }
+
+  UInt_t rejectOrigin = 0;
+  if (proc ==  kPyCharmPWHG || proc ==  kPyCharm) {
+    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
+  }
+  else if (proc ==  kPyBeautyPWHG || proc ==  kPyBeauty) {
+    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kAnyOrigin & ~AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
+  }
+
+  rejectOrigin |= AliAnalysisTaskDmesonJets::EMesonOrigin_t::kUnknownQuark;
 
   AliFastSimulationTask::AddTaskFastSimulation(gen);
 
@@ -87,24 +97,32 @@ void runJetSimulation(
   pJetQA->SetParticleLevel(kTRUE);
   pJetQA->SetVzRange(-999,999);
 
-  AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
-  pDMesonJetsTask->SetVzRange(-999,999);
-  pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
-  pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
-  pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
-  AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
-  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
-  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
-  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
-  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
-  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
-  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  if (proc == kPyCharmPWHG || proc == kPyBeautyPWHG || proc == kPyCharm || proc == kPyBeauty) {
+    AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
+    pDMesonJetsTask->SetVzRange(-999,999);
+    pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
+    pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+    pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
+    AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
+    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+    eng->SetRejectedOriginMap(rejectOrigin);
+    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+    eng->SetRejectedOriginMap(rejectOrigin);
+    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+    eng->SetRejectedOriginMap(rejectOrigin);
+    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+    eng->SetRejectedOriginMap(rejectOrigin);
+    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+    eng->SetRejectedOriginMap(rejectOrigin);
+    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+    eng->SetRejectedOriginMap(rejectOrigin);
+  }
 
   AliEmcalJetTask* pJetTaskCh04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
   pJetTaskCh04->SetVzRange(-999,999);
