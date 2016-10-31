@@ -11,4 +11,6 @@ powheg.log
 powheg_*.log
 powheg.input
 powheg_*.input
+galice.root
+outputs_valid
 
