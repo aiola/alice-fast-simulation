@@ -47,10 +47,6 @@ class AliFastSimulationTask : public AliAnalysisTaskSE {
   void           SetGen(AliGenerator *gen)             { fGen             = gen; }
   void           SetMCParticlesName(const char *n)     { fMCParticlesName = n  ; }
 
-  static AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune=kPerugia2012, Process_t proc=kPyMb,
-      ESpecialParticle_t specialPart = kNoSpecialParticle, Int_t ptHardMin=0, Int_t ptHardMax=1,
-      Bool_t forceHadronicDecay=kFALSE, Float_t ptWeight=0);
-
   static AliFastSimulationTask* AddTaskFastSimulation(AliGenerator* genGen, Int_t seed = 0, TString partName = "mcparticles", TString taskName = "FastSimulationTask", const Bool_t drawQA = kTRUE);
 
  protected:
