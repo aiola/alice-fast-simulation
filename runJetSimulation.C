@@ -121,8 +121,6 @@ void runJetSimulation(
   mcInputHandler->SetGenerator(gen);
   mcInputHandler->SetSeed(seed);
   mcInputHandler->SetSeedMode(1);
-  //mcInputHandler->SetGeneratorMacroPath(gSystem->Getenv("GEN_MACRO_PATH"));
-  //mcInputHandler->SetGeneratorMacroParameters(gSystem->Getenv("GEN_PARAMETERS"));
   mgr->SetMCtruthEventHandler(mcInputHandler);
 
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
@@ -136,8 +134,6 @@ void runJetSimulation(
   }
 
   rejectOrigin |= AliAnalysisTaskDmesonJets::EMesonOrigin_t::kUnknownQuark;
-
-  //AliFastSimulationTask::AddTaskFastSimulation(gen, seed);
 
   AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
