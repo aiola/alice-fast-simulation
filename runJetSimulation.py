@@ -3,7 +3,7 @@
 import ROOT
 import argparse
 
-def main(runtype, gridmode, pythiaEvents, procStr, gen, seed):
+def main(runtype, gridmode, pythiaEvents, procStr, gen, seed, lhe):
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
     ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
@@ -19,43 +19,44 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen, seed):
     ROOT.gSystem.Load("libfastjetcontribfragile")
     
     ROOT.gSystem.Load("libpythia6_4_28.so")
-    #ROOT.gROOT.ProcessLine(".L AliFastSimulationTask.cxx+g")
     ROOT.gROOT.ProcessLine(".L runJetSimulation.C+g")
 
+    trainName = "FastSim_{0}_{1}".format(gen, procStr)
+
     if gen == "pythia":
+        if lhe:
+            print("An LHE file was provided ({0}) but PYTHIA was selected as generator. The LHE file will be ignored".format(lhe))
+            lhe = ""
         if procStr == "dijet":
             proc = ROOT.kPyJets
-            trainName = "FastSim_PyJets"
             forceDecay = False
             specialPart = ROOT.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharm
-            trainName = "FastSim_PyCharm"
             forceDecay = False
             specialPart = ROOT.kccbar
         elif procStr == "beauty":
             proc = ROOT.kPyBeauty
-            trainName = "FastSim_PyBeauty"
             forceDecay = False
             specialPart = ROOT.kbbbar
     elif gen == "powheg":
+        if not lhe:
+            print("Must provide an LHE file if POWHEG is selected as event generator!")
+            exit(1)
         if procStr == "dijet":
             proc = ROOT.kPyJetsPWHG
-            trainName = "FastSim_PyJetsPWHG"
             forceDecay = False
             specialPart = ROOT.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharmPWHG
-            trainName = "FastSim_PyCharmPWHG"
             forceDecay = False
             specialPart = ROOT.kNoSpecialParticle
         elif procStr == "beauty":
             proc = ROOT.kPyBeautyPWHG
-            trainName = "FastSim_PyBeautyPWHG"
             forceDecay = False
             specialPart = ROOT.kNoSpecialParticle
 
-    ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName, seed)
+    ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName, seed, lhe)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run jet simulation.')
@@ -69,8 +70,10 @@ if __name__ == '__main__':
                         default='pythia')
     parser.add_argument('--proc', metavar='PROC',
                         default='charm')
+    parser.add_argument('--lhe', metavar='LHE',
+                        default='')
     parser.add_argument('--seed', metavar='SEED',
                         default=0, type=int)
     args = parser.parse_args()
 
-    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen, args.seed)
+    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen, args.seed, args.lhe)

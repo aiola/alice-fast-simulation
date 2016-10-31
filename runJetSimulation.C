@@ -57,10 +57,11 @@ void runJetSimulation(
     const char   *gridmode     = "offline",                   // set the grid run mode (can be "full", "test", "offline", "submit" or "terminate")
     const Int_t   numevents    = 50000,                       // number of events
     Process_t     proc         = kPyMb,
-    Int_t         specialPart  = 0,
+    ESpecialParticle_t specialPart = kNoSpecialParticle,
     Bool_t        forceHadDecay=kFALSE,
     const char   *taskname     = "FastSim",                    // sets name of grid generated macros
-    Int_t         seed         = 0
+    Int_t         seed         = 0,
+    const char   *lhe          = ""
   )
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
@@ -111,11 +112,9 @@ void runJetSimulation(
   */
 
   // Generator and generator handler
-  AliGenPythia* gen = CreatePythia6Gen(7000., kPerugia2012, proc,
-      (ESpecialParticle_t)specialPart, 0, 1, forceHadDecay);
-  if (proc == kPyJetsPWHG || proc ==  kPyCharmPWHG || proc ==  kPyBeautyPWHG) {
-    gen->SetReadLHEF("pwgevents.lhe");
-  }
+  AliGenPythia* gen = CreatePythia6Gen(7000., kPerugia2012, proc, specialPart, 0, 1, forceHadDecay);
+  TString LHEfile(lhe);
+  if (!LHEfile.IsNull()) gen->SetReadLHEF(LHEfile);
 
   AliMCGenHandler* mcInputHandler = new AliMCGenHandler();
   mcInputHandler->SetGenerator(gen);
@@ -139,6 +138,7 @@ void runJetSimulation(
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetQA->SetMC(kTRUE);
   pJetQA->SetParticleLevel(kTRUE);
+  pJetQA->SetIsPythia(kTRUE);
   pJetQA->SetVzRange(-999,999);
 
   if (proc == kPyCharmPWHG || proc == kPyBeautyPWHG || proc == kPyCharm || proc == kPyBeauty) {
