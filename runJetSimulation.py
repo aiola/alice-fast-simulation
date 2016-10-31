@@ -19,7 +19,7 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen, seed):
     ROOT.gSystem.Load("libfastjetcontribfragile")
     
     ROOT.gSystem.Load("libpythia6_4_28.so")
-    ROOT.gROOT.ProcessLine(".L AliFastSimulationTask.cxx+g")
+    #ROOT.gROOT.ProcessLine(".L AliFastSimulationTask.cxx+g")
     ROOT.gROOT.ProcessLine(".L runJetSimulation.C+g")
 
     if gen == "pythia":
@@ -27,33 +27,33 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen, seed):
             proc = ROOT.kPyJets
             trainName = "FastSim_PyJets"
             forceDecay = False
-            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+            specialPart = ROOT.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharm
             trainName = "FastSim_PyCharm"
             forceDecay = False
-            specialPart = ROOT.AliFastSimulationTask.kccbar
+            specialPart = ROOT.kccbar
         elif procStr == "beauty":
             proc = ROOT.kPyBeauty
             trainName = "FastSim_PyBeauty"
             forceDecay = False
-            specialPart = ROOT.AliFastSimulationTask.kbbbar
+            specialPart = ROOT.kbbbar
     elif gen == "powheg":
         if procStr == "dijet":
             proc = ROOT.kPyJetsPWHG
             trainName = "FastSim_PyJetsPWHG"
             forceDecay = False
-            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+            specialPart = ROOT.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharmPWHG
             trainName = "FastSim_PyCharmPWHG"
             forceDecay = False
-            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+            specialPart = ROOT.kNoSpecialParticle
         elif procStr == "beauty":
             proc = ROOT.kPyBeautyPWHG
             trainName = "FastSim_PyBeautyPWHG"
             forceDecay = False
-            specialPart = ROOT.AliFastSimulationTask.kNoSpecialParticle
+            specialPart = ROOT.kNoSpecialParticle
 
     ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName, seed)
 
