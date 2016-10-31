@@ -89,7 +89,7 @@ def main(runtype, gridmode, pythiaEvents, proc, gen):
 	print("Setting PYTHIA seed to {0}".format(rnd))
 	
 	print("Running PYTHIA simulation...")
-	simOutput = subprocess.check_output(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", rnd]) 
+	simOutput = subprocess.check_output(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd)]) 
 	with open("sim.log", "w") as myfile:
 		myfile.write(simOutput)
 
