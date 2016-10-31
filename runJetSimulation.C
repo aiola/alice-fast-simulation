@@ -144,6 +144,7 @@ void runJetSimulation(
   if (proc == kPyCharmPWHG || proc == kPyBeautyPWHG || proc == kPyCharm || proc == kPyBeauty) {
     AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
     pDMesonJetsTask->SetVzRange(-999,999);
+    pDMesonJetsTask->SetIsPythia(kTRUE);
     pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
     pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
     pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
@@ -181,6 +182,7 @@ void runJetSimulation(
   AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
   pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetSpectraTask->SetVzRange(-999,999);
+  pJetSpectraTask->SetIsPythia(kTRUE);
   pJetSpectraTask->SetNeedEmcalGeom(kFALSE);
   pJetSpectraTask->GetParticleContainer("mcparticles")->SetMinPt(0.);
   pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
