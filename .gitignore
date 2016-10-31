@@ -13,4 +13,4 @@ powheg.input
 powheg_*.input
 galice.root
 outputs_valid
-
+powheg_*.tar
