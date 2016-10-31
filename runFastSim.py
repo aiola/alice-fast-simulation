@@ -14,7 +14,10 @@ def main(runtype, gridmode, pythiaEvents, proc, gen, LHEfile):
 	print("------------------ job starts ---------------------")
 	dateNow = datetime.datetime.now()
 	print(dateNow)
-	
+
+	unixTS = int(time.time())
+	fname = "{0}_{1}_{2}".format(gen, proc, unixTS)
+
 	print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
 	
 	if gen == "powheg":
@@ -68,8 +71,6 @@ def main(runtype, gridmode, pythiaEvents, proc, gen, LHEfile):
 				print("No log file was found.")
 			exit(1)
 
-		unixTS = int(time.time())
-		fname = "{0}_{1}_{2}".format(gen, proc, unixTS)
 		LHEfile = "pwgevents_{0}.lhe".format(fname)
 
 		os.rename("powheg.input","{0}.input".format(fname))
@@ -87,6 +88,9 @@ def main(runtype, gridmode, pythiaEvents, proc, gen, LHEfile):
 	print("Running PYTHIA simulation...")
 	with open("sim.log", "w") as myfile:
 		subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile], stdout=myfile, stderr=myfile) 
+
+	os.rename("sim.log","sim_{0}.log".format(fname))
+	print("Simulation log backed up in {0}.log".format(fname))
 
 	print("Done")
 	print("...see results in the log files")
