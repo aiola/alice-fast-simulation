@@ -4,6 +4,8 @@ import ROOT
 import argparse
 
 def main(pythiaEvents, procStr, gen, seed, lhe, name):
+    ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
+
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
     ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
@@ -19,7 +21,7 @@ def main(pythiaEvents, procStr, gen, seed, lhe, name):
     ROOT.gSystem.Load("libfastjetcontribfragile")
     
     ROOT.gSystem.Load("libpythia6_4_28.so")
-    ROOT.gROOT.ProcessLine(".L AliAnalysisTaskSEhfcjMCanalysis.cxx+g");
+    ROOT.gROOT.ProcessLine(".L AliAnalysisTaskSEhfcjMCanalysis.cxx+g")
     ROOT.gROOT.ProcessLine(".L runJetSimulation.C+g")
 
     if name:

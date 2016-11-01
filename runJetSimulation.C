@@ -69,13 +69,15 @@ void runJetSimulation(
   // Dummy ESD event and ESD handler
   AliESDEvent *esdE = new AliESDEvent();
   esdE->CreateStdContent();
+  esdE->GetESDRun()->GetBeamType();
+  esdE->GetESDRun()->Print();
   AliESDVertex *vtx = new AliESDVertex(0.,0.,100);
   vtx->SetName("VertexTracks");
   vtx->SetTitle("VertexTracks");
   esdE->SetPrimaryVertexTracks(vtx);
   AliDummyHandler* dumH = new AliDummyHandler();
-  dumH->SetEvent(esdE);
   mgr->SetInputEventHandler(dumH);
+  dumH->SetEvent(esdE);
 
   /*
   kPyCharm, kPyBeauty, kPyCharmUnforced, kPyBeautyUnforced,

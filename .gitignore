@@ -1,8 +1,9 @@
 *.so
 *.d
 *.pyc
-FastSim*
-AnalysisResults*.root
+FastSim_*.root
+FastSimAnalysis_*
+*AnalysisResults*.root
 *_ACLiC_*
 *.lhe
 POWHEG_bins

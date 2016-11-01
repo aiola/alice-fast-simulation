@@ -10,7 +10,7 @@ import argparse
 import random
 import sys
 
-def main(pythiaEvents, proc, gen, LHEfile):
+def main(pythiaEvents, proc, gen, LHEfile, grid):
 	print("------------------ job starts ---------------------")
 	dateNow = datetime.datetime.now()
 	print(dateNow)
@@ -36,12 +36,15 @@ def main(pythiaEvents, proc, gen, LHEfile):
 	if runPOWHEG:
 		print("Running new POWHEG simulation!")
 		if proc == "dijet": 
-			powhegExe = "./POWHEG_bins/pwhg_main_dijet"
+			powhegExe = "pwhg_main_dijet"
 		elif proc == "charm":
-			powhegExe = "./POWHEG_bins/pwhg_main_hvq"
+			powhegExe = "pwhg_main_hvq"
 		elif proc == "beauty":
-			powhegExe = "./POWHEG_bins/pwhg_main_hvq"
-		
+			powhegExe = "pwhg_main_hvq"
+
+		if not grid:
+			powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
+
 		powhegEvents = int(pythiaEvents * 1.1)
 		shutil.copy("{0}-powheg.input".format(proc),"powheg.input")
 		rnd = random.randint(0, 65535)
@@ -71,26 +74,32 @@ def main(pythiaEvents, proc, gen, LHEfile):
 				print("No log file was found.")
 			exit(1)
 
-		LHEfile = "pwgevents_{0}.lhe".format(fname)
-
-		os.rename("powheg.input","{0}.input".format(fname))
-		print("POWHEG configuration backed up in {0}.input".format(fname))
-		os.rename("pwgevents.lhe",LHEfile)
-		print("POWHEG events backed up in {0}".format(LHEfile))
-		os.rename("powheg.log","{0}.log".format(fname))
-		print("POWHEG log backed up in {0}.log".format(fname))
-		#cleaning the working directory and archiving POWHEG files
-		subprocess.call(["./clean_powheg.sh", "{0}.tar".format(fname)])
+		if grid:
+			LHEfile = "pwgevents.lhe"
+		else:
+			LHEfile = "pwgevents_{0}.lhe".format(fname)
+			os.rename("powheg.input","{0}.input".format(fname))
+			print("POWHEG configuration backed up in {0}.input".format(fname))
+			os.rename("pwgevents.lhe",LHEfile)
+			print("POWHEG events backed up in {0}".format(LHEfile))
+			os.rename("powheg.log","{0}.log".format(fname))
+			print("POWHEG log backed up in {0}.log".format(fname))
+			#cleaning the working directory and archiving POWHEG files
+			subprocess.call(["./clean_powheg.sh", "{0}.tar".format(fname)])
 
 	rnd = random.randint(0, 65535)
 	print("Setting PYTHIA seed to {0}".format(rnd))
 	
 	print("Running PYTHIA simulation...")
 	with open("sim.log", "w") as myfile:
-		subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--name", fname], stdout=myfile, stderr=myfile) 
+		if grid:
+			subprocess.call(["aliroot",  "-b", "-l", "-q", "runJetSimulationGrid.C({0}, \"{1}\", \"{2}\", {3}, \"{4}\", \"{5}\")".format(pythiaEvents, proc, gen, rnd, LHEfile, fname)], stdout=myfile, stderr=myfile)
+		else:
+			subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--name", fname], stdout=myfile, stderr=myfile) 
 
-	os.rename("sim.log","sim_{0}.log".format(fname))
-	print("Simulation log backed up in {0}.log".format(fname))
+	if not grid:
+		os.rename("sim.log","sim_{0}.log".format(fname))
+		print("Simulation log backed up in {0}.log".format(fname))
 
 	print("Done")
 	print("...see results in the log files")
@@ -114,6 +123,9 @@ if __name__ == '__main__':
 						default='')
     parser.add_argument('--proc', metavar='PROC',
                         default='charm')
+    parser.add_argument("--grid", action='store_const',
+						default=False, const = True,
+						help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.proc, args.gen, args.lhe)
+    main(args.numevents, args.proc, args.gen, args.lhe, args.grid)
