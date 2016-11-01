@@ -3,7 +3,7 @@
 import ROOT
 import argparse
 
-def main(runtype, gridmode, pythiaEvents, procStr, gen, seed, lhe):
+def main(pythiaEvents, procStr, gen, seed, lhe, name):
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
     ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
@@ -19,9 +19,13 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen, seed, lhe):
     ROOT.gSystem.Load("libfastjetcontribfragile")
     
     ROOT.gSystem.Load("libpythia6_4_28.so")
+    ROOT.gROOT.ProcessLine(".L AliAnalysisTaskSEhfcjMCanalysis.cxx+g");
     ROOT.gROOT.ProcessLine(".L runJetSimulation.C+g")
 
-    trainName = "FastSim_{0}_{1}".format(gen, procStr)
+    if name:
+        trainName = "FastSim_{0}".format(name)
+    else:
+        trainName = "FastSim_{0}_{1}".format(gen, procStr)
 
     if gen == "pythia":
         if lhe:
@@ -56,14 +60,10 @@ def main(runtype, gridmode, pythiaEvents, procStr, gen, seed, lhe):
             forceDecay = False
             specialPart = ROOT.kNoSpecialParticle
 
-    ROOT.runJetSimulation(runtype, gridmode, pythiaEvents, proc, specialPart, forceDecay, trainName, seed, lhe)
+    ROOT.runJetSimulation(pythiaEvents, proc, specialPart, forceDecay, trainName, seed, lhe)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run jet simulation.')
-    parser.add_argument('--runtype', metavar='RUNTYPE',
-                        default='local')
-    parser.add_argument('--gridmode', metavar='GRIDMODE',
-                        default='offline')
     parser.add_argument('--numevents', metavar='NEVT',
                         default=50000, type=int)
     parser.add_argument('--gen', metavar='GEN',
@@ -74,6 +74,8 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('--seed', metavar='SEED',
                         default=0, type=int)
+    parser.add_argument('--name', metavar='NAME',
+                        default='')
     args = parser.parse_args()
 
-    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen, args.seed, args.lhe)
+    main(args.numevents, args.proc, args.gen, args.seed, args.lhe, args.name)

@@ -10,7 +10,7 @@ import argparse
 import random
 import sys
 
-def main(runtype, gridmode, pythiaEvents, proc, gen, LHEfile):
+def main(pythiaEvents, proc, gen, LHEfile):
 	print("------------------ job starts ---------------------")
 	dateNow = datetime.datetime.now()
 	print(dateNow)
@@ -87,7 +87,7 @@ def main(runtype, gridmode, pythiaEvents, proc, gen, LHEfile):
 	
 	print("Running PYTHIA simulation...")
 	with open("sim.log", "w") as myfile:
-		subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile], stdout=myfile, stderr=myfile) 
+		subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--name", fname], stdout=myfile, stderr=myfile) 
 
 	os.rename("sim.log","sim_{0}.log".format(fname))
 	print("Simulation log backed up in {0}.log".format(fname))
@@ -106,10 +106,6 @@ def main(runtype, gridmode, pythiaEvents, proc, gen, LHEfile):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run fast simulation.')
-    parser.add_argument('--runtype', metavar='RUNTYPE',
-                        default='local')
-    parser.add_argument('--gridmode', metavar='GRIDMODE',
-                        default='offline')
     parser.add_argument('--numevents', metavar='NEVT',
                         default=50000, type=int)
     parser.add_argument('--gen', metavar='GEN',
@@ -120,4 +116,4 @@ if __name__ == '__main__':
                         default='charm')
     args = parser.parse_args()
 
-    main(args.runtype, args.gridmode, args.numevents, args.proc, args.gen, args.lhe)
+    main(args.numevents, args.proc, args.gen, args.lhe)

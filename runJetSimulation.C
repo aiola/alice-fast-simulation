@@ -27,7 +27,7 @@
 #include <AliAnalysisTaskEmcalJetQA.h>
 #include <AliEmcalMCTrackSelector.h>
 
-//#include "AliFastSimulationTask.h"
+#include "AliAnalysisTaskSEhfcjMCanalysis.h"
 
 // PYTHIA6 tunes: https://arxiv.org/pdf/1005.3457v5.pdf
 enum EPythiaTune_t {
@@ -46,15 +46,12 @@ enum ESpecialParticle_t {
   kbbbar = 2
 };
 
-AliAnalysisGrid* CreateAlienHandler(const char *taskname, const char *gridmode);
-AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune=kPerugia2012, Process_t proc=kPyMb,
+AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune=kPerugia2011, Process_t proc=kPyMb,
     ESpecialParticle_t specialPart = kNoSpecialParticle, Int_t ptHardMin=0, Int_t ptHardMax=1,
     Bool_t forceHadronicDecay=kFALSE, Float_t ptWeight=0);
 
 //______________________________________________________________________________
 void runJetSimulation(
-    const char   *runtype      = "local",                     // local or grid
-    const char   *gridmode     = "offline",                   // set the grid run mode (can be "full", "test", "offline", "submit" or "terminate")
     const Int_t   numevents    = 50000,                       // number of events
     Process_t     proc         = kPyMb,
     ESpecialParticle_t specialPart = kNoSpecialParticle,
@@ -64,25 +61,6 @@ void runJetSimulation(
     const char   *lhe          = ""
   )
 {
-  //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
-
-  enum eRunType  { kLocal, kGrid, kYaleHEP };
-
-  eRunType rType;
-  if (!strcmp(runtype, "grid")) 
-    rType = kGrid;
-  else if (!strcmp(runtype, "local")) 
-    rType = kLocal;
-  else if (!strcmp(runtype, "hep"))
-    rType = kYaleHEP;
-  else {
-    std::cout << "Incorrect run option, check first argument of run macro" << std::endl;
-    std::cout << "runtype = local, grid, hep" << std::endl;
-    return;
-  }
-
-  std::cout << runtype << " analysis chosen" << std::endl;
-
   // analysis manager
   AliAnalysisManager* mgr = new AliAnalysisManager(taskname);
 
@@ -112,7 +90,7 @@ void runJetSimulation(
   */
 
   // Generator and generator handler
-  AliGenPythia* gen = CreatePythia6Gen(7000., kPerugia2012, proc, specialPart, 0, 1, forceHadDecay);
+  AliGenPythia* gen = CreatePythia6Gen(7000., kPerugia2011, proc, specialPart, 0, 1, forceHadDecay);
   TString LHEfile(lhe);
   if (!LHEfile.IsNull()) gen->SetReadLHEF(LHEfile);
 
@@ -121,6 +99,8 @@ void runJetSimulation(
   mcInputHandler->SetSeed(seed);
   mcInputHandler->SetSeedMode(1);
   mgr->SetMCtruthEventHandler(mcInputHandler);
+
+  AliAnalysisTaskSEhfcjMCanalysis::AddTaskSEhfcjMCanalysis();
 
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
 
@@ -198,96 +178,15 @@ void runJetSimulation(
   out->Close();
   delete out;
 
-  if (rType == kGrid) {
-    AliAnalysisGrid *plugin = CreateAlienHandler(taskname, gridmode); 
-    mgr->SetGridHandler(plugin);
+  if (!gAlice) new AliRun("gAlice","The ALICE Off-line Simulation Framework");
 
-    // start analysis
-    std::cout << "Starting Analysis...";
-    mgr->SetDebugLevel(0);
-    mgr->StartAnalysis("grid");
-  }
-  else {  // local, hep
-    if (!gAlice) new AliRun("gAlice","The ALICE Off-line Simulation Framework");
-
-    // start analysis
-    std::cout << "Starting Analysis...";
-    mgr->SetUseProgressBar(1, 25);
-    mgr->SetDebugLevel(0);
-    //mgr->AddClassDebug("AliJetTriggerSelectionTask",AliLog::kDebug+100);
-    mgr->SetCacheSize(0);
-    mgr->EventLoop(numevents);
-  }
-}
-
-//______________________________________________________________________________
-AliAnalysisGrid* CreateAlienHandler(const char *taskname, const char *gridmode)
-{
-  AliAnalysisAlien *plugin = new AliAnalysisAlien();
-  plugin->SetRunMode(gridmode);
-  
-  // Set versions of used packages
-  plugin->SetAliPhysicsVersion("vAN-20161012");
-
-  //plugin->SetMergeViaJDL(kTRUE);
-
-  // Declare input data to be processed.
-  plugin->AddDataFile("/alice/cern.ch/user/s/saiola/esdempty.root");
-  
-  // Define alien work directory where all files will be copied. Relative to alien $HOME.
-  plugin->SetGridWorkingDir(taskname);
-  
-  // Declare alien output directory. Relative to working directory.
-  plugin->SetGridOutputDir("out"); // In this case will be $HOME/taskname/out
-  
-  //plugin->AddIncludePath("-I$ALICE_ROOT/include");
-  //plugin->AddIncludePath("-I$ALICE_ROOT/PWGJE/EMCALJetTasks/");
-  //plugin->AddIncludePath("-I$FASTJET/include -I$FASTJET/include/fastjet");
-  //plugin->AddIncludePath("-I$PWD/.");
-
-  // Declare the analysis source files names separated by blancs. To be compiled runtime
-  // using ACLiC on the worker nodes.
-  plugin->SetAnalysisSource("AliAnalysisTaskHFexploration.cxx AliFastSimulationTask.cxx");
-  
-  // Declare all libraries (other than the default ones for the framework. These will be
-  // loaded by the generated analysis macro. Add all extra files (task .cxx/.h) here.
-  plugin->SetAdditionalLibs("AliAnalysisTaskHFexploration.h AliAnalysisTaskHFexploration.cxx AliFastSimulationTask.h AliFastSimulationTask.cxx ");
-
-  // Declare the output file names separated by blancs.
-  // (can be like: file.root or file.root@ALICE::Niham::File)
-  // To only save certain files, use SetDefaultOutputs(kFALSE), and then
-  // SetOutputFiles("list.root other.filename") to choose which files to save
-  plugin->SetDefaultOutputs(kFALSE);
-  plugin->SetOutputFiles("AnalysisResults*.root std*");
-  
-  // Optionally set a name for the generated analysis macro (default MyAnalysis.C)
-  plugin->SetAnalysisMacro(Form("%s.C",taskname));
-  
-  // Optionally set maximum number of input files/subjob (default 100, put 0 to ignore)
-  plugin->SetSplitMaxInputFileNumber(0);
-  
-  // Optionally modify the executable name (default analysis.sh)
-  plugin->SetExecutable(Form("%s.sh",taskname));
-  
-  // set number of test files to use in "test" mode
-  plugin->SetNtestFiles(1);
-  
-  // Optionally resubmit threshold.
-  plugin->SetMasterResubmitThreshold(90);
-  
-  // Optionally set time to live (default 30000 sec)
-  plugin->SetTTL(50000);
-  
-  // Optionally modify the name of the generated JDL (default analysis.jdl)
-  plugin->SetJDLName(Form("%s.jdl",taskname));
-  
-  // Optionally modify job price (default 1)
-  plugin->SetPrice(1);      
-  
-  // Optionally modify split mode (default 'se')    
-  plugin->SetSplitMode("production:1-10");
-  
-  return plugin;
+  // start analysis
+  std::cout << "Starting Analysis...";
+  mgr->SetUseProgressBar(1, 25);
+  mgr->SetDebugLevel(0);
+  //mgr->AddClassDebug("AliJetTriggerSelectionTask",AliLog::kDebug+100);
+  mgr->SetCacheSize(0);
+  mgr->EventLoop(numevents);
 }
 
 //________________________________________________________________________
