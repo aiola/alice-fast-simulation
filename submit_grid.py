@@ -145,7 +145,7 @@ def SubmitJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, Grid
     CopyFilesToTheGrid(FilesToCopy, AlienDest, LocalDest, Offline, GridUpdate)
     if not Offline:
         subprocessCall(["alien_submit", "alien://{0}/{1}".format(AlienDest, JdlFile)])
-
+    os.remove(JdlFile)
     print "Done."
 
     subprocessCall(["ls", LocalDest])

@@ -78,4 +78,3 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
   }
   runJetSimulation(pythiaEvents, proc, specialPart, forceDecay, trainName, seed, lhe);
 }
-

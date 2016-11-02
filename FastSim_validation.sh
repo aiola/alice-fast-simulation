@@ -21,7 +21,7 @@ echo "========================================="
 
 # my program is here
 files=(AnalysisResults*.root)
-filename=files[0]
+filename=${files[0]}
 
 if [[ ! -f "${filename}" ]]; then
 	echo "File '${filename}' does not exists!"
