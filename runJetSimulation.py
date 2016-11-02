@@ -4,7 +4,8 @@ import ROOT
 import argparse
 
 def main(pythiaEvents, procStr, gen, seed, lhe, name):
-    ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
+    #ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
+    ROOT.gSystem.SetFPEMask(ROOT.TSystem.kNoneMask)
 
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
