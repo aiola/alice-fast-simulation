@@ -238,7 +238,8 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     ExeFile = "runFastSim.py"
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
-    FilesToCopy = ["runJetSimulation.C", "runJetSimulationGrid.C", "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h",
+    #"AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
+    FilesToCopy = ["runJetSimulation.C", "runJetSimulationGrid.C",
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
@@ -326,7 +327,7 @@ if __name__ == '__main__':
     parser.add_argument('--merge', metavar='TIMESTAMP',
                         default='')
     parser.add_argument('--max-files-per-job', metavar='N',
-                        default=15, type=int)
+                        default=10, type=int)
     parser.add_argument('--download', metavar='TIMESTAMP',
                         default='')
     args = parser.parse_args()
