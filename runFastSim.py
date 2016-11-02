@@ -15,8 +15,11 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 	dateNow = datetime.datetime.now()
 	print(dateNow)
 
-	unixTS = int(time.time())
-	fname = "{0}_{1}_{2}".format(gen, proc, unixTS)
+	if grid:
+		fname = "{0}_{1}".format(gen, proc)
+	else:
+		unixTS = int(time.time())
+		fname = "{0}_{1}_{2}".format(gen, proc, unixTS)
 
 	print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
 	

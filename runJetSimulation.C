@@ -102,7 +102,7 @@ void runJetSimulation(
   mcInputHandler->SetSeedMode(1);
   mgr->SetMCtruthEventHandler(mcInputHandler);
 
-  AliAnalysisTaskSEhfcjMCanalysis::AddTaskSEhfcjMCanalysis();
+  //AliAnalysisTaskSEhfcjMCanalysis::AddTaskSEhfcjMCanalysis();
 
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
 
