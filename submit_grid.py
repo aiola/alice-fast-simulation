@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+# script to submit fast simulation jobs to the grid
+# submit a processing job using POWHEG charm settings with 100 subjobs, each producing 50k events 
+# ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --numevents 50000 --numjobs 100
+# submit a merging job with a maximum of 15 files processed in each subjob (you will need the timestamp number provided after submitting the processing job)
+# ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --merge [TIMESTAMP] --max-files-per-job 15
+# you should keep submitting merging jobs until everything is merged in an acceptable number of files (you can go on until everything is merged in a single file if you like)
+# download your results from the last merging stage (you will need the timestamp number provided after submitting the processing job)
+# ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --download [TIMESTAMP]
+# you can specify a merging stage if you want to download an intermediate merging stage using the option "--stage [STAGE]"
+
 import os
 import subprocess
 import argparse
@@ -259,7 +269,36 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 
     subprocessCall(["ls", LocalDest])
 
-def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit, Merge, Download, MaxFilesPerJob):
+def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
+    if MergingStage < 0:
+        MergingStage = DetermineMergingStage(AlienPath, TrainName)
+
+    if MergingStage < 0:
+        print("Could not find any results from train {0}! Aborting...".format(TrainName))
+    elif MergingStage == 0:
+        print("Merging stage determined to be 0 (i.e. no grid merging has been performed)")
+        AlienOutputPath = "{0}/{1}/output".format(AlienPath, TrainName)
+        LocalDest = "{0}/{1}/output".format(LocalPath, TrainName)
+    else:
+        print("Merging stage determined to be {0}".format(MergingStage))
+        AlienOutputPath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage-1)
+        LocalDest = "{0}/{1}/stage_{2}/output".format(LocalPath, TrainName, MergingStage-1)
+
+    if not os.path.isdir(LocalDest):
+        os.makedirs(LocalDest)
+    AlienOuputContent = subprocessCheckOutput(["alien_ls", AlienOutputPath]).splitlines()
+    for SubDir in AlienOuputContent:
+        SubDirDest = "{0}/{1}".format(LocalDest, SubDir)
+        SubDirOrig = "{0}/{1}".format(AlienOutputPath, SubDir)
+        if not os.path.isdir(SubDirDest):
+            os.makedirs(SubDirDest)
+        FilesToDownload = subprocessCheckOutput(["alien_ls", "{0}/AnalysisResults*.root".format(SubDirOrig)]).splitlines()
+        for FileName in FilesToDownload:
+            FileOrig = "{0}/{1}".format(SubDirOrig, FileName)
+            print("Downloading from {0} to {1}".format(FileOrig, SubDirDest))
+            subprocessCall(["alien_cp", "alien://{0}".format(FileOrig), SubDirDest])
+
+def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
         rootPath=subprocess.check_output(["which", "root"]).rstrip()
         alirootPath=subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -295,9 +334,10 @@ def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPow
         SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc)
     elif Download:
         TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
-        DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc)
+        DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage)
     else:
         unixTS = int(time.time())
+        print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
         SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit)
 
@@ -330,6 +370,8 @@ if __name__ == '__main__':
                         default=10, type=int)
     parser.add_argument('--download', metavar='TIMESTAMP',
                         default='')
+    parser.add_argument('--stage', metavar='TIMESTAMP',
+                        default=-1, type=int)
     args = parser.parse_args()
 
-    main(args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.old_powheg_init, args.merge, args.download, args.max_files_per_job)
+    main(args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)
