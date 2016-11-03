@@ -5,13 +5,11 @@
 
 // Root classes
 #include <TSystem.h>
-#include <TString.h>
 #include <TArrayI.h>
 #include <TChain.h>
 #include <TFile.h>
 
 // AliRoot classes
-#include <PythiaProcesses.h>
 #include <AliGenPythia.h>
 #include <AliESDInputHandler.h>
 #include <AliAnalysisAlien.h>
@@ -19,6 +17,7 @@
 #include <AliDummyHandler.h>
 #include <AliMCGenHandler.h>
 #include <AliRun.h>
+#include <AliAnalysisTaskSE.h>
 
 // AliPhysics classes
 #include <AliAnalysisTaskDmesonJets.h>
@@ -27,44 +26,66 @@
 #include <AliAnalysisTaskEmcalJetQA.h>
 #include <AliEmcalMCTrackSelector.h>
 
-//#include "AliAnalysisTaskSEhfcjMCanalysis.h"
-
-// PYTHIA6 tunes: https://arxiv.org/pdf/1005.3457v5.pdf
-enum EPythiaTune_t {
-  kPerugia0 = 320,
-  kPerugio0NOCR = 324,
-  kPerugia2010 = 327,
-  kPerugia2011 = 350,
-  kPerugia2011NOCR = 354,
-  kPerugia2012 = 370,
-  kPerugia2012NOCR = 375
-};
-
-enum ESpecialParticle_t {
-  kNoSpecialParticle = 0,
-  kccbar = 1,
-  kbbbar = 2
-};
-
-AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune=kPerugia2011, Process_t proc=kPyMb,
-    ESpecialParticle_t specialPart = kNoSpecialParticle, Int_t ptHardMin=0, Int_t ptHardMax=1,
-    Bool_t forceHadronicDecay=kFALSE, Float_t ptWeight=0);
+#include "OnTheFlySimulationGenerator.h"
 
 //______________________________________________________________________________
-void runJetSimulation(
-    const Int_t   numevents    = 50000,                       // number of events
-    Process_t     proc         = kPyMb,
-    ESpecialParticle_t specialPart = kNoSpecialParticle,
-    Bool_t        forceHadDecay=kFALSE,
-    const char   *taskname     = "FastSim",                    // sets name of grid generated macros
-    Int_t         seed         = 0,
-    const char   *lhe          = ""
-  )
+OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
+  fName("FastSim"),
+  fAnalysisManager(0),
+  fEvents(50000),
+  fProcess(kPyMbDefault),
+  fSpecialParticle(kNoSpecialParticle),
+  fForceHadDecay(kFALSE),
+  fSeed(0.),
+  fLHEFile(),
+  fCMSEnergy(7),
+  fTune(kPerugia2011),
+  fPtHardMin(0),
+  fPtHardMax(1)
+{
+}
+
+//______________________________________________________________________________
+OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
+  fName(taskname),
+  fAnalysisManager(0),
+  fEvents(50000),
+  fProcess(kPyMbDefault),
+  fSpecialParticle(kNoSpecialParticle),
+  fForceHadDecay(kFALSE),
+  fSeed(0.),
+  fLHEFile(),
+  fCMSEnergy(7),
+  fTune(kPerugia2011),
+  fPtHardMin(0),
+  fPtHardMax(1)
+{
+}
+
+//______________________________________________________________________________
+OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t numevents, Process_t proc, ESpecialParticle_t specialPart, Bool_t forceHadDecay, Int_t seed, TString lhe) :
+  fName(taskname),
+  fAnalysisManager(0),
+  fEvents(numevents),
+  fProcess(proc),
+  fSpecialParticle(specialPart),
+  fForceHadDecay(forceHadDecay),
+  fSeed(seed),
+  fLHEFile(lhe),
+  fCMSEnergy(7),
+  fTune(kPerugia2011),
+  fPtHardMin(0),
+  fPtHardMax(1)
+{
+}
+
+//______________________________________________________________________________
+void OnTheFlySimulationGenerator::PrepareAnalysisManager()
 {
   // analysis manager
-  AliAnalysisManager* mgr = new AliAnalysisManager(taskname);
+  fAnalysisManager = new AliAnalysisManager(fName);
 
-  AliAnalysisManager::SetCommonFileName(Form("AnalysisResults_%s.root",taskname));
+  AliAnalysisManager::SetCommonFileName(Form("AnalysisResults_%s.root",fName.Data()));
 
   // Dummy ESD event and ESD handler
   AliESDEvent *esdE = new AliESDEvent();
@@ -76,7 +97,7 @@ void runJetSimulation(
   vtx->SetTitle("VertexTracks");
   esdE->SetPrimaryVertexTracks(vtx);
   AliDummyHandler* dumH = new AliDummyHandler();
-  mgr->SetInputEventHandler(dumH);
+  fAnalysisManager->SetInputEventHandler(dumH);
   dumH->SetEvent(esdE);
 
   /*
@@ -92,25 +113,22 @@ void runJetSimulation(
   */
 
   // Generator and generator handler
-  AliGenPythia* gen = CreatePythia6Gen(7000., kPerugia2011, proc, specialPart, 0, 1, forceHadDecay);
-  TString LHEfile(lhe);
-  if (!LHEfile.IsNull()) gen->SetReadLHEF(LHEfile);
+  AliGenPythia* gen = CreatePythia6Gen(fCMSEnergy, fTune, fProcess, fSpecialParticle, fPtHardMin, fPtHardMax, fForceHadDecay);
+  if (!fLHEFile.IsNull()) gen->SetReadLHEF(fLHEFile);
 
   AliMCGenHandler* mcInputHandler = new AliMCGenHandler();
   mcInputHandler->SetGenerator(gen);
-  mcInputHandler->SetSeed(seed);
+  mcInputHandler->SetSeed(fSeed);
   mcInputHandler->SetSeedMode(1);
-  mgr->SetMCtruthEventHandler(mcInputHandler);
-
-  //AliAnalysisTaskSEhfcjMCanalysis::AddTaskSEhfcjMCanalysis();
+  fAnalysisManager->SetMCtruthEventHandler(mcInputHandler);
 
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
 
   UInt_t rejectOrigin = 0;
-  if (proc ==  kPyCharmPWHG || proc ==  kPyCharm) {
+  if (fProcess ==  kPyCharmPWHG || fProcess ==  kPyCharm) {
     rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
   }
-  else if (proc ==  kPyBeautyPWHG || proc ==  kPyBeauty) {
+  else if (fProcess ==  kPyBeautyPWHG || fProcess ==  kPyBeauty) {
     rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kAnyOrigin & ~AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
   }
 
@@ -123,7 +141,7 @@ void runJetSimulation(
   pJetQA->SetIsPythia(kTRUE);
   pJetQA->SetVzRange(-999,999);
 
-  if (proc == kPyCharmPWHG || proc == kPyBeautyPWHG || proc == kPyCharm || proc == kPyBeauty) {
+  if (fProcess == kPyCharmPWHG || fProcess == kPyBeautyPWHG || fProcess == kPyCharm || fProcess == kPyBeauty) {
     AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
     pDMesonJetsTask->SetVzRange(-999,999);
     pDMesonJetsTask->SetIsPythia(kTRUE);
@@ -170,13 +188,19 @@ void runJetSimulation(
   pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
   pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid);
   pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+}
 
-  if (!mgr->InitAnalysis()) return;
-  mgr->PrintStatus();
+//________________________________________________________________________
+void OnTheFlySimulationGenerator::Start()
+{
+  if (!fAnalysisManager) PrepareAnalysisManager();
 
-  TFile *out = new TFile(Form("%s.root",taskname),"RECREATE");
+  if (!fAnalysisManager->InitAnalysis()) return;
+  fAnalysisManager->PrintStatus();
+
+  TFile *out = new TFile(Form("%s.root",fName.Data()),"RECREATE");
   out->cd();
-  mgr->Write();
+  fAnalysisManager->Write();
   out->Close();
   delete out;
 
@@ -184,17 +208,15 @@ void runJetSimulation(
 
   // start analysis
   std::cout << "Starting Analysis...";
-  mgr->SetUseProgressBar(1, 25);
-  mgr->SetDebugLevel(0);
+  fAnalysisManager->SetUseProgressBar(1, 25);
+  fAnalysisManager->SetDebugLevel(0);
   //mgr->AddClassDebug("AliJetTriggerSelectionTask",AliLog::kDebug+100);
-  mgr->SetCacheSize(0);
-  mgr->EventLoop(numevents);
+  fAnalysisManager->SetCacheSize(0);
+  fAnalysisManager->EventLoop(fEvents);
 }
 
 //________________________________________________________________________
-AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc,
-    ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax,
-    Bool_t forceHadronicDecay, Float_t ptWeight)
+AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay)
 {
   AliGenPythia* genP = new AliGenPythia(-1);
   genP->SetTune(tune);
@@ -203,10 +225,7 @@ AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc
   genP->SetVertexSmear(kPerEvent);
   genP->SetProcess(proc);
 
-  if (ptHardMin > 0.) {
-    genP->SetPtHard(ptHardMin, ptHardMax);
-    if (ptWeight > 0) genP->SetWeightPower(ptWeight);
-  }
+  if (ptHardMin > 0.) genP->SetPtHard(ptHardMin, ptHardMax);
 
   if (specialPart == kccbar) {
     genP->SetHeavyQuarkYRange(-5, 5);

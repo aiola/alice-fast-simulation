@@ -1,5 +1,9 @@
 //runJetSimulationGrid.C
 
+#include <TSystem.h>
+#include <TInterpreter.h>
+#include "OnTheFlySimulationGenerator.h"
+
 void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString name)
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
@@ -20,8 +24,7 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
   gSystem->Load("libfastjetcontribfragile");
 
   gSystem->Load("libpythia6_4_28.so");
-  gROOT->ProcessLine(".L AliAnalysisTaskSEhfcjMCanalysis.cxx+g");
-  gROOT->ProcessLine(".L runJetSimulation.C+g");
+  gROOT->ProcessLine(".L OnTheFlySimulationGenerator.cxx+g");
 
   TString trainName;
   if (!name.IsNull()) {
@@ -33,7 +36,7 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
 
   Process_t proc = kPyMb;
   Bool_t forceDecay = kFALSE;
-  ESpecialParticle_t specialPart = kNoSpecialParticle;
+  OnTheFlySimulationGenerator::ESpecialParticle_t specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
   if (gen == "pythia") {
     if (!lhe.IsNull()) {
       Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored",lhe);
@@ -42,17 +45,17 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
     if (procStr == "dijet") {
       proc = kPyJets;
       forceDecay = kFALSE;
-      specialPart = kNoSpecialParticle;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
       proc = kPyCharm;
       forceDecay = kFALSE;
-      specialPart = kccbar;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
       proc = kPyBeauty;
       forceDecay = kFALSE;
-      specialPart = kbbbar;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
   }
   else if (gen == "powheg") {
@@ -63,18 +66,26 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
     if (procStr == "dijet") {
       proc = kPyJetsPWHG;
       forceDecay = kFALSE;
-      specialPart = kNoSpecialParticle;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
       proc = kPyCharmPWHG;
       forceDecay = kFALSE;
-      specialPart = kNoSpecialParticle;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "beauty") {
       proc = kPyBeautyPWHG;
       forceDecay = kFALSE;
-      specialPart = kNoSpecialParticle;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
   }
-  runJetSimulation(pythiaEvents, proc, specialPart, forceDecay, trainName, seed, lhe);
+
+  OnTheFlySimulationGenerator* sim = new OnTheFlySimulationGenerator(trainName);
+  sim->SetNumberOfEvents(pythiaEvents);
+  sim->SetProcess(proc);
+  sim->SetSpecialParticle(specialPart);
+  sim->SetForceHadronicDecay(forceDecay);
+  sim->SetSeed(seed);
+  sim->SetLHEFile(lhe);
+  sim->Start();
 }
