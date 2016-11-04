@@ -2,7 +2,6 @@
 
 #include <TSystem.h>
 #include <TInterpreter.h>
-#include "OnTheFlySimulationGenerator.h"
 
 void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString name)
 {
