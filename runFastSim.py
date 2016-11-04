@@ -50,7 +50,7 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 
 		powhegEvents = int(pythiaEvents * 1.1)
 		shutil.copy("{0}-powheg.input".format(proc),"powheg.input")
-		rnd = random.randint(0, 65535)
+		rnd = random.randint(0, 1073741824) #2^30
 		
 		with open("powheg.input", "a") as myfile:
 		    myfile.write("iseed {0}\n".format(rnd))
@@ -90,7 +90,7 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 			#cleaning the working directory and archiving POWHEG files
 			subprocess.call(["./clean_powheg.sh", "{0}.tar".format(fname)])
 
-	rnd = random.randint(0, 65535)
+	rnd = random.randint(0, 1073741824) #2^30
 	print("Setting PYTHIA seed to {0}".format(rnd))
 	
 	print("Running PYTHIA simulation...")
