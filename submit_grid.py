@@ -241,6 +241,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
     subprocessCall(["ls", LocalDest])
 
 def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit):
+    print("Submitting merging jobs for train {0}".format(TrainName))
     AlienDest = "{0}/{1}".format(AlienPath, TrainName)
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
 
@@ -270,6 +271,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     subprocessCall(["ls", LocalDest])
 
 def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
+    print("Downloading results from train {0}".format(TrainName))
     if MergingStage < 0:
         MergingStage = DetermineMergingStage(AlienPath, TrainName)
 
@@ -297,6 +299,19 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
             FileOrig = "{0}/{1}".format(SubDirOrig, FileName)
             print("Downloading from {0} to {1}".format(FileOrig, SubDirDest))
             subprocessCall(["alien_cp", "alien://{0}".format(FileOrig), SubDirDest])
+
+def GetLastTrainName(AlienPath, Gen, Proc):
+    TrainName = "FastSim_{0}_{1}".format(Gen, Proc)
+    AlienPathContent = subprocessCheckOutput(["alien_ls", AlienPath]).splitlines()
+    regex = re.compile("{0}.*".format(TrainName))
+    Timestamps = [int(subdir[len(TrainName)+1:]) for subdir in AlienPathContent if re.match(regex, subdir)]
+    if len(Timestamps) == 0:
+        print("Could not find any train in the alien path {0} provided!".format(AlienPath))
+        print("\n".join(AlienPathContent))
+        print("{0}.*".format(TrainName))
+        return None
+    TrainName += "_{0}".format(max(Timestamps))
+    return TrainName
 
 def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
@@ -330,10 +345,20 @@ def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPow
     AlienPath = "/alice/cern.ch/user/s/saiola"
     
     if Merge:
-        TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
+        if Merge == "last":
+            TrainName = GetLastTrainName(AlienPath, Gen, Proc)
+            if not TrainName:
+                exit(1)
+        else:
+            TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
         SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc)
     elif Download:
-        TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
+        if Merge == "last":
+            TrainName = GetLastTrainName(AlienPath, Gen, Proc)
+            if not TrainName:
+                exit(1)
+        else:
+            TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
         DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage)
     else:
         unixTS = int(time.time())
