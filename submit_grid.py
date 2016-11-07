@@ -141,7 +141,7 @@ def GenerateMergingJDL(Exe, Xml, AlienDest, TrainName, AliPhysicsVersion, Valida
     jdlContent = "# This is the startup script \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
-TTL = \"7200\"; \n\
+TTL = \"10000\"; \n\
 OutputDir = \"{dest}/output/#alien_counter_03i#\"; \n\
 Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
@@ -203,7 +203,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
     elif MergingStage == 0:
         print("Merging stage determined to be 0 (i.e. first merging stage)")
         PreviousStagePath = "{0}/{1}/output".format(AlienPath, TrainName)
-        SplitMethod = "se"
+        SplitMethod = "parentdirectory"
     else:
         print("Merging stage determined to be {0}".format(MergingStage))
         PreviousStagePath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage-1)
