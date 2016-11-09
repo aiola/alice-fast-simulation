@@ -277,6 +277,7 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
 
     if MergingStage < 0:
         print("Could not find any results from train {0}! Aborting...".format(TrainName))
+        exit(0)
     elif MergingStage == 0:
         print("Merging stage determined to be 0 (i.e. no grid merging has been performed)")
         AlienOutputPath = "{0}/{1}/output".format(AlienPath, TrainName)
@@ -353,7 +354,7 @@ def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPow
             TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
         SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc)
     elif Download:
-        if Merge == "last":
+        if Download == "last":
             TrainName = GetLastTrainName(AlienPath, Gen, Proc)
             if not TrainName:
                 exit(1)
