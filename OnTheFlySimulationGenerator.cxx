@@ -148,6 +148,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
     pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
     pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
     pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
+    pDMesonJetsTask->SetApplyKinematicCuts(kFALSE);
     AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
     eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
     eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
@@ -229,23 +230,9 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(Float_t e_cms, EPyth
 
   if (specialPart == kccbar) {
     genP->SetHeavyQuarkYRange(-5, 5);
-    Float_t randcharge = gRandom->Rndm();
-    if (randcharge > 0.5) {
-      genP->SetTriggerParticle(4, 3., -1., 1000);
-    }
-    else {
-      genP->SetTriggerParticle(-4, 3., -1., 1000);
-    }
   }
   else if (specialPart == kbbbar) {
     genP->SetHeavyQuarkYRange(-5, 5);
-    Float_t randcharge = gRandom->Rndm();
-    if (randcharge > 0.5) {
-      genP->SetTriggerParticle(5, 3., -1., 1000);
-    }
-    else {
-      genP->SetTriggerParticle(-5, 3., -1., 1000);
-    }
   }
 
   if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4BodiesWithV0);
@@ -258,11 +245,11 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(Float_t e_cms, EPyth
   // Additional settings from A. Rossi
   genP->SetProjectile("p", 1, 1);
   genP->SetTarget(    "p", 1, 1);
-  genP->SetMomentumRange(0, 999999.);
-  genP->SetThetaRange(0., 180.);
-  genP->SetYRange(-12.,12.);
-  genP->SetPtRange(0,1000.);
-  genP->SetTrackingFlag(0);
+  //genP->SetMomentumRange(0, 999999.);
+  //genP->SetThetaRange(0., 180.);
+  //genP->SetYRange(-12.,12.);
+  //genP->SetPtRange(0,1000.);
+  //genP->SetTrackingFlag(0);
 
   genP->Print();
   return genP;
