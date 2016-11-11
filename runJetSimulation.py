@@ -37,11 +37,11 @@ def main(pythiaEvents, procStr, gen, seed, lhe, name):
             forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
-            proc = ROOT.kPyCharm
+            proc = ROOT.kPyCharmppMNRwmi
             forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kccbar
         elif procStr == "beauty":
-            proc = ROOT.kPyBeauty
+            proc = ROOT.kPyBeautyppMNRwmi
             forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kbbbar
     elif gen == "powheg":

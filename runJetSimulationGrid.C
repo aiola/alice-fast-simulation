@@ -47,12 +47,12 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
-      proc = kPyCharm;
+      proc = kPyCharmppMNRwmi;
       forceDecay = kFALSE;
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
-      proc = kPyBeauty;
+      proc = kPyBeautyppMNRwmi;
       forceDecay = kFALSE;
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
