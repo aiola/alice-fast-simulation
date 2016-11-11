@@ -71,4 +71,7 @@ protected:
   EPythiaTune_t        fTune             ;
   Int_t                fPtHardMin        ;
   Int_t                fPtHardMax        ;
+private:
+  OnTheFlySimulationGenerator(const OnTheFlySimulationGenerator&);//not implemented
+  OnTheFlySimulationGenerator& operator=(const OnTheFlySimulationGenerator&); //not implemented
 };
