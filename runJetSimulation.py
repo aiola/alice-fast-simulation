@@ -10,7 +10,6 @@ def main(pythiaEvents, procStr, gen, seed, lhe, name):
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
     ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
-    ROOT.gInterpreter.AddIncludePath("/opt/alicesw/RooUnfold/src")
 
     #load fastjet libraries 3.x
     ROOT.gSystem.Load("libCGAL")

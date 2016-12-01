@@ -11,7 +11,6 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
   gInterpreter->AddIncludePath("$ALICE_ROOT/include");
   gInterpreter->AddIncludePath("$ALICE_PHYSICS/include");
   gInterpreter->AddIncludePath("$FASTJET/include");
-  gInterpreter->AddIncludePath("/opt/alicesw/RooUnfold/src");
 
   //load fastjet libraries 3.x
   gSystem->Load("libCGAL");

@@ -64,7 +64,7 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 		print("Running POWHEG...")
 		with open("powheg.log", "w") as myfile:
 			subprocess.call([powhegExe], stdout=myfile, stderr=myfile)
-	
+
 		if not os.path.isfile("pwgevents.lhe"):
 			print("Could not find POWHEG output pwgevents.lhe. Something went wrong, aborting...")
 			if os.path.isfile("powheg.log"):
