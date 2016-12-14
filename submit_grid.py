@@ -17,6 +17,7 @@ import yaml
 import time
 import shutil
 import re
+import UserConfiguration
 
 def AlienDelete(fileName):
     if fileName.find("alien://") == -1:
@@ -314,7 +315,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -333,17 +334,17 @@ def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass,
     except subprocess.CalledProcessError:
         print "Alien token not available. Creating a token for you..."
         try:
-            # tokenInit=subprocess.check_output(["alien-token-init", "saiola"], shell=True)
+            # tokenInit=subprocess.check_output(["alien-token-init", UserConf["username"]], shell=True)
             print "Token init disabled"
         except subprocess.CalledProcessError:
             print "Error: could not create the token!"
             exit()
 
-    if "JETRESULTS" in os.environ:
-        LocalPath = os.environ["JETRESULTS"]
-    else:
-        LocalPath = "."
-    AlienPath = "/alice/cern.ch/user/s/saiola"
+    LocalPath = UserConf["local_path"]
+    AlienPath = "/alice/cern.ch/user/{0}/{1}".format(UserConf["username"][0], UserConf["username"])
+
+    print("Local working directory: {0}".format(LocalPath))
+    print("Alien working directory: {0}".format(AlienPath))
 
     if Merge:
         if Merge == "last":
@@ -404,6 +405,10 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('--stage', metavar='TIMESTAMP',
                         default=-1, type=int)
+    parser.add_argument('--user-conf', metavar='USERCONF',
+                        default="userConf.yaml")
     args = parser.parse_args()
 
-    main(args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)
+    userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
+
+    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)

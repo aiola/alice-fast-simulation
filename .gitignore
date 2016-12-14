@@ -16,3 +16,4 @@ galice.root
 outputs_valid
 powheg_*.tar
 sim_*.log
+userConf.yaml
