@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # script to submit fast simulation jobs to the grid
-# submit a processing job using POWHEG charm settings with 100 subjobs, each producing 50k events 
+# submit a processing job using POWHEG charm settings with 100 subjobs, each producing 50k events
 # ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --numevents 50000 --numjobs 100
 # submit a merging job with a maximum of 15 files processed in each subjob (you will need the timestamp number provided after submitting the processing job)
 # ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --merge [TIMESTAMP] --max-files-per-job 15
@@ -49,12 +49,12 @@ def AlienCopy(source, destination, attempts=3, overwrite=False):
             AlienDelete(destination)
         else:
             return True
-        
+
     if destination.find("alien://") == -1:
         dest = "alien://{0}".format(destination)
     else:
         dest = destination
-    
+
     while True:
         subprocessCall(["alien_cp", source, dest])
         i += 1
@@ -64,13 +64,13 @@ def AlienCopy(source, destination, attempts=3, overwrite=False):
         if i >= attempts:
             print("After {0} attempts I could not copy {1} to {2}".format(i, source, dest))
             break
-    
+
     return fileExists
 
 def subprocessCall(cmd):
     print(cmd)
     return  subprocess.call(cmd)
-    
+
 def subprocessCheckCall(cmd):
     print(cmd)
     return subprocess.check_call(cmd)
@@ -85,14 +85,14 @@ def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
         subprocessCall(["alien_mkdir", "-p", "{0}/output".format(AlienDest)])
 
     if not os.path.isdir(LocalDest):
-        print "Creating directory "+LocalDest
+        print "Creating directory " + LocalDest
         os.makedirs(LocalDest)
     for file in Files:
         if not Offline:
-            AlienCopy(file, "alien://{0}/{1}".format(AlienDest,file), 3, GridUpdate)
+            AlienCopy(file, "alien://{0}/{1}".format(AlienDest, file), 3, GridUpdate)
         shutil.copy(file, LocalDest)
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact):
     jdlContent = "# This is the startup script \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
@@ -102,7 +102,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --numevents {Events} --grid\"; \n\
+Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --numevents {Events} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -118,17 +118,17 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc)
+".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
-        start=True
+        start = True
         for file in FilesToCopy:
             if start:
                 jdlContent += "\n"
             else:
                 jdlContent += ", \n"
-            start=False
+            start = False
             jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
         jdlContent += "}; \n"
 
@@ -170,13 +170,13 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
         jdlContent += "Split=\"{split}\"; \n".format(split=SplitMethod)
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
-        start=True
+        start = True
         for file in FilesToCopy:
             if start:
                 jdlContent += "\n"
             else:
                 jdlContent += ", \n"
-            start=False
+            start = False
             jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
         jdlContent += "}; \n"
 
@@ -206,13 +206,13 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
         SplitMethod = "parentdirectory"
     else:
         print("Merging stage determined to be {0}".format(MergingStage))
-        PreviousStagePath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage-1)
+        PreviousStagePath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage - 1)
         SplitMethod = "parentdirectory"
 
     AlienDest = "{0}/{1}/stage_{2}".format(AlienPath, TrainName, MergingStage)
     LocalDest = "{0}/{1}/stage_{2}".format(LocalPath, TrainName, MergingStage)
 
-    ValidationScript="FastSim_validation.sh"
+    ValidationScript = "FastSim_validation.sh"
     ExeFile = "runFastSimMerging.py"
     JdlFile = "FastSim_Merging_{0}_{1}.jdl".format(Gen, Proc)
     XmlFile = "FastSim_Merging_{0}_{1}_stage_{2}.xml".format(Gen, Proc, MergingStage)
@@ -240,21 +240,21 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit):
     print("Submitting merging jobs for train {0}".format(TrainName))
     AlienDest = "{0}/{1}".format(AlienPath, TrainName)
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
 
-    ValidationScript="FastSim_validation.sh"
+    ValidationScript = "FastSim_validation.sh"
     ExeFile = "runFastSim.py"
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
-    #"AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
+    # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
     FilesToCopy = ["OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulationGrid.C",
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
-    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc)
+    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact)
 
     f = open(JdlFile, 'w')
     f.write(JdlContent)
@@ -284,8 +284,8 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
         LocalDest = "{0}/{1}/output".format(LocalPath, TrainName)
     else:
         print("Merging stage determined to be {0}".format(MergingStage))
-        AlienOutputPath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage-1)
-        LocalDest = "{0}/{1}/stage_{2}/output".format(LocalPath, TrainName, MergingStage-1)
+        AlienOutputPath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage - 1)
+        LocalDest = "{0}/{1}/stage_{2}/output".format(LocalPath, TrainName, MergingStage - 1)
 
     if not os.path.isdir(LocalDest):
         os.makedirs(LocalDest)
@@ -305,7 +305,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName = "FastSim_{0}_{1}".format(Gen, Proc)
     AlienPathContent = subprocessCheckOutput(["alien_ls", AlienPath]).splitlines()
     regex = re.compile("{0}.*".format(TrainName))
-    Timestamps = [int(subdir[len(TrainName)+1:]) for subdir in AlienPathContent if re.match(regex, subdir)]
+    Timestamps = [int(subdir[len(TrainName) + 1:]) for subdir in AlienPathContent if re.match(regex, subdir)]
     if len(Timestamps) == 0:
         print("Could not find any train in the alien path {0} provided!".format(AlienPath))
         print("\n".join(AlienPathContent))
@@ -314,44 +314,44 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
-        rootPath=subprocess.check_output(["which", "root"]).rstrip()
-        alirootPath=subprocess.check_output(["which", "aliroot"]).rstrip()
-        alienPath=subprocess.check_output(["which", "alien-token-info"]).rstrip()
+        rootPath = subprocess.check_output(["which", "root"]).rstrip()
+        alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
+        alienPath = subprocess.check_output(["which", "alien-token-info"]).rstrip()
     except subprocess.CalledProcessError:
         print "Environment is not configured correctly!"
         exit()
 
-    print "Root: "+rootPath
-    print "AliRoot: "+alirootPath
-    print "Alien: "+alienPath
+    print "Root: " + rootPath
+    print "AliRoot: " + alirootPath
+    print "Alien: " + alienPath
 
     try:
         print "Token info disabled"
-        #tokenInfo=subprocess.check_output(["alien-token-info"])
+        # tokenInfo=subprocess.check_output(["alien-token-info"])
     except subprocess.CalledProcessError:
         print "Alien token not available. Creating a token for you..."
         try:
-            #tokenInit=subprocess.check_output(["alien-token-init", "saiola"], shell=True)
+            # tokenInit=subprocess.check_output(["alien-token-init", "saiola"], shell=True)
             print "Token init disabled"
         except subprocess.CalledProcessError:
             print "Error: could not create the token!"
             exit()
 
     if "JETRESULTS" in os.environ:
-        LocalPath=os.environ["JETRESULTS"]
+        LocalPath = os.environ["JETRESULTS"]
     else:
-        LocalPath="."
+        LocalPath = "."
     AlienPath = "/alice/cern.ch/user/s/saiola"
-    
+
     if Merge:
         if Merge == "last":
             TrainName = GetLastTrainName(AlienPath, Gen, Proc)
             if not TrainName:
                 exit(1)
         else:
-            TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
+            TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
         SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc)
     elif Download:
         if Download == "last":
@@ -359,13 +359,13 @@ def main(AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPow
             if not TrainName:
                 exit(1)
         else:
-            TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
+            TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
         DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage)
     else:
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
-        TrainName="FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, OldPowhegInit)
+        TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
@@ -377,7 +377,7 @@ if __name__ == '__main__':
                         default=False, const=True,
                         help='Test mode')
     parser.add_argument("--update", action='store_const',
-                        default=False, const = True,
+                        default=False, const=True,
                         help='Update all scripts and macros on the grid.')
     parser.add_argument('--numevents', metavar='NEVT',
                         default=50000, type=int)
@@ -387,8 +387,14 @@ if __name__ == '__main__':
                         default='pythia')
     parser.add_argument('--proc', metavar='PROC',
                         default='charm')
+    parser.add_argument('--qmass', metavar='QMASS',
+                        default=-1)
+    parser.add_argument('--facscfact', metavar='FACSCFACT',
+                        default=1)
+    parser.add_argument('--renscfact', metavar='RENSCFACT',
+                        default=1)
     parser.add_argument("--old-powheg-init", action='store_const',
-                        default=False, const = True,
+                        default=False, const=True,
                         help='Use old POWHEG init files.')
     parser.add_argument('--merge', metavar='TIMESTAMP',
                         default='')
@@ -400,4 +406,4 @@ if __name__ == '__main__':
                         default=-1, type=int)
     args = parser.parse_args()
 
-    main(args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)
+    main(args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)

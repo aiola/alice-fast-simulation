@@ -10,10 +10,14 @@ import argparse
 import random
 import sys
 
-def main(pythiaEvents, proc, gen, LHEfile, grid):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, LHEfile, grid):
 	print("------------------ job starts ---------------------")
 	dateNow = datetime.datetime.now()
 	print(dateNow)
+
+	if qmass < 0:
+		if proc == "charm": qmass = 1.5
+		elif proc == "beauty": qmass = 4.75
 
 	if grid:
 		fname = "{0}_{1}".format(gen, proc)
@@ -22,7 +26,7 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 		fname = "{0}_{1}_{2}".format(gen, proc, unixTS)
 
 	print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
-	
+
 	if gen == "powheg":
 		if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.input") or os.path.isfile("powheg.log"):
 			print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.input, powheg.log")
@@ -38,7 +42,7 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 
 	if runPOWHEG:
 		print("Running new POWHEG simulation!")
-		if proc == "dijet": 
+		if proc == "dijet":
 			powhegExe = "pwhg_main_dijet"
 		elif proc == "charm":
 			powhegExe = "pwhg_main_hvq"
@@ -49,13 +53,16 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 			powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
 
 		powhegEvents = int(pythiaEvents * 1.1)
-		shutil.copy("{0}-powheg.input".format(proc),"powheg.input")
-		rnd = random.randint(0, 1073741824) #2^30
-		
+		shutil.copy("{0}-powheg.input".format(proc), "powheg.input")
+		rnd = random.randint(0, 1073741824)  # 2^30
+
 		with open("powheg.input", "a") as myfile:
 		    myfile.write("iseed {0}\n".format(rnd))
 		    myfile.write("numevts {0}\n".format(powhegEvents))
-		
+		    myfile.write("qmass {0}\n".format(qmass))
+		    myfile.write("facscfact {0}\n".format(facscfact))
+		    myfile.write("renscfact {0}\n".format(renscfact))
+
 		with open("powheg.input", 'r') as fin:
 		    powheg_input = fin.read().splitlines()
 		for line in powheg_input:
@@ -81,37 +88,37 @@ def main(pythiaEvents, proc, gen, LHEfile, grid):
 			LHEfile = "pwgevents.lhe"
 		else:
 			LHEfile = "pwgevents_{0}.lhe".format(fname)
-			os.rename("powheg.input","{0}.input".format(fname))
+			os.rename("powheg.input", "{0}.input".format(fname))
 			print("POWHEG configuration backed up in {0}.input".format(fname))
-			os.rename("pwgevents.lhe",LHEfile)
+			os.rename("pwgevents.lhe", LHEfile)
 			print("POWHEG events backed up in {0}".format(LHEfile))
-			os.rename("powheg.log","{0}.log".format(fname))
+			os.rename("powheg.log", "{0}.log".format(fname))
 			print("POWHEG log backed up in {0}.log".format(fname))
-			#cleaning the working directory and archiving POWHEG files
+			# cleaning the working directory and archiving POWHEG files
 			subprocess.call(["./clean_powheg.sh", "{0}.tar".format(fname)])
 
-	rnd = random.randint(0, 1073741824) #2^30
+	rnd = random.randint(0, 1073741824)  # 2^30
 	print("Setting PYTHIA seed to {0}".format(rnd))
-	
+
 	print("Running PYTHIA simulation...")
 	with open("sim.log", "w") as myfile:
 		if grid:
-			subprocess.call(["aliroot",  "-b", "-l", "-q", "runJetSimulationGrid.C({0}, \"{1}\", \"{2}\", {3}, \"{4}\", \"{5}\")".format(pythiaEvents, proc, gen, rnd, LHEfile, fname)], stdout=myfile, stderr=myfile)
+			subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulationGrid.C({0}, \"{1}\", \"{2}\", {3}, \"{4}\", \"{5}\")".format(pythiaEvents, proc, gen, rnd, LHEfile, fname)], stdout=myfile, stderr=myfile)
 		else:
-			subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--name", fname], stdout=myfile, stderr=myfile) 
+			subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--name", fname], stdout=myfile, stderr=myfile)
 
 	if not grid:
-		os.rename("sim.log","sim_{0}.log".format(fname))
+		os.rename("sim.log", "sim_{0}.log".format(fname))
 		print("Simulation log backed up in {0}.log".format(fname))
 
 	print("Done")
 	print("...see results in the log files")
-	
+
 	subprocess.call(["ls", "-l"])
-	
+
 	print("############### SCRATCH SIZE ####################")
 	subprocess.call(["du", "-sh"])
-	
+
 	print("------------------ job ends ----------------------")
 	dateNow = datetime.datetime.now()
 	print(dateNow)
@@ -126,9 +133,15 @@ if __name__ == '__main__':
 						default='')
     parser.add_argument('--proc', metavar='PROC',
                         default='charm')
+    parser.add_argument('--qmass', metavar='QMASS',
+						default=-1)
+    parser.add_argument('--facscfact', metavar='FACSCFACT',
+						default=1)
+    parser.add_argument('--renscfact', metavar='RENSCFACT',
+						default=1)
     parser.add_argument("--grid", action='store_const',
-						default=False, const = True,
+						default=False, const=True,
 						help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.proc, args.gen, args.lhe, args.grid)
+    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhe, args.grid)
