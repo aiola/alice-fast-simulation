@@ -25,6 +25,7 @@ For POWHEG, it is possible to set the following parameters:
 - qmass (mass of the quark)
 - facscfact (factorization scale factor)
 - renscfact (renormalization scale factor)
+- lhans (LHA PDF number, see https://lhapdf.hepforge.org/pdfsets.html)
 For example to change the mass of the quark:
 
 ./submit_grid.py --aliphysics vAN-20161213-1 --gen powheg --proc charm --numevents 50000 --numjobs 500 --qmass 1.7
