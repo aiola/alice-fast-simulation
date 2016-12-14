@@ -93,7 +93,7 @@ def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
             AlienCopy(file, "alien://{0}/{1}".format(AlienDest, file), 3, GridUpdate)
         shutil.copy(file, LocalDest)
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS):
     jdlContent = "# This is the startup script \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
@@ -103,7 +103,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --numevents {Events} --grid\"; \n\
+Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --numevents {Events} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -119,7 +119,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact)
+".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -241,7 +241,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, OldPowhegInit):
     print("Submitting merging jobs for train {0}".format(TrainName))
     AlienDest = "{0}/{1}".format(AlienPath, TrainName)
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
@@ -255,7 +255,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
-    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact)
+    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS)
 
     f = open(JdlFile, 'w')
     f.write(JdlContent)
@@ -315,7 +315,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -366,7 +366,7 @@ def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Pr
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
@@ -394,6 +394,8 @@ if __name__ == '__main__':
                         default=1)
     parser.add_argument('--renscfact', metavar='RENSCFACT',
                         default=1)
+    parser.add_argument('--lhans', metavar='RENSCFACT',
+                        default=11000)
     parser.add_argument("--old-powheg-init", action='store_const',
                         default=False, const=True,
                         help='Use old POWHEG init files.')
@@ -411,4 +413,4 @@ if __name__ == '__main__':
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)
+    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)
