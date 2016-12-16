@@ -15,6 +15,18 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, LHEfile, g
     dateNow = datetime.datetime.now()
     print(dateNow)
 
+    try:
+        rootPath = subprocess.check_output(["which", "root"]).rstrip()
+        alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
+        alienPath = subprocess.check_output(["which", "alien-token-info"]).rstrip()
+    except subprocess.CalledProcessError:
+        print "Environment is not configured correctly!"
+        exit()
+
+    print "Root: " + rootPath
+    print "AliRoot: " + alirootPath
+    print "Alien: " + alienPath
+
     if qmass < 0:
         if proc == "charm": qmass = 1.5
         elif proc == "beauty": qmass = 4.75
