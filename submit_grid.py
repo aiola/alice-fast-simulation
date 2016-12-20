@@ -19,6 +19,12 @@ import shutil
 import re
 import UserConfiguration
 
+# goodSites = ["ALICE::LUNARC::SLURM", "ALICE::ORNL::LCG", "ALICE::SNIC::SLURM", "ALICE::Torino::Torino-CREAM",
+#             "ALICE::Bari::CREAM", "ALICE::GRIF_IRFU::LCG", "ALICE::NIHAM::PBS64", "ALICE::RRC_KI_T1::LCG",
+#             "ALICE::Catania::Catania_VF", "ALICE::RRC_KI_T1::LCG"]
+goodSites = []
+badSites = ["ALICE::UiB::ARC"]
+
 def AlienDelete(fileName):
     if fileName.find("alien://") == -1:
         fname = fileName
@@ -26,6 +32,14 @@ def AlienDelete(fileName):
         fname = fileName[8:]
 
     subprocessCall(["alien_rm", fname])
+
+def AlienDeleteDir(fileName):
+    if fileName.find("alien://") == -1:
+        fname = fileName
+    else:
+        fname = fileName[8:]
+
+    subprocessCall(["alien_rmdir", fname])
 
 def AlienFileExists(fileName):
     if fileName.find("alien://") == -1:
@@ -70,7 +84,7 @@ def AlienCopy(source, destination, attempts=3, overwrite=False):
 
 def subprocessCall(cmd):
     print(cmd)
-    return  subprocess.call(cmd)
+    return subprocess.call(cmd)
 
 def subprocessCheckCall(cmd):
     print(cmd)
@@ -133,6 +147,8 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
             jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
         jdlContent += "}; \n"
 
+    requirements = GenerateSiteRequirements()
+    jdlContent += requirements
     return jdlContent
 
 def GenerateXMLCollection(Path, XmlName):
@@ -181,7 +197,30 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
             jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
         jdlContent += "}; \n"
 
+    requirements = GenerateSiteRequirements()
+    jdlContent += requirements
     return jdlContent
+
+def GenerateSiteRequirements():
+    PosRequirements = ""
+    NegRequirements = ""
+    if len(goodSites) > 0:
+        for site in goodSites:
+            PosRequirements += "(other.CE == \"{0}\") ||".format(site)
+        PosRequirements = PosRequirements[:-3]
+    if len(badSites) > 0:
+        for site in badSites:
+            NegRequirements += "(other.CE != \"{0}\") &&".format(site)
+        NegRequirements = NegRequirements[:-3]
+    if PosRequirements and not NegRequirements:
+        requirements = "Requirements = ({0});\n".format(PosRequirements)
+    elif NegRequirements and not PosRequirements:
+        requirements = "Requirements = ({0});\n".format(NegRequirements)
+    elif NegRequirements and PosRequirements:
+        requirements = "Requirements = ({0} && {1});\n".format(PosRequirements, NegRequirements)
+    else:
+        requirements = ""
+    return requirements
 
 def DetermineMergingStage(AlienPath, TrainName):
     AlienOutput = "{0}/{1}".format(AlienPath, TrainName)
@@ -195,8 +234,9 @@ def DetermineMergingStage(AlienPath, TrainName):
     MergingStage = len(MergingStages)
     return MergingStage
 
-def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc):
-    MergingStage = DetermineMergingStage(AlienPath, TrainName)
+def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc, MergingStage):
+    if MergingStage < 0:
+        MergingStage = DetermineMergingStage(AlienPath, TrainName)
 
     if MergingStage < 0:
         print("Could not find any results from train {0}! Aborting...".format(TrainName))
@@ -211,6 +251,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
         SplitMethod = "parentdirectory"
 
     AlienDest = "{0}/{1}/stage_{2}".format(AlienPath, TrainName, MergingStage)
+    if AlienFileExists(AlienDest): AlienDeleteDir(AlienDest)
     LocalDest = "{0}/{1}/stage_{2}".format(LocalPath, TrainName, MergingStage)
 
     ValidationScript = "FastSim_validation.sh"
@@ -298,9 +339,22 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
             os.makedirs(SubDirDest)
         FilesToDownload = subprocessCheckOutput(["alien_ls", "{0}/AnalysisResults*.root".format(SubDirOrig)]).splitlines()
         for FileName in FilesToDownload:
+            FileDest = "{0}/{1}".format(SubDirDest, FileName)
+            if os.path.isfile(FileDest):
+                print("File {0} already exists, skipping...".format(FileDest))
+                continue
             FileOrig = "{0}/{1}".format(SubDirOrig, FileName)
-            print("Downloading from {0} to {1}".format(FileOrig, SubDirDest))
-            subprocessCall(["alien_cp", "alien://{0}".format(FileOrig), SubDirDest])
+            FileDestTemp = "{0}/temp_{1}".format(SubDirDest, FileName)
+            if os.path.isfile(FileDestTemp):
+                os.remove(FileDestTemp)
+            print("Downloading from {0} to {1}".format(FileOrig, FileDestTemp))
+            subprocessCall(["alien_cp", "alien://{0}".format(FileOrig), FileDestTemp])
+            if os.path.getsize(FileDestTemp) > 0:
+                print("Renaming {0} to {1}".format(FileDestTemp, FileDest))
+                os.rename(FileDestTemp, FileDest)
+            else:
+                print("ERROR ***** Downloading of {0} failed!".format(FileOrig))
+                os.remove(FileDestTemp)
 
 def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName = "FastSim_{0}_{1}".format(Gen, Proc)
@@ -353,7 +407,7 @@ def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Pr
                 exit(1)
         else:
             TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
-        SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc)
+        SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, MaxFilesPerJob, Gen, Proc, MergingStage)
     elif Download:
         if Download == "last":
             TrainName = GetLastTrainName(AlienPath, Gen, Proc)
