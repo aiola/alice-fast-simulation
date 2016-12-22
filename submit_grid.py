@@ -22,8 +22,10 @@ import UserConfiguration
 # goodSites = ["ALICE::LUNARC::SLURM", "ALICE::ORNL::LCG", "ALICE::SNIC::SLURM", "ALICE::Torino::Torino-CREAM",
 #             "ALICE::Bari::CREAM", "ALICE::GRIF_IRFU::LCG", "ALICE::NIHAM::PBS64", "ALICE::RRC_KI_T1::LCG",
 #             "ALICE::Catania::Catania_VF", "ALICE::RRC_KI_T1::LCG"]
+# badSites = ["ALICE::UiB::ARC"]
+
 goodSites = []
-badSites = ["ALICE::UiB::ARC"]
+badSites = []
 
 def AlienDelete(fileName):
     if fileName.find("alien://") == -1:
@@ -107,7 +109,7 @@ def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
             AlienCopy(file, "alien://{0}/{1}".format(AlienDest, file), 3, GridUpdate)
         shutil.copy(file, LocalDest)
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2):
     jdlContent = "# This is the startup script \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
@@ -117,7 +119,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --numevents {Events} --grid\"; \n\
+Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --numevents {Events} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -133,7 +135,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS)
+".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -282,7 +284,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, OldPowhegInit):
     print("Submitting merging jobs for train {0}".format(TrainName))
     AlienDest = "{0}/{1}".format(AlienPath, TrainName)
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
@@ -296,7 +298,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
-    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS)
+    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2)
 
     f = open(JdlFile, 'w')
     f.write(JdlContent)
@@ -369,7 +371,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, OldPowhegInit, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -420,7 +422,7 @@ def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Pr
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
@@ -450,6 +452,12 @@ if __name__ == '__main__':
                         default=1)
     parser.add_argument('--lhans', metavar='RENSCFACT',
                         default=11000)
+    parser.add_argument('--beam-type', metavar='BEAMTYPE',
+                        default="pp")
+    parser.add_argument('--ebeam1', metavar='ENERGY1',
+                        default=3500)
+    parser.add_argument('--ebeam2', metavar='ENERGY2',
+                        default=3500)
     parser.add_argument("--old-powheg-init", action='store_const',
                         default=False, const=True,
                         help='Use old POWHEG init files.')
@@ -467,4 +475,4 @@ if __name__ == '__main__':
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)
+    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.beam_type, args.ebeam1, args.ebeam2, args.old_powheg_init, args.merge, args.download, args.stage, args.max_files_per_job)

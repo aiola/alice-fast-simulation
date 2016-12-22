@@ -10,7 +10,7 @@ import argparse
 import random
 import sys
 
-def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, LHEfile, grid):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, LHEfile, grid):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -76,6 +76,8 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, LHEfile, g
             myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("lhans1 {0}\n".format(lhans))
             myfile.write("lhans2 {0}\n".format(lhans))
+            myfile.write("ebeam1 {0}\n".format(ebeam1))
+            myfile.write("ebeam2 {0}\n".format(ebeam2))
 
         with open("powheg.input", 'r') as fin:
             powheg_input = fin.read().splitlines()
@@ -117,9 +119,9 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, LHEfile, g
     print("Running PYTHIA simulation...")
     with open("sim.log", "w") as myfile:
         if grid:
-            subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulationGrid.C({0}, \"{1}\", \"{2}\", {3}, \"{4}\", \"{5}\")".format(pythiaEvents, proc, gen, rnd, LHEfile, fname)], stdout=myfile, stderr=myfile)
+            subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulationGrid.C({0}, \"{1}\", \"{2}\", {3}, \"{4}\", \"{5}\", {6}, {7}, \"{8}\")".format(pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, fname)], stdout=myfile, stderr=myfile)
         else:
-            subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--name", fname], stdout=myfile, stderr=myfile)
+            subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--beam-type", beamType, "--ebeam1", ebeam1, "--ebeam2", ebeam2, "--name", fname], stdout=myfile, stderr=myfile)
 
     if not grid:
         os.rename("sim.log", "sim_{0}.log".format(fname))
@@ -155,9 +157,15 @@ if __name__ == '__main__':
                         default=1)
     parser.add_argument('--lhans', metavar='LHANS',
                         default=11000)
+    parser.add_argument('--beam-type', metavar='BEAMTYPE',
+                        default="pp")
+    parser.add_argument('--ebeam1', metavar='EBEAM1',
+                        default=3500)
+    parser.add_argument('--ebeam2', metavar='EBEAM2',
+                        default=3500)
     parser.add_argument("--grid", action='store_const',
                         default=False, const=True,
                         help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.lhe, args.grid)
+    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.lhe, args.grid)

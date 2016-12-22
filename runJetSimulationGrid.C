@@ -3,7 +3,7 @@
 #include <TSystem.h>
 #include <TInterpreter.h>
 
-void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString name)
+void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString beamType, Double_t ebeam1, Double_t ebeam2, TString name)
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
   gSystem->SetFPEMask(TSystem::kNoneMask);
@@ -85,5 +85,17 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
   sim->SetForceHadronicDecay(forceDecay);
   sim->SetSeed(seed);
   sim->SetLHEFile(lhe);
+  sim->SetEnergyBeam1(ebeam1);
+  sim->SetEnergyBeam2(ebeam2);
+  if (beamType == "pPb") {
+    sim->EnableDJet_pPb();
+  }
+  else if (beamType == "pp") {
+    sim->EnableDJet_pp();
+  }
+  else {
+    Printf("ERROR: Beam type %s not recognized!! Not running...", beamType.Data());
+    return;
+  }
   sim->Start();
 }

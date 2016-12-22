@@ -8,6 +8,7 @@
 #include <TArrayI.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 
 // AliRoot classes
 #include <AliGenPythia.h>
@@ -38,10 +39,16 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fForceHadDecay(kFALSE),
   fSeed(0.),
   fLHEFile(),
-  fCMSEnergy(7),
+  fCMSEnergy(-1),
   fTune(kPerugia2011),
   fPtHardMin(0),
-  fPtHardMax(1)
+  fPtHardMax(1),
+  fJetQA(kFALSE),
+  fDJet_pp(kFALSE),
+  fDJet_pPb(kFALSE),
+  fJetTree(kFALSE),
+  fEnergyBeam1(3500),
+  fEnergyBeam2(3500)
 {
 }
 
@@ -55,10 +62,16 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fForceHadDecay(kFALSE),
   fSeed(0.),
   fLHEFile(),
-  fCMSEnergy(7),
+  fCMSEnergy(-1),
   fTune(kPerugia2011),
   fPtHardMin(0),
-  fPtHardMax(1)
+  fPtHardMax(1),
+  fJetQA(kFALSE),
+  fDJet_pp(kFALSE),
+  fDJet_pPb(kFALSE),
+  fJetTree(kFALSE),
+  fEnergyBeam1(3500),
+  fEnergyBeam2(3500)
 {
 }
 
@@ -72,10 +85,16 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fForceHadDecay(forceHadDecay),
   fSeed(seed),
   fLHEFile(lhe),
-  fCMSEnergy(7),
+  fCMSEnergy(-1),
   fTune(kPerugia2011),
   fPtHardMin(0),
-  fPtHardMax(1)
+  fPtHardMax(1),
+  fJetQA(kFALSE),
+  fDJet_pp(kFALSE),
+  fDJet_pPb(kFALSE),
+  fJetTree(kFALSE),
+  fEnergyBeam1(3500),
+  fEnergyBeam2(3500)
 {
 }
 
@@ -113,7 +132,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   */
 
   // Generator and generator handler
-  AliGenPythia* gen = CreatePythia6Gen(fCMSEnergy, fTune, fProcess, fSpecialParticle, fPtHardMin, fPtHardMax, fForceHadDecay);
+  AliGenPythia* gen = CreatePythia6Gen(GetCMSEnergy(), fTune, fProcess, fSpecialParticle, fPtHardMin, fPtHardMax, fForceHadDecay);
   if (!fLHEFile.IsNull()) gen->SetReadLHEF(fLHEFile);
 
   AliMCGenHandler* mcInputHandler = new AliMCGenHandler();
@@ -124,71 +143,10 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
 
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
 
-  UInt_t rejectOrigin = 0;
-  if (fProcess ==  kPyCharmPWHG || fProcess ==  kPyCharm) {
-    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
-  }
-  else if (fProcess ==  kPyBeautyPWHG || fProcess ==  kPyBeauty) {
-    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kAnyOrigin & ~AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
-  }
-
-  rejectOrigin |= AliAnalysisTaskDmesonJets::EMesonOrigin_t::kUnknownQuark;
-
-  AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
-  pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
-  pJetQA->SetMC(kTRUE);
-  pJetQA->SetParticleLevel(kTRUE);
-  pJetQA->SetIsPythia(kTRUE);
-  pJetQA->SetVzRange(-999,999);
-
-  if (fProcess == kPyCharmPWHG || fProcess == kPyBeautyPWHG || fProcess == kPyCharm || fProcess == kPyBeauty) {
-    AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
-    pDMesonJetsTask->SetVzRange(-999,999);
-    pDMesonJetsTask->SetIsPythia(kTRUE);
-    pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
-    pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
-    pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
-    pDMesonJetsTask->SetApplyKinematicCuts(kFALSE);
-    AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
-    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
-    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-    eng->SetRejectedOriginMap(rejectOrigin);
-    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
-    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-    eng->SetRejectedOriginMap(rejectOrigin);
-    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
-    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-    eng->SetRejectedOriginMap(rejectOrigin);
-    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
-    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-    eng->SetRejectedOriginMap(rejectOrigin);
-    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
-    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-    eng->SetRejectedOriginMap(rejectOrigin);
-    eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
-    eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
-    eng->SetRejectedOriginMap(rejectOrigin);
-  }
-
-  AliEmcalJetTask* pJetTaskCh04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
-  pJetTaskCh04->SetVzRange(-999,999);
-  pJetTaskCh04->SetNeedEmcalGeom(kFALSE);
-  AliEmcalJetTask* pJetTaskCh06 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.6, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
-  pJetTaskCh06->SetVzRange(-999,999);
-  pJetTaskCh06->SetNeedEmcalGeom(kFALSE);
-  AliEmcalJetTask* pJetTaskFu04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kFullJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
-  pJetTaskFu04->SetVzRange(-999,999);
-  pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
-
-  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
-  pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
-  pJetSpectraTask->SetVzRange(-999,999);
-  pJetSpectraTask->SetIsPythia(kTRUE);
-  pJetSpectraTask->SetNeedEmcalGeom(kFALSE);
-  pJetSpectraTask->GetParticleContainer("mcparticles")->SetMinPt(0.);
-  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
-  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid);
-  pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+  if (fJetQA) AddJetQA();
+  if (fDJet_pp) AddDJet_pp();
+  if (fDJet_pPb) AddDJet_pPb();
+  if (fJetTree) AddJetTree();
 }
 
 //________________________________________________________________________
@@ -217,8 +175,99 @@ void OnTheFlySimulationGenerator::Start()
 }
 
 //________________________________________________________________________
+void OnTheFlySimulationGenerator::AddJetQA()
+{
+  AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
+  pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pJetQA->SetMC(kTRUE);
+  pJetQA->SetParticleLevel(kTRUE);
+  pJetQA->SetIsPythia(kTRUE);
+  pJetQA->SetVzRange(-999,999);
+}
+
+//________________________________________________________________________
+void OnTheFlySimulationGenerator::AddDJet_pp()
+{
+  UInt_t rejectOrigin = 0;
+  if (fProcess ==  kPyCharmPWHG || fProcess ==  kPyCharm) {
+    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
+  }
+  else if (fProcess ==  kPyBeautyPWHG || fProcess ==  kPyBeauty) {
+    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kAnyOrigin & ~AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
+  }
+
+  rejectOrigin |= AliAnalysisTaskDmesonJets::EMesonOrigin_t::kUnknownQuark;
+
+  AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
+  pDMesonJetsTask->SetVzRange(-999,999);
+  pDMesonJetsTask->SetIsPythia(kTRUE);
+  pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
+  pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
+  pDMesonJetsTask->SetApplyKinematicCuts(kFALSE);
+  AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  eng->SetRejectedOriginMap(rejectOrigin);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  eng->SetRejectedOriginMap(rejectOrigin);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  eng->SetRejectedOriginMap(rejectOrigin);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  eng->SetRejectedOriginMap(rejectOrigin);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  eng->SetRejectedOriginMap(rejectOrigin);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+  eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
+  eng->SetRejectedOriginMap(rejectOrigin);
+
+}
+
+//________________________________________________________________________
+void OnTheFlySimulationGenerator::AddDJet_pPb()
+{
+
+}
+
+//________________________________________________________________________
+void OnTheFlySimulationGenerator::AddJetTree()
+{
+  AliEmcalJetTask* pJetTaskCh04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  pJetTaskCh04->SetVzRange(-999,999);
+  pJetTaskCh04->SetNeedEmcalGeom(kFALSE);
+  AliEmcalJetTask* pJetTaskCh06 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.6, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  pJetTaskCh06->SetVzRange(-999,999);
+  pJetTaskCh06->SetNeedEmcalGeom(kFALSE);
+  AliEmcalJetTask* pJetTaskFu04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kFullJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
+  pJetTaskFu04->SetVzRange(-999,999);
+  pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
+
+  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
+  pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pJetSpectraTask->SetVzRange(-999,999);
+  pJetSpectraTask->SetIsPythia(kTRUE);
+  pJetSpectraTask->SetNeedEmcalGeom(kFALSE);
+  pJetSpectraTask->GetParticleContainer("mcparticles")->SetMinPt(0.);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+}
+
+//________________________________________________________________________
+void OnTheFlySimulationGenerator::CalculateCMSEnergy()
+{
+  fCMSEnergy = 2*TMath::Sqrt(fEnergyBeam1*fEnergyBeam2) / 1000; // In GeV
+}
+
+//________________________________________________________________________
 AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay)
 {
+  Printf("PYTHIA generator with CMS energy = %.3f TeV", e_cms);
+
   AliGenPythia* genP = new AliGenPythia(-1);
   genP->SetTune(tune);
 

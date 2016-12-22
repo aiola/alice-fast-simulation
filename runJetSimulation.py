@@ -3,15 +3,15 @@
 import ROOT
 import argparse
 
-def main(pythiaEvents, procStr, gen, seed, lhe, name):
-    #ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
+def main(pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, name):
+    # ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
     ROOT.gSystem.SetFPEMask(ROOT.TSystem.kNoneMask)
 
     ROOT.gInterpreter.AddIncludePath("$ALICE_ROOT/include")
     ROOT.gInterpreter.AddIncludePath("$ALICE_PHYSICS/include")
     ROOT.gInterpreter.AddIncludePath("$FASTJET/include")
 
-    #load fastjet libraries 3.x
+    # load fastjet libraries 3.x
     ROOT.gSystem.Load("libCGAL")
     ROOT.gSystem.Load("libfastjet")
     ROOT.gSystem.Load("libsiscone")
@@ -67,6 +67,15 @@ def main(pythiaEvents, procStr, gen, seed, lhe, name):
     sim.SetForceHadronicDecay(forceDecay)
     sim.SetSeed(seed)
     sim.SetLHEFile(lhe)
+    sim.SetEnergyBeam1(float(ebeam1))
+    sim.SetEnergyBeam2(float(ebeam2))
+    if beamType == "pPb":
+        sim.EnableDJet_pPb()
+    elif beamType == "pp":
+        sim.EnableDJet_pp()
+    else:
+        print("ERROR: Beam type {0} not recognized!! Not running...".format(beamType))
+        exit(1)
     sim.Start()
 
 if __name__ == '__main__':
@@ -81,8 +90,14 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('--seed', metavar='SEED',
                         default=0, type=int)
+    parser.add_argument('--beam-type', metavar='BEAMTYPE',
+                        default="pp")
+    parser.add_argument('--ebeam1', metavar='EBEAM1',
+                        default=3500)
+    parser.add_argument('--ebeam2', metavar='EBEAM2',
+                        default=3500)
     parser.add_argument('--name', metavar='NAME',
                         default='')
     args = parser.parse_args()
 
-    main(args.numevents, args.proc, args.gen, args.seed, args.lhe, args.name)
+    main(args.numevents, args.proc, args.gen, args.seed, args.lhe, args.beam_type, args.ebeam1, args.ebeam2, args.name)

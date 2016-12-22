@@ -37,9 +37,14 @@ public:
   void SetForceHadronicDecay(Bool_t forceHadDecay)        { fForceHadDecay   = forceHadDecay ; }
   void SetSeed(Int_t seed)                                { fSeed            = seed          ; }
   void SetLHEFile(TString lhe)                            { fLHEFile         = lhe           ; }
-  void SetCMSEnergy(Float_t e_cms)                        { fCMSEnergy       = e_cms         ; }
+  void SetEnergyBeam1(Float_t e)                          { fEnergyBeam1     = e             ; }
+  void SetEnergyBeam2(Float_t e)                          { fEnergyBeam2     = e             ; }
   void SetPythiaTune(EPythiaTune_t tune)                  { fTune            = tune          ; }
   void SetPtHardRange(Int_t ptHardMin, Int_t ptHardMax)   { fPtHardMin       = ptHardMin     ; fPtHardMax       = ptHardMax; }
+  void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
+  void EnableDJet_pp(Bool_t b = kTRUE)                    { fDJet_pp         = b             ; }
+  void EnableDJet_pPb(Bool_t b = kTRUE)                   { fDJet_pPb        = b             ; }
+  void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
 
   static AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay);
 
@@ -53,12 +58,22 @@ public:
   Bool_t             GetForceHadronicDecay() const { return fForceHadDecay  ; }
   Int_t              GetSeed()               const { return fSeed           ; }
   const TString&     GetLHEFile()            const { return fLHEFile        ; }
-  Float_t            GetCMSEnergy()          const { return fCMSEnergy      ; }
+  Float_t            GetCMSEnergy()                { if (fCMSEnergy < 0) CalculateCMSEnergy(); return fCMSEnergy; }
+  Float_t            GetEnergyBeam1()        const { return fEnergyBeam1    ; }
+  Float_t            GetEnergyBeam2()        const { return fEnergyBeam2    ; }
   EPythiaTune_t      GetPythiaTune()         const { return fTune           ; }
   Int_t              GetPtHardMin()          const { return fPtHardMin      ; }
   Int_t              GetPtHardMax()          const { return fPtHardMax      ; }
 
+
 protected:
+  void               AddJetQA();
+  void               AddJetTree();
+  void               AddDJet_pp();
+  void               AddDJet_pPb();
+
+  void               CalculateCMSEnergy();
+
   TString              fName             ;
   AliAnalysisManager*  fAnalysisManager  ;
   Int_t                fEvents           ;
@@ -67,10 +82,17 @@ protected:
   Bool_t               fForceHadDecay    ;
   Int_t                fSeed             ;
   TString              fLHEFile          ;
-  Float_t              fCMSEnergy        ;
+  Float_t              fCMSEnergy        ; // in TeV
   EPythiaTune_t        fTune             ;
   Int_t                fPtHardMin        ;
   Int_t                fPtHardMax        ;
+  Bool_t               fJetQA            ;
+  Bool_t               fDJet_pp          ;
+  Bool_t               fDJet_pPb         ;
+  Bool_t               fJetTree          ;
+  Float_t              fEnergyBeam1      ; // in GeV
+  Float_t              fEnergyBeam2      ; // in GeV
+
 private:
   OnTheFlySimulationGenerator(const OnTheFlySimulationGenerator&);//not implemented
   OnTheFlySimulationGenerator& operator=(const OnTheFlySimulationGenerator&); //not implemented
