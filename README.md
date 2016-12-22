@@ -10,10 +10,10 @@ cd alice-yale-hfjet/fastSimulation
 ## Submit simulations to the grid
 
 ~~~~
-./submit_grid.py --aliphysics vAN-20161213-1 --gen powheg --proc charm --numevents 50000 --numjobs 500
+./submit_grid.py --aliphysics vAN-20161213-1 --gen powheg --proc charm --numevents 50000 --numjobs 500 --ttl 7200
 ~~~~
 
-The above command will submit 500 grid jobs, each simulating 50000 events (total: 25 M events).
+The above command will submit 500 grid jobs, each simulating 50000 events (total: 25 M events), with a TTL (Time-To-Live) of 7200 seconds.
 The script automatically assign different seeds to each job, so that the simulated statistics is uncorrelated.
 
 The possible choices for the generator are:
@@ -29,7 +29,13 @@ The possible choices for process are:
 - beauty
 - dijet
 
+The following additional parameters are available for both POWHEG and PYTHIA:
+
+- `--beam-type [pp | pPb]`: set the beam type either `pp` or `pPb`; the beam type determines whether the the method `OnTheFlySimulationGenerator::AddDJet_pp()` or `OnTheFlySimulationGenerator::AddDJet_pPb()` will be used (default is `pp`);
+- `--ebeam1 X` and `--ebeam2 Y`: set the energy of the two beams; note that this functionality is not well tested for asymmetric collisions (it seems that POWHEG gets stuck for asymmetric collisions), so for the moment it is recommended to use symmetric only.
+
 For POWHEG, it is possible to set the following parameters:
+
 - qmass (mass of the quark)
 
 - facscfact (factorization scale factor)
