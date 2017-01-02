@@ -150,19 +150,19 @@ if __name__ == '__main__':
     parser.add_argument('--proc', metavar='PROC',
                         default='charm')
     parser.add_argument('--qmass', metavar='QMASS',
-                        default=-1)
+                        default=-1.0, type=float)
     parser.add_argument('--facscfact', metavar='FACSCFACT',
-                        default=1)
+                        default=1.0, type=float)
     parser.add_argument('--renscfact', metavar='RENSCFACT',
-                        default=1)
+                        default=1.0 , type=float)
     parser.add_argument('--lhans', metavar='LHANS',
-                        default=11000)
+                        default=11000, type=int)
     parser.add_argument('--beam-type', metavar='BEAMTYPE',
                         default="pp")
     parser.add_argument('--ebeam1', metavar='EBEAM1',
-                        default=3500)
+                        default=3500, type=int)
     parser.add_argument('--ebeam2', metavar='EBEAM2',
-                        default=3500)
+                        default=3500, type=int)
     parser.add_argument("--grid", action='store_const',
                         default=False, const=True,
                         help='Grid analysis.')
