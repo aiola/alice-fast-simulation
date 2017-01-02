@@ -109,8 +109,18 @@ def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
             AlienCopy(file, "alien://{0}/{1}".format(AlienDest, file), 3, GridUpdate)
         shutil.copy(file, LocalDest)
 
+def GenerateComments():
+    branch = subprocessCheckOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    hash = subprocessCheckOutput(["git", "rev-parse", "HEAD"])
+    comments = "# This is the startup script \n\
+# alice-yale-hfjet \n\
+# Generated using branch {branch} ({hash}) \n\
+".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
+    return comments
+
 def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2):
-    jdlContent = "# This is the startup script \n\
+    comments = GenerateComments()
+    jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
 TTL = \"{TTL}\"; \n\
@@ -135,7 +145,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, TTL=TTL)
+".format(comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, TTL=TTL)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -157,7 +167,7 @@ def GenerateXMLCollection(Path, XmlName):
     return subprocessCheckOutput(["alien_find", "-x", XmlName, Path, "*/AnalysisResults*.root"])
 
 def GenerateMergingJDL(Exe, Xml, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod):
-    jdlContent = "# This is the startup script \n\
+    jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
 TTL = \"{TTL}\"; \n\
@@ -184,7 +194,7 @@ InputDataList = \"wn.xml\"; \n\
 SplitMaxInputFileNumber=\"{maxFiles}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(executable=Exe, xml=Xml, dest=AlienDest, trainName=TrainName, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, maxFiles=MaxFilesPerJob, TTL=TTL)
+".format(comments=comments, executable=Exe, xml=Xml, dest=AlienDest, trainName=TrainName, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, maxFiles=MaxFilesPerJob, TTL=TTL)
     if SplitMethod:
         jdlContent += "Split=\"{split}\"; \n".format(split=SplitMethod)
     if len(FilesToCopy) > 0:
