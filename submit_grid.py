@@ -167,6 +167,7 @@ def GenerateXMLCollection(Path, XmlName):
     return subprocessCheckOutput(["alien_find", "-x", XmlName, Path, "*/AnalysisResults*.root"])
 
 def GenerateMergingJDL(Exe, Xml, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod):
+    comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
 # Time after which the job is killed (120 min.) \n\
