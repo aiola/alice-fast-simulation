@@ -10,7 +10,7 @@ import argparse
 import random
 import sys
 
-def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, LHEfile, grid):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, LHEfile, nPDFset, nPDFerrSet, grid):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -78,6 +78,11 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
             myfile.write("lhans2 {0}\n".format(lhans))
             myfile.write("ebeam1 {0}\n".format(ebeam1))
             myfile.write("ebeam2 {0}\n".format(ebeam2))
+            if beamType == "pPb":
+                myfile.write("nPDFset {0}        ! (0:EKS98, 1:EPS08, 2:EPS09LO, 3:EPS09NLO)\n".format(nPDFset))
+                myfile.write("nPDFerrSet {0}     ! (1:central, 2:+1, 3:-1..., 30:+15, 31:-15)\n".format(nPDFerrSet))
+                myfile.write("AA1 1              ! (Atomic number of hadron 1)\n")
+                myfile.write("AA2 208            ! (Atomic number of hadron 2)\n")
 
         with open("powheg.input", 'r') as fin:
             powheg_input = fin.read().splitlines()
@@ -163,9 +168,13 @@ if __name__ == '__main__':
                         default=3500, type=int)
     parser.add_argument('--ebeam2', metavar='EBEAM2',
                         default=3500, type=int)
+    parser.add_argument('--nPDFset', metavar='3',
+                        default=3, type=int)
+    parser.add_argument('--nPDFerrSet', metavar='1',
+                        default=1, type=int)
     parser.add_argument("--grid", action='store_const',
                         default=False, const=True,
                         help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.lhe, args.grid)
+    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.lhe, args.nPDFset, args.nPDFerrSet, args.grid)

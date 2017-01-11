@@ -230,7 +230,9 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
 //________________________________________________________________________
 void OnTheFlySimulationGenerator::AddDJet_pPb()
 {
-
+  // Implement user task for pPb analysis here!
+  // For the moment, use pp user task
+  AddDJet_pp();
 }
 
 //________________________________________________________________________
