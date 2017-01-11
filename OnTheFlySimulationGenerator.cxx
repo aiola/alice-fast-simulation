@@ -129,7 +129,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   */
 
   // Generator and generator handler
-  AliGenPythia* gen = CreatePythia6Gen(GetCMSEnergy(), fTune, fProcess, fSpecialParticle, fPtHardMin, fPtHardMax, fForceHadDecay);
+  AliGenPythia* gen = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fTune, fProcess, fSpecialParticle, fPtHardMin, fPtHardMax, fForceHadDecay);
   if (!fLHEFile.IsNull()) gen->SetReadLHEF(fLHEFile);
 
   AliMCGenHandler* mcInputHandler = new AliMCGenHandler();
