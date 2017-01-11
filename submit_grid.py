@@ -118,7 +118,7 @@ def GenerateComments():
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -129,7 +129,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --numevents {Events} --grid\"; \n\
+Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --nPDFset {nPDFset} --nPDFerrSet {nPDFerrSet} --numevents {Events} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -145,7 +145,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, TTL=TTL)
+".format(comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, nPDFset=nPDFset, nPDFerrSet=nPDFerrSet, TTL=TTL)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -295,7 +295,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, OldPowhegInit):
     print("Submitting merging jobs for train {0}".format(TrainName))
     AlienDest = "{0}/{1}".format(AlienPath, TrainName)
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
@@ -309,7 +309,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
-    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2)
+    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet)
 
     f = open(JdlFile, 'w')
     f.write(JdlContent)
@@ -382,7 +382,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, OldPowhegInit, TTL, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, OldPowhegInit, TTL, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -433,7 +433,7 @@ def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Pr
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
@@ -469,6 +469,10 @@ if __name__ == '__main__':
                         default=3500)
     parser.add_argument('--ebeam2', metavar='ENERGY2',
                         default=3500)
+    parser.add_argument('--nPDFset', metavar='3',
+                        default=3, type=int)
+    parser.add_argument('--nPDFerrSet', metavar='1',
+                        default=1, type=int)
     parser.add_argument("--old-powheg-init", action='store_const',
                         default=False, const=True,
                         help='Use old POWHEG init files.')
@@ -480,7 +484,7 @@ if __name__ == '__main__':
                         default=10, type=int)
     parser.add_argument('--download', metavar='TIMESTAMP',
                         default='')
-    parser.add_argument('--stage', metavar='TIMESTAMP',
+    parser.add_argument('--stage', metavar='stage',
                         default=-1, type=int)
     parser.add_argument('--user-conf', metavar='USERCONF',
                         default="userConf.yaml")
@@ -488,4 +492,4 @@ if __name__ == '__main__':
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.beam_type, args.ebeam1, args.ebeam2, args.old_powheg_init, args.ttl, args.merge, args.download, args.stage, args.max_files_per_job)
+    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.old_powheg_init, args.ttl, args.merge, args.download, args.stage, args.max_files_per_job)

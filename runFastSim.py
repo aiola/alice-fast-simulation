@@ -10,7 +10,7 @@ import argparse
 import random
 import sys
 
-def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, LHEfile, nPDFset, nPDFerrSet, grid):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, LHEfile, grid):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -177,4 +177,4 @@ if __name__ == '__main__':
                         help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.lhe, args.nPDFset, args.nPDFerrSet, args.grid)
+    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.lhe, args.grid)
