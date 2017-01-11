@@ -88,10 +88,10 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
   sim->SetEnergyBeam1(ebeam1);
   sim->SetEnergyBeam2(ebeam2);
   if (beamType == "pPb") {
-    sim->EnableDJet_pPb();
+    sim->SetBeamType(OnTheFlySimulationGenerator::kpPb);
   }
   else if (beamType == "pp") {
-    sim->EnableDJet_pp();
+    sim->SetBeamType(OnTheFlySimulationGenerator::kpp);
   }
   else {
     Printf("ERROR: Beam type %s not recognized!! Not running...", beamType.Data());

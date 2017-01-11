@@ -44,8 +44,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fPtHardMin(0),
   fPtHardMax(1),
   fJetQA(kFALSE),
-  fDJet_pp(kFALSE),
-  fDJet_pPb(kFALSE),
+  fBeamType(kpp),
   fJetTree(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500)
@@ -67,8 +66,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fPtHardMin(0),
   fPtHardMax(1),
   fJetQA(kFALSE),
-  fDJet_pp(kFALSE),
-  fDJet_pPb(kFALSE),
+  fBeamType(kpp),
   fJetTree(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500)
@@ -90,8 +88,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fPtHardMin(0),
   fPtHardMax(1),
   fJetQA(kFALSE),
-  fDJet_pp(kFALSE),
-  fDJet_pPb(kFALSE),
+  fBeamType(kpp),
   fJetTree(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500)
@@ -144,8 +141,8 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
 
   if (fJetQA) AddJetQA();
-  if (fDJet_pp) AddDJet_pp();
-  if (fDJet_pPb) AddDJet_pPb();
+  if (fBeamType == kpp) AddDJet_pp();
+  else if (fBeamType == kpPb) AddDJet_pPb();
   if (fJetTree) AddJetTree();
 }
 
@@ -266,7 +263,7 @@ void OnTheFlySimulationGenerator::CalculateCMSEnergy()
 }
 
 //________________________________________________________________________
-AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay)
+AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay)
 {
   Printf("PYTHIA generator with CMS energy = %.3f TeV", e_cms);
 
@@ -293,9 +290,16 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(Float_t e_cms, EPyth
 
   genP->UseNewMultipleInteractionsScenario(); // for all Pythia versions >= 6.3
 
+  if (beam == kpp) {
+    genP->SetProjectile("p", 1, 1);
+    genP->SetTarget(    "p", 1, 1);
+  }
+  else if (beam == kpPb) {
+    genP->SetProjectile("p",208,82);
+    genP->SetTarget("p",1,1);
+  }
+
   // Additional settings from A. Rossi
-  genP->SetProjectile("p", 1, 1);
-  genP->SetTarget(    "p", 1, 1);
   //genP->SetMomentumRange(0, 999999.);
   //genP->SetThetaRange(0., 180.);
   //genP->SetYRange(-12.,12.);

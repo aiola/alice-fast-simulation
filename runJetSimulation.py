@@ -70,9 +70,9 @@ def main(pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, name):
     sim.SetEnergyBeam1(float(ebeam1))
     sim.SetEnergyBeam2(float(ebeam2))
     if beamType == "pPb":
-        sim.EnableDJet_pPb()
+        sim.SetBeamType(ROOT.OnTheFlySimulationGenerator.kpPb)
     elif beamType == "pp":
-        sim.EnableDJet_pp()
+        sim.SetBeamType(ROOT.OnTheFlySimulationGenerator.kpp)
     else:
         print("ERROR: Beam type {0} not recognized!! Not running...".format(beamType))
         exit(1)

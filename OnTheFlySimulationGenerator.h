@@ -26,6 +26,11 @@ public:
     kbbbar = 2
   };
 
+  enum EBeamType_t {
+    kpp = 1,
+    kpPb = 2
+  };
+
   OnTheFlySimulationGenerator();
   OnTheFlySimulationGenerator(TString taskname);
   OnTheFlySimulationGenerator(TString taskname, Int_t numevents, Process_t proc, ESpecialParticle_t specialPart, Bool_t forceHadDecay, Int_t seed, TString lhe);
@@ -42,11 +47,10 @@ public:
   void SetPythiaTune(EPythiaTune_t tune)                  { fTune            = tune          ; }
   void SetPtHardRange(Int_t ptHardMin, Int_t ptHardMax)   { fPtHardMin       = ptHardMin     ; fPtHardMax       = ptHardMax; }
   void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
-  void EnableDJet_pp(Bool_t b = kTRUE)                    { fDJet_pp         = b             ; }
-  void EnableDJet_pPb(Bool_t b = kTRUE)                   { fDJet_pPb        = b             ; }
+  void SetBeamType(EBeamType_t b)                         { fBeamType        = b             ; }
   void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
 
-  static AliGenPythia* CreatePythia6Gen(Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay);
+  static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay);
 
   void PrepareAnalysisManager();
   void Start();
@@ -64,7 +68,6 @@ public:
   EPythiaTune_t      GetPythiaTune()         const { return fTune           ; }
   Int_t              GetPtHardMin()          const { return fPtHardMin      ; }
   Int_t              GetPtHardMax()          const { return fPtHardMax      ; }
-
 
 protected:
   void               AddJetQA();
@@ -87,8 +90,7 @@ protected:
   Int_t                fPtHardMin        ;
   Int_t                fPtHardMax        ;
   Bool_t               fJetQA            ;
-  Bool_t               fDJet_pp          ;
-  Bool_t               fDJet_pPb         ;
+  EBeamType_t          fBeamType         ;
   Bool_t               fJetTree          ;
   Float_t              fEnergyBeam1      ; // in GeV
   Float_t              fEnergyBeam2      ; // in GeV
