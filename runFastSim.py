@@ -81,8 +81,8 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
             if beamType == "pPb":
                 myfile.write("nPDFset {0}        ! (0:EKS98, 1:EPS08, 2:EPS09LO, 3:EPS09NLO)\n".format(nPDFset))
                 myfile.write("nPDFerrSet {0}     ! (1:central, 2:+1, 3:-1..., 30:+15, 31:-15)\n".format(nPDFerrSet))
-                myfile.write("AA1 1              ! (Atomic number of hadron 1)\n")
-                myfile.write("AA2 208            ! (Atomic number of hadron 2)\n")
+                myfile.write("AA1 208            ! (Atomic number of hadron 1)\n")
+                myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
         with open("powheg.input", 'r') as fin:
             powheg_input = fin.read().splitlines()

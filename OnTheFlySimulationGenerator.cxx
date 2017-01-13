@@ -297,6 +297,9 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
   else if (beam == kpPb) {
     genP->SetProjectile("p",208,82);
     genP->SetTarget("p",1,1);
+    genP->SetNuclearPDF(19);
+    genP->SetUseNuclearPDF(kTRUE);
+    genP->SetUseLorentzBoost(kTRUE);
   }
 
   // Additional settings from A. Rossi
