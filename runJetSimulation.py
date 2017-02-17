@@ -3,7 +3,7 @@
 import ROOT
 import argparse
 
-def main(pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, name):
+def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, ptHard):
     # ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
     ROOT.gSystem.SetFPEMask(ROOT.TSystem.kNoneMask)
 
@@ -25,39 +25,40 @@ def main(pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, name):
     if name:
         trainName = "FastSim_{0}".format(name)
     else:
-        trainName = "FastSim_{0}_{1}".format(gen, procStr)
+        if ptHard < 0:
+            trainName = "FastSim_{0}_{1}".format(gen, procStr)
+        else:
+            trainName = "FastSim_{0}_{1}_{2}".format(gen, procStr, ptHard)
 
+    forceDecay = False
     if gen == "pythia":
         if lhe:
             print("An LHE file was provided ({0}) but PYTHIA was selected as generator. The LHE file will be ignored".format(lhe))
             lhe = ""
         if procStr == "dijet":
             proc = ROOT.kPyJets
-            forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
-            proc = ROOT.kPyCharmppMNRwmi
-            forceDecay = False
+            if ptHard >= 0: proc = ROOT.kPyJets
+            else: proc = ROOT.kPyCharmppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kccbar
         elif procStr == "beauty":
-            proc = ROOT.kPyBeautyppMNRwmi
-            forceDecay = False
+            if ptHard >= 0: proc = ROOT.kPyJets
+            else: proc = ROOT.kPyBeautyppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kbbbar
     elif gen == "powheg":
+        if ptHard >= 0: print("Pt hard bins are ignored for POWHEG")
         if not lhe:
             print("Must provide an LHE file if POWHEG is selected as event generator!")
             exit(1)
         if procStr == "dijet":
             proc = ROOT.kPyJetsPWHG
-            forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharmPWHG
-            forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "beauty":
             proc = ROOT.kPyBeautyPWHG
-            forceDecay = False
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
 
     sim = ROOT.OnTheFlySimulationGenerator(trainName)
@@ -69,6 +70,7 @@ def main(pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, name):
     sim.SetLHEFile(lhe)
     sim.SetEnergyBeam1(float(ebeam1))
     sim.SetEnergyBeam2(float(ebeam2))
+    sim.SetPtHardBin(ptHard);
     if beamType == "pPb":
         sim.SetBeamType(ROOT.OnTheFlySimulationGenerator.kpPb)
     elif beamType == "pp":
@@ -98,6 +100,8 @@ if __name__ == '__main__':
                         default=3500)
     parser.add_argument('--name', metavar='NAME',
                         default='')
+    parser.add_argument('--pthard', metavar='EBEAM2',
+                        default=-1, type=int)
     args = parser.parse_args()
 
-    main(args.numevents, args.proc, args.gen, args.seed, args.lhe, args.beam_type, args.ebeam1, args.ebeam2, args.name)
+    main(args.name, args.numevents, args.proc, args.gen, args.seed, args.lhe, args.beam_type, args.ebeam1, args.ebeam2, args.pthard)

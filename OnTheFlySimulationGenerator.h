@@ -45,7 +45,7 @@ public:
   void SetEnergyBeam1(Float_t e)                          { fEnergyBeam1     = e             ; }
   void SetEnergyBeam2(Float_t e)                          { fEnergyBeam2     = e             ; }
   void SetPythiaTune(EPythiaTune_t tune)                  { fTune            = tune          ; }
-  void SetPtHardRange(Int_t ptHardMin, Int_t ptHardMax)   { fPtHardMin       = ptHardMin     ; fPtHardMax       = ptHardMax; }
+  void SetPtHardBin(Int_t ptHard)                         { fPtHardBin       = ptHard        ; }
   void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
   void SetBeamType(EBeamType_t b)                         { fBeamType        = b             ; }
   void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
@@ -66,8 +66,8 @@ public:
   Float_t            GetEnergyBeam1()        const { return fEnergyBeam1    ; }
   Float_t            GetEnergyBeam2()        const { return fEnergyBeam2    ; }
   EPythiaTune_t      GetPythiaTune()         const { return fTune           ; }
-  Int_t              GetPtHardMin()          const { return fPtHardMin      ; }
-  Int_t              GetPtHardMax()          const { return fPtHardMax      ; }
+  Int_t              GetPtHardMin()          const { return fPtHardBins[fPtHardBin]    ; }
+  Int_t              GetPtHardMax()          const { return fPtHardBins[fPtHardBin+1]  ; }
 
 protected:
   void               AddJetQA();
@@ -87,8 +87,8 @@ protected:
   TString              fLHEFile          ;
   Float_t              fCMSEnergy        ; // in TeV
   EPythiaTune_t        fTune             ;
-  Int_t                fPtHardMin        ;
-  Int_t                fPtHardMax        ;
+  Int_t                fPtHardBin        ;
+  TArrayD              fPtHardBins       ;
   Bool_t               fJetQA            ;
   EBeamType_t          fBeamType         ;
   Bool_t               fJetTree          ;

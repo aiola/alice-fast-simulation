@@ -41,8 +41,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fLHEFile(),
   fCMSEnergy(-1),
   fTune(kPerugia2011),
-  fPtHardMin(0),
-  fPtHardMax(1),
+  fPtHardBin(-1),
+  fPtHardBins(),
   fJetQA(kFALSE),
   fBeamType(kpp),
   fJetTree(kFALSE),
@@ -63,8 +63,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fLHEFile(),
   fCMSEnergy(-1),
   fTune(kPerugia2011),
-  fPtHardMin(0),
-  fPtHardMax(1),
+  fPtHardBin(-1),
+  fPtHardBins(),
   fJetQA(kFALSE),
   fBeamType(kpp),
   fJetTree(kFALSE),
@@ -85,8 +85,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fLHEFile(lhe),
   fCMSEnergy(-1),
   fTune(kPerugia2011),
-  fPtHardMin(0),
-  fPtHardMax(1),
+  fPtHardBin(-1),
+  fPtHardBins(),
   fJetQA(kFALSE),
   fBeamType(kpp),
   fJetTree(kFALSE),
@@ -129,7 +129,23 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   */
 
   // Generator and generator handler
-  AliGenPythia* gen = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fTune, fProcess, fSpecialParticle, fPtHardMin, fPtHardMax, fForceHadDecay);
+  Double_t ptHardMin = 0;
+  Double_t ptHardMax = 0;
+  if (fPtHardBin >= 0) {
+    if (fPtHardBins.GetSize() == 0) {
+      fPtHardBins.Set(7);
+      fPtHardBins[0] = 0;
+      fPtHardBins[1] = 5;
+      fPtHardBins[2] = 11;
+      fPtHardBins[3] = 21;
+      fPtHardBins[4] = 36;
+      fPtHardBins[5] = 57;
+      fPtHardBins[6] = 9999;
+    }
+    ptHardMin = fPtHardBins[fPtHardBin];
+    ptHardMax = fPtHardBins[fPtHardBin+1];
+  }
+  AliGenPythia* gen = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fTune, fProcess, fSpecialParticle, ptHardMin, ptHardMax, fForceHadDecay);
   if (!fLHEFile.IsNull()) gen->SetReadLHEF(fLHEFile);
 
   AliMCGenHandler* mcInputHandler = new AliMCGenHandler();
@@ -274,19 +290,23 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
   genP->SetVertexSmear(kPerEvent);
   genP->SetProcess(proc);
 
-  if (ptHardMin > 0.) genP->SetPtHard(ptHardMin, ptHardMax);
+  if (ptHardMin >= 0.) {
+    genP->SetPtHard(ptHardMin, ptHardMax);
+    Printf("Setting pt hard bin limits: %.2f, %.2f", ptHardMin, ptHardMax);
+  }
 
   if (specialPart == kccbar) {
-    genP->SetHeavyQuarkYRange(-5, 5);
+    genP->SetHeavyQuarkYRange(-1.5, 1.5);
   }
   else if (specialPart == kbbbar) {
-    genP->SetHeavyQuarkYRange(-5, 5);
+    genP->SetHeavyQuarkYRange(-1.5, 1.5);
   }
 
   if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4BodiesWithV0);
+  //if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4Bodies);
 
   //   Center of mass energy
-  genP->SetEnergyCMS(e_cms); // in GeV
+  genP->SetEnergyCMS(e_cms*1000); // in GeV
 
   genP->UseNewMultipleInteractionsScenario(); // for all Pythia versions >= 6.3
 
@@ -303,10 +323,10 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
   }
 
   // Additional settings from A. Rossi
-  //genP->SetMomentumRange(0, 999999.);
-  //genP->SetThetaRange(0., 180.);
-  //genP->SetYRange(-12.,12.);
-  //genP->SetPtRange(0,1000.);
+  genP->SetMomentumRange(0, 999999.);
+  genP->SetThetaRange(0., 180.);
+  genP->SetYRange(-12.,12.);
+  genP->SetPtRange(0,1000.);
   //genP->SetTrackingFlag(0);
 
   genP->Print();

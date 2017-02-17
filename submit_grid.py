@@ -118,7 +118,7 @@ def GenerateComments():
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -129,7 +129,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --nPDFset {nPDFset} --nPDFerrSet {nPDFerrSet} --numevents {Events} --grid\"; \n\
+Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --nPDFset {nPDFset} --nPDFerrSet {nPDFerrSet} --numevents {Events} --pthard {PtHard} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -145,7 +145,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, nPDFset=nPDFset, nPDFerrSet=nPDFerrSet, TTL=TTL)
+".format(PtHard=PtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, nPDFset=nPDFset, nPDFerrSet=nPDFerrSet, TTL=TTL)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -247,58 +247,70 @@ def DetermineMergingStage(AlienPath, TrainName):
     MergingStage = len(MergingStages)
     return MergingStage
 
-def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, MergingStage):
-    if MergingStage < 0:
-        MergingStage = DetermineMergingStage(AlienPath, TrainName)
-
-    if MergingStage < 0:
-        print("Could not find any results from train {0}! Aborting...".format(TrainName))
-        exit(1)
-    elif MergingStage == 0:
-        print("Merging stage determined to be 0 (i.e. first merging stage)")
-        PreviousStagePath = "{0}/{1}/output".format(AlienPath, TrainName)
-        SplitMethod = "parentdirectory"
+def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHard, MergingStage):
+    if PtHard < 0:
+        minPtHardBin = -1
+        maxPtHardBin = -1
     else:
-        print("Merging stage determined to be {0}".format(MergingStage))
-        PreviousStagePath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage - 1)
-        SplitMethod = "parentdirectory"
+        minPtHardBin = 0
+        maxPtHardBin = PtHard - 1
 
-    AlienDest = "{0}/{1}/stage_{2}".format(AlienPath, TrainName, MergingStage)
-    if AlienFileExists(AlienDest): AlienDeleteDir(AlienDest)
-    LocalDest = "{0}/{1}/stage_{2}".format(LocalPath, TrainName, MergingStage)
+    for ptHardBin in range(minPtHardBin, maxPtHardBin + 1):
+        if ptHardBin < 0:
+            TrainPtHardName = TrainName
+        else:
+            TrainPtHardName = "{0}/{1}".format(TrainName, ptHardBin)
 
-    ValidationScript = "FastSim_validation.sh"
-    ExeFile = "runFastSimMerging.py"
-    JdlFile = "FastSim_Merging_{0}_{1}.jdl".format(Gen, Proc)
-    XmlFile = "FastSim_Merging_{0}_{1}_stage_{2}.xml".format(Gen, Proc, MergingStage)
+        if MergingStage < 0:
+            MergingStage = DetermineMergingStage(AlienPath, TrainPtHardName)
 
-    FilesToCopy = ["runJetSimulationMergingGrid.C"]
-    JdlContent = GenerateMergingJDL(ExeFile, XmlFile, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod)
+        if MergingStage < 0:
+            print("Could not find any results from train {0}! Aborting...".format(TrainName))
+            exit(1)
+        elif MergingStage == 0:
+            print("Merging stage determined to be 0 (i.e. first merging stage)")
+            PreviousStagePath = "{0}/{1}/output".format(AlienPath, TrainPtHardName)
+            SplitMethod = "parentdirectory"
+        else:
+            print("Merging stage determined to be {0}".format(MergingStage))
+            PreviousStagePath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainPtHardName, MergingStage - 1)
+            SplitMethod = "parentdirectory"
 
-    f = open(JdlFile, 'w')
-    f.write(JdlContent)
-    f.close()
+        AlienDest = "{0}/{1}/stage_{2}".format(AlienPath, TrainPtHardName, MergingStage)
+        LocalDest = "{0}/{1}/stage_{2}".format(LocalPath, TrainPtHardName, MergingStage)
 
-    XmlContent = GenerateXMLCollection(PreviousStagePath, XmlFile)
-    f = open(XmlFile, 'w')
-    f.write(XmlContent)
-    f.close()
+        if AlienFileExists(AlienDest): AlienDeleteDir(AlienDest)
 
-    FilesToCopy.extend([JdlFile, XmlFile, ExeFile, ValidationScript])
+        ValidationScript = "FastSim_validation.sh"
+        ExeFile = "runFastSimMerging.py"
+        JdlFile = "FastSim_Merging_{0}_{1}.jdl".format(Gen, Proc)
+        XmlFile = "FastSim_Merging_{0}_{1}_stage_{2}.xml".format(Gen, Proc, MergingStage)
 
-    CopyFilesToTheGrid(FilesToCopy, AlienDest, LocalDest, Offline, GridUpdate)
-    if not Offline:
-        subprocessCall(["alien_submit", "alien://{0}/{1}".format(AlienDest, JdlFile)])
-    os.remove(JdlFile)
-    os.remove(XmlFile)
+        FilesToCopy = ["runJetSimulationMergingGrid.C"]
+        JdlContent = GenerateMergingJDL(ExeFile, XmlFile, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod)
+
+        f = open(JdlFile, 'w')
+        f.write(JdlContent)
+        f.close()
+
+        XmlContent = GenerateXMLCollection(PreviousStagePath, XmlFile)
+        f = open(XmlFile, 'w')
+        f.write(XmlContent)
+        f.close()
+
+        FilesToCopy.extend([JdlFile, XmlFile, ExeFile, ValidationScript])
+
+        CopyFilesToTheGrid(FilesToCopy, AlienDest, LocalDest, Offline, GridUpdate)
+        if not Offline:
+            subprocessCall(["alien_submit", "alien://{0}/{1}".format(AlienDest, JdlFile)])
+        os.remove(JdlFile)
+        os.remove(XmlFile)
     print "Done."
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard, OldPowhegInit):
     print("Submitting merging jobs for train {0}".format(TrainName))
-    AlienDest = "{0}/{1}".format(AlienPath, TrainName)
-    LocalDest = "{0}/{1}".format(LocalPath, TrainName)
 
     ValidationScript = "FastSim_validation.sh"
     ExeFile = "runFastSim.py"
@@ -309,65 +321,92 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
-    JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet)
 
-    f = open(JdlFile, 'w')
-    f.write(JdlContent)
-    f.close()
+    if PtHard < 0:
+        minPtHardBin = -1
+        maxPtHardBin = -1
+    else:
+        minPtHardBin = 0
+        maxPtHardBin = PtHard - 1
 
-    FilesToCopy.extend([JdlFile, ExeFile, ValidationScript])
+    for ptHardBin in range(minPtHardBin, maxPtHardBin + 1):
+        if ptHardBin < 0:
+            AlienDest = "{0}/{1}".format(AlienPath, TrainName)
+            LocalDest = "{0}/{1}".format(LocalPath, TrainName)
+        else:
+            AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
+            LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, ptHardBin)
 
-    CopyFilesToTheGrid(FilesToCopy, AlienDest, LocalDest, Offline, GridUpdate)
-    if not Offline:
-        subprocessCall(["alien_submit", "alien://{0}/{1}".format(AlienDest, JdlFile)])
-    os.remove(JdlFile)
+        f = open(JdlFile, 'w')
+        f.write(JdlContent)
+        f.close()
+
+        FilesToCopy.extend([JdlFile, ExeFile, ValidationScript])
+
+        CopyFilesToTheGrid(FilesToCopy, AlienDest, LocalDest, Offline, GridUpdate)
+        if not Offline:
+            subprocessCall(["alien_submit", "alien://{0}/{1}".format(AlienDest, JdlFile)])
+        os.remove(JdlFile)
     print "Done."
 
     subprocessCall(["ls", LocalDest])
 
-def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage):
-    print("Downloading results from train {0}".format(TrainName))
-    if MergingStage < 0:
-        MergingStage = DetermineMergingStage(AlienPath, TrainName)
-
-    if MergingStage < 0:
-        print("Could not find any results from train {0}! Aborting...".format(TrainName))
-        exit(0)
-    elif MergingStage == 0:
-        print("Merging stage determined to be 0 (i.e. no grid merging has been performed)")
-        AlienOutputPath = "{0}/{1}/output".format(AlienPath, TrainName)
-        LocalDest = "{0}/{1}/output".format(LocalPath, TrainName)
+def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHard, MergingStage):
+    if PtHard < 0:
+        minPtHardBin = -1
+        maxPtHardBin = -1
     else:
-        print("Merging stage determined to be {0}".format(MergingStage))
-        AlienOutputPath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainName, MergingStage - 1)
-        LocalDest = "{0}/{1}/stage_{2}/output".format(LocalPath, TrainName, MergingStage - 1)
+        minPtHardBin = 0
+        maxPtHardBin = PtHard - 1
 
-    if not os.path.isdir(LocalDest):
-        os.makedirs(LocalDest)
-    AlienOuputContent = subprocessCheckOutput(["alien_ls", AlienOutputPath]).splitlines()
-    for SubDir in AlienOuputContent:
-        SubDirDest = "{0}/{1}".format(LocalDest, SubDir)
-        SubDirOrig = "{0}/{1}".format(AlienOutputPath, SubDir)
-        if not os.path.isdir(SubDirDest):
-            os.makedirs(SubDirDest)
-        FilesToDownload = subprocessCheckOutput(["alien_ls", "{0}/AnalysisResults*.root".format(SubDirOrig)]).splitlines()
-        for FileName in FilesToDownload:
-            FileDest = "{0}/{1}".format(SubDirDest, FileName)
-            if os.path.isfile(FileDest):
-                print("File {0} already exists, skipping...".format(FileDest))
-                continue
-            FileOrig = "{0}/{1}".format(SubDirOrig, FileName)
-            FileDestTemp = "{0}/temp_{1}".format(SubDirDest, FileName)
-            if os.path.isfile(FileDestTemp):
-                os.remove(FileDestTemp)
-            print("Downloading from {0} to {1}".format(FileOrig, FileDestTemp))
-            subprocessCall(["alien_cp", "alien://{0}".format(FileOrig), FileDestTemp])
-            if os.path.getsize(FileDestTemp) > 0:
-                print("Renaming {0} to {1}".format(FileDestTemp, FileDest))
-                os.rename(FileDestTemp, FileDest)
-            else:
-                print("ERROR ***** Downloading of {0} failed!".format(FileOrig))
-                os.remove(FileDestTemp)
+    for ptHardBin in range(minPtHardBin, maxPtHardBin + 1):
+        if ptHardBin < 0:
+            TrainPtHardName = TrainName
+        else:
+            TrainPtHardName = "{0}/{1}".format(TrainName, ptHardBin)
+        print("Downloading results from train {0}".format(TrainPtHardName))
+        if MergingStage < 0:
+            MergingStage = DetermineMergingStage(AlienPath, TrainPtHardName)
+
+        if MergingStage < 0:
+            print("Could not find any results from train {0}! Aborting...".format(TrainPtHardName))
+            exit(0)
+        elif MergingStage == 0:
+            print("Merging stage determined to be 0 (i.e. no grid merging has been performed)")
+            AlienOutputPath = "{0}/{1}/output".format(AlienPath, TrainPtHardName)
+            LocalDest = "{0}/{1}/output".format(LocalPath, TrainPtHardName)
+        else:
+            print("Merging stage determined to be {0}".format(MergingStage))
+            AlienOutputPath = "{0}/{1}/stage_{2}/output".format(AlienPath, TrainPtHardName, MergingStage - 1)
+            LocalDest = "{0}/{1}/stage_{2}/output".format(LocalPath, TrainPtHardName, MergingStage - 1)
+
+        if not os.path.isdir(LocalDest):
+            os.makedirs(LocalDest)
+        AlienOuputContent = subprocessCheckOutput(["alien_ls", AlienOutputPath]).splitlines()
+        for SubDir in AlienOuputContent:
+            SubDirDest = "{0}/{1}".format(LocalDest, SubDir)
+            SubDirOrig = "{0}/{1}".format(AlienOutputPath, SubDir)
+            if not os.path.isdir(SubDirDest):
+                os.makedirs(SubDirDest)
+            FilesToDownload = subprocessCheckOutput(["alien_ls", "{0}/AnalysisResults*.root".format(SubDirOrig)]).splitlines()
+            for FileName in FilesToDownload:
+                FileDest = "{0}/{1}".format(SubDirDest, FileName)
+                if os.path.isfile(FileDest):
+                    print("File {0} already exists, skipping...".format(FileDest))
+                    continue
+                FileOrig = "{0}/{1}".format(SubDirOrig, FileName)
+                FileDestTemp = "{0}/temp_{1}".format(SubDirDest, FileName)
+                if os.path.isfile(FileDestTemp):
+                    os.remove(FileDestTemp)
+                print("Downloading from {0} to {1}".format(FileOrig, FileDestTemp))
+                subprocessCall(["alien_cp", "alien://{0}".format(FileOrig), FileDestTemp])
+                if os.path.getsize(FileDestTemp) > 0:
+                    print("Renaming {0} to {1}".format(FileDestTemp, FileDest))
+                    os.rename(FileDestTemp, FileDest)
+                else:
+                    print("ERROR ***** Downloading of {0} failed!".format(FileOrig))
+                    os.remove(FileDestTemp)
 
 def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName = "FastSim_{0}_{1}".format(Gen, Proc)
@@ -382,7 +421,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, OldPowhegInit, TTL, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard, OldPowhegInit, TTL, Merge, Download, MergingStage, MaxFilesPerJob):
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -420,7 +459,7 @@ def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Pr
                 exit(1)
         else:
             TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
-        SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, MergingStage)
+        SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHard, MergingStage)
     elif Download:
         if Download == "last":
             TrainName = GetLastTrainName(AlienPath, Gen, Proc)
@@ -428,12 +467,12 @@ def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Pr
                 exit(1)
         else:
             TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
-        DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, MergingStage)
+        DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHard, MergingStage)
     else:
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
@@ -488,8 +527,10 @@ if __name__ == '__main__':
                         default=-1, type=int)
     parser.add_argument('--user-conf', metavar='USERCONF',
                         default="userConf.yaml")
+    parser.add_argument('--pthard', metavar='1',
+                        default=-1, type=int)
     args = parser.parse_args()
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.old_powheg_init, args.ttl, args.merge, args.download, args.stage, args.max_files_per_job)
+    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.pthard, args.old_powheg_init, args.ttl, args.merge, args.download, args.stage, args.max_files_per_job)

@@ -3,7 +3,7 @@
 #include <TSystem.h>
 #include <TInterpreter.h>
 
-void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString beamType, Double_t ebeam1, Double_t ebeam2, TString name)
+void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString beamType, Double_t ebeam1, Double_t ebeam2, Int_t ptHard = -1)
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
   gSystem->SetFPEMask(TSystem::kNoneMask);
@@ -29,7 +29,12 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
     trainName = Form("FastSim_%s", name.Data());
   }
   else {
-    trainName = Form("FastSim_%s_%s", gen.Data(), procStr.Data());
+    if (ptHard < 0) {
+      trainName = Form("FastSim_%s_%s", gen.Data(), procStr.Data());
+    }
+    else {
+      trainName = Form("FastSim_%s_%s_%d", gen.Data(), procStr.Data(), ptHard);
+    }
   }
 
   Process_t proc = kPyMb;
@@ -42,17 +47,24 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
     }
     if (procStr == "dijet") {
       proc = kPyJets;
-      forceDecay = kFALSE;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
-      proc = kPyCharmppMNRwmi;
-      forceDecay = kFALSE;
+      if (ptHard >= 0) {
+        proc = kPyJets;
+      }
+      else {
+        proc = kPyCharmppMNRwmi;
+      }
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
-      proc = kPyBeautyppMNRwmi;
-      forceDecay = kFALSE;
+      if (ptHard >= 0) {
+        proc = kPyJets;
+      }
+      else {
+        proc = kPyBeautyppMNRwmi;
+      }
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
   }
@@ -61,20 +73,18 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
       Printf("Must provide an LHE file if POWHEG is selected as event generator!");
       return;
     }
+    if (ptHard >= 0) {
+      Printf("Pt hard bins are ignored for POWHEG");
+    }
+    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     if (procStr == "dijet") {
       proc = kPyJetsPWHG;
-      forceDecay = kFALSE;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
       proc = kPyCharmPWHG;
-      forceDecay = kFALSE;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "beauty") {
       proc = kPyBeautyPWHG;
-      forceDecay = kFALSE;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
   }
 
@@ -87,6 +97,7 @@ void runJetSimulationGrid(Int_t pythiaEvents, TString procStr, TString gen, UInt
   sim->SetLHEFile(lhe);
   sim->SetEnergyBeam1(ebeam1);
   sim->SetEnergyBeam2(ebeam2);
+  sim->SetPtHardBin(ptHard);
   if (beamType == "pPb") {
     sim->SetBeamType(OnTheFlySimulationGenerator::kpPb);
   }
