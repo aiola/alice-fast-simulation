@@ -421,7 +421,31 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(UserConf, AliPhysicsVersion, Offline, GridUpdate, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard, OldPowhegInit, TTL, Merge, Download, MergingStage, MaxFilesPerJob):
+def main(UserConf, config, Offline, GridUpdate, OldPowhegInit, Merge, Download, MergingStage):
+
+    AliPhysicsVersion = config["aliphysics"]
+    Events = config["numevents"]
+    Jobs = config["numbjobs"]
+    Gen = config["gen"]
+    Proc = config["proc"]
+    QMass = config["qmass"]
+    FacScFact = config["facscfact"]
+    RenScFact = config["renscfact"]
+    LHANS = config["lhans"]
+    BeamType = config["beam_type"]
+    EBeam1 = config["ebeam1"]
+    EBeam2 = config["ebeam2"]
+    nPDFset = config["nPDFset"]
+    nPDFerrSet = config["nPDFerrSet"]
+    PtHardList = config["pthard"]
+    TTL = config["ttl"]
+    MaxFilesPerJob = config["max_files_per_job"]
+
+    if PtHardList:
+        PtHard = len(PtHardList) - 1
+    else:
+        PtHard = -1
+
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -478,59 +502,69 @@ if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
 
     parser = argparse.ArgumentParser(description='Local final merging for LEGO train results.')
-    parser.add_argument('--aliphysics', metavar='vXXX',
-                        help='AliPhysics version')
-    parser.add_argument('--offline', action='store_const',
-                        default=False, const=True,
-                        help='Test mode')
+    parser.add_argument('config', metavar='config.yaml',
+                        default="default.yaml", help='YAML configuration file')
+    parser.add_argument('--user-conf', metavar='USERCONF',
+                        default="userConf.yaml")
     parser.add_argument("--update", action='store_const',
                         default=False, const=True,
                         help='Update all scripts and macros on the grid.')
-    parser.add_argument('--numevents', metavar='NEVT',
-                        default=50000, type=int)
-    parser.add_argument('--numjobs', metavar='NJOBS',
-                        default=10, type=int)
-    parser.add_argument('--gen', metavar='GEN',
-                        default='pythia')
-    parser.add_argument('--proc', metavar='PROC',
-                        default='charm')
-    parser.add_argument('--qmass', metavar='QMASS',
-                        default=-1)
-    parser.add_argument('--facscfact', metavar='FACSCFACT',
-                        default=1)
-    parser.add_argument('--renscfact', metavar='RENSCFACT',
-                        default=1)
-    parser.add_argument('--lhans', metavar='RENSCFACT',
-                        default=11000)
-    parser.add_argument('--beam-type', metavar='BEAMTYPE',
-                        default="pp")
-    parser.add_argument('--ebeam1', metavar='ENERGY1',
-                        default=3500)
-    parser.add_argument('--ebeam2', metavar='ENERGY2',
-                        default=3500)
-    parser.add_argument('--nPDFset', metavar='3',
-                        default=3, type=int)
-    parser.add_argument('--nPDFerrSet', metavar='1',
-                        default=1, type=int)
-    parser.add_argument("--old-powheg-init", action='store_const',
+    parser.add_argument('--offline', action='store_const',
                         default=False, const=True,
-                        help='Use old POWHEG init files.')
-    parser.add_argument('--ttl', metavar='TTL',
-                        default=7200)
+                        help='Test mode')
     parser.add_argument('--merge', metavar='TIMESTAMP',
                         default='')
-    parser.add_argument('--max-files-per-job', metavar='N',
-                        default=10, type=int)
     parser.add_argument('--download', metavar='TIMESTAMP',
                         default='')
     parser.add_argument('--stage', metavar='stage',
                         default=-1, type=int)
-    parser.add_argument('--user-conf', metavar='USERCONF',
-                        default="userConf.yaml")
-    parser.add_argument('--pthard', metavar='1',
-                        default=-1, type=int)
+    parser.add_argument("--old-powheg-init", action='store_const',
+                        default=False, const=True,
+                        help='Use old POWHEG init files.')
+
+    # The following parameters can be set more conveniently using the YAML configuration file
+    # If provided, the corresponding value from the YAML configuration is ignored
+    parser.add_argument('--aliphysics', metavar='vXXX',
+                        default=None, help='AliPhysics version')
+    parser.add_argument('--numevents', metavar='NEVT',
+                        default=None)
+    parser.add_argument('--numjobs', metavar='NJOBS',
+                        default=None)
+    parser.add_argument('--gen', metavar='GEN',
+                        default=None)
+    parser.add_argument('--proc', metavar='PROC',
+                        default=None)
+    parser.add_argument('--qmass', metavar='QMASS',
+                        default=None)
+    parser.add_argument('--facscfact', metavar='FACSCFACT',
+                        default=None)
+    parser.add_argument('--renscfact', metavar='RENSCFACT',
+                        default=None)
+    parser.add_argument('--lhans', metavar='LHANS',
+                        default=None)
+    parser.add_argument('--beam-type', metavar='BEAMTYPE',
+                        default=None)
+    parser.add_argument('--ebeam1', metavar='ENERGY1',
+                        default=None)
+    parser.add_argument('--ebeam2', metavar='ENERGY2',
+                        default=None)
+    parser.add_argument('--nPDFset', metavar='3',
+                        default=None)
+    parser.add_argument('--nPDFerrSet', metavar='1',
+                        default=None)
+    parser.add_argument('--ttl', metavar='TTL',
+                        default=None)
+    parser.add_argument('--max-files-per-job', metavar='N',
+                        default=None)
     args = parser.parse_args()
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.aliphysics, args.offline, args.update, args.numevents, args.numjobs, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans, args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.pthard, args.old_powheg_init, args.ttl, args.merge, args.download, args.stage, args.max_files_per_job)
+    f = open(args.config, 'r')
+    config = yaml.load(f)
+    f.close()
+
+    pars_name = [a for a in dir(args) if not a.startswith('__') and not callable(getattr(args, a)) and not getattr(args, a) is None]
+    for p in pars_name: config[p] = getattr(args, a)
+
+    main(userConf, config, args.offline, args.update, args.old_powheg_init, args.merge, args.download, args.stage)

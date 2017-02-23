@@ -133,14 +133,30 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   Double_t ptHardMax = 0;
   if (fPtHardBin >= 0) {
     if (fPtHardBins.GetSize() == 0) {
-      fPtHardBins.Set(7);
+/*      fPtHardBins.Set(7);
       fPtHardBins[0] = 0;
       fPtHardBins[1] = 5;
       fPtHardBins[2] = 11;
       fPtHardBins[3] = 21;
       fPtHardBins[4] = 36;
       fPtHardBins[5] = 57;
-      fPtHardBins[6] = 9999;
+      fPtHardBins[6] = 9999;*/
+/*      fPtHardBins.Set(11);
+      fPtHardBins[0] = 0;
+      fPtHardBins[1] = 5;
+      fPtHardBins[2] = 10;
+      fPtHardBins[3] = 15;
+      fPtHardBins[4] = 20;
+      fPtHardBins[5] = 25;
+      fPtHardBins[6] = 30;
+      fPtHardBins[7] = 40;
+      fPtHardBins[8] = 50;
+      fPtHardBins[9] = 60;
+      fPtHardBins[10] = 9999;*/
+      fPtHardBins.Set(3);
+      fPtHardBins[0] = 5;
+      fPtHardBins[1] = 12;
+      fPtHardBins[3] = 9999;
     }
     ptHardMin = fPtHardBins[fPtHardBin];
     ptHardMax = fPtHardBins[fPtHardBin+1];
