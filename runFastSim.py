@@ -10,7 +10,7 @@ import argparse
 import random
 import sys
 
-def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, LHEfile, pthard, grid):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, LHEfile, minpthard, maxpthard, grid):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -124,9 +124,9 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
     print("Running PYTHIA simulation...")
     with open("sim.log", "w") as myfile:
         if grid:
-            subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulationGrid.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, pthard)], stdout=myfile, stderr=myfile)
+            subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulationGrid.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, minpthard, maxpthard)], stdout=myfile, stderr=myfile)
         else:
-            subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--beam-type", beamType, "--ebeam1", str(ebeam1), "--ebeam2", str(ebeam2), "--name", fname, "--pthard", str(pthard)], stdout=myfile, stderr=myfile)
+            subprocess.call(["./runJetSimulation.py", "--numevents", str(pythiaEvents), "--proc", proc, "--gen", gen, "--seed", str(rnd), "--lhe", LHEfile, "--beam-type", beamType, "--ebeam1", str(ebeam1), "--ebeam2", str(ebeam2), "--name", fname, "--minpthard", str(minpthard), "--maxpthard", str(maxpthard)], stdout=myfile, stderr=myfile)
 
     if not grid:
         os.rename("sim.log", "sim_{0}.log".format(fname))
@@ -172,11 +172,13 @@ if __name__ == '__main__':
                         default=3, type=int)
     parser.add_argument('--nPDFerrSet', metavar='1',
                         default=1, type=int)
-    parser.add_argument('--pthard', metavar='1',
-                        default=-1, type=int)
+    parser.add_argument('--minpthard', metavar="MINPTHARD",
+                        default=-1, type=float)
+    parser.add_argument('--maxpthard', metavar='MAXPTHARD',
+                        default=-1, type=float)
     parser.add_argument("--grid", action='store_const',
                         default=False, const=True,
                         help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.lhe, args.pthard, args.grid)
+    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.lhe, args.minpthard, args.maxpthard, args.grid)

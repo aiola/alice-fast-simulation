@@ -118,7 +118,7 @@ def GenerateComments():
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, MinPtHard, MaxPtHard):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -129,7 +129,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --nPDFset {nPDFset} --nPDFerrSet {nPDFerrSet} --numevents {Events} --pthard {PtHard} --grid\"; \n\
+Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --nPDFset {nPDFset} --nPDFerrSet {nPDFerrSet} --numevents {Events} --minpthard {MinPtHard} --minpthard {MaxPtHard} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -145,7 +145,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(PtHard=PtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, nPDFset=nPDFset, nPDFerrSet=nPDFerrSet, TTL=TTL)
+".format(MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, nPDFset=nPDFset, nPDFerrSet=nPDFerrSet, TTL=TTL)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -248,17 +248,19 @@ def DetermineMergingStage(AlienPath, TrainName):
     return MergingStage
 
 def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHard, MergingStage):
-    if PtHard < 0:
+    if PtHardList and len(PtHardList) > 1:
+        minPtHardBin = 0
+        maxPtHardBin = len(PtHardList)
+    else:
         minPtHardBin = -1
         maxPtHardBin = -1
-    else:
-        minPtHardBin = 0
-        maxPtHardBin = PtHard - 1
 
-    for ptHardBin in range(minPtHardBin, maxPtHardBin + 1):
+    for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:
             TrainPtHardName = TrainName
         else:
+            minPtHard = PtHardList[ptHardBin]
+            maxPtHard = PtHardList[ptHardBin + 1]
             TrainPtHardName = "{0}/{1}".format(TrainName, ptHardBin)
 
         if MergingStage < 0:
@@ -322,21 +324,23 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
 
-    if PtHard < 0:
+    if PtHardList and len(PtHardList) > 1:
+        minPtHardBin = 0
+        maxPtHardBin = len(PtHardList)
+    else:
         minPtHardBin = -1
         maxPtHardBin = -1
-    else:
-        minPtHardBin = 0
-        maxPtHardBin = PtHard - 1
 
-    for ptHardBin in range(minPtHardBin, maxPtHardBin + 1):
+    for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:
             AlienDest = "{0}/{1}".format(AlienPath, TrainName)
             LocalDest = "{0}/{1}".format(LocalPath, TrainName)
         else:
+            minPtHard = PtHardList[ptHardBin]
+            maxPtHard = PtHardList[ptHardBin + 1]
             AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
             LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
-        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, ptHardBin)
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, minPtHard, maxPtHard)
 
         f = open(JdlFile, 'w')
         f.write(JdlContent)
@@ -352,18 +356,20 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 
     subprocessCall(["ls", LocalDest])
 
-def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHard, MergingStage):
-    if PtHard < 0:
+def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, MergingStage):
+    if PtHardList and len(PtHardList) > 1:
+        minPtHardBin = 0
+        maxPtHardBin = len(PtHardList)
+    else:
         minPtHardBin = -1
         maxPtHardBin = -1
-    else:
-        minPtHardBin = 0
-        maxPtHardBin = PtHard - 1
 
-    for ptHardBin in range(minPtHardBin, maxPtHardBin + 1):
+    for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:
             TrainPtHardName = TrainName
         else:
+            minPtHard = PtHardList[ptHardBin]
+            maxPtHard = PtHardList[ptHardBin + 1]
             TrainPtHardName = "{0}/{1}".format(TrainName, ptHardBin)
         print("Downloading results from train {0}".format(TrainPtHardName))
         if MergingStage < 0:
@@ -441,11 +447,6 @@ def main(UserConf, config, Offline, GridUpdate, OldPowhegInit, Merge, Download, 
     TTL = config["ttl"]
     MaxFilesPerJob = config["max_files_per_job"]
 
-    if PtHardList:
-        PtHard = len(PtHardList) - 1
-    else:
-        PtHard = -1
-
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -483,7 +484,7 @@ def main(UserConf, config, Offline, GridUpdate, OldPowhegInit, Merge, Download, 
                 exit(1)
         else:
             TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Merge)
-        SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHard, MergingStage)
+        SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHardList, MergingStage)
     elif Download:
         if Download == "last":
             TrainName = GetLastTrainName(AlienPath, Gen, Proc)
@@ -491,12 +492,12 @@ def main(UserConf, config, Offline, GridUpdate, OldPowhegInit, Merge, Download, 
                 exit(1)
         else:
             TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, Download)
-        DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHard, MergingStage)
+        DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, MergingStage)
     else:
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHardList, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script

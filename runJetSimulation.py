@@ -3,7 +3,7 @@
 import ROOT
 import argparse
 
-def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, ptHard):
+def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, minPtHard, maxPtHard):
     # ROOT.gSystem.SetFPEMask(ROOT.TSystem.kInvalid | ROOT.TSystem.kDivByZero | ROOT.TSystem.kOverflow | ROOT.TSystem.kUnderflow)
     ROOT.gSystem.SetFPEMask(ROOT.TSystem.kNoneMask)
 
@@ -39,15 +39,18 @@ def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, 
             proc = ROOT.kPyJets
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
-            if ptHard >= 0: proc = ROOT.kPyJets
+            if minPtHard >= 0 and maxPtHard >= 0: proc = ROOT.kPyJets
             else: proc = ROOT.kPyCharmppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kccbar
         elif procStr == "beauty":
-            if ptHard >= 0: proc = ROOT.kPyJets
+            if minPtHard >= 0 and maxPtHard >= 0: proc = ROOT.kPyJets
             else: proc = ROOT.kPyBeautyppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kbbbar
     elif gen == "powheg":
-        if ptHard >= 0: print("Pt hard bins are ignored for POWHEG")
+        if minPtHard >= 0 and maxPtHard >= 0:
+            print("Pt hard bins are ignored for POWHEG")
+            minPtHard = -1
+            maxPtHard = -1
         if not lhe:
             print("Must provide an LHE file if POWHEG is selected as event generator!")
             exit(1)
@@ -70,7 +73,7 @@ def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, 
     sim.SetLHEFile(lhe)
     sim.SetEnergyBeam1(float(ebeam1))
     sim.SetEnergyBeam2(float(ebeam2))
-    sim.SetPtHardBin(ptHard);
+    sim.SetPtHardRange(minPtHard, maxPtHard)
     if beamType == "pPb":
         sim.SetBeamType(ROOT.OnTheFlySimulationGenerator.kpPb)
     elif beamType == "pp":
@@ -100,8 +103,10 @@ if __name__ == '__main__':
                         default=3500)
     parser.add_argument('--name', metavar='NAME',
                         default='')
-    parser.add_argument('--pthard', metavar='EBEAM2',
-                        default=-1, type=int)
+    parser.add_argument('--minpthard', metavar="MINPTHARD",
+                        default=-1, type=float)
+    parser.add_argument('--maxpthard', metavar='MAXPTHARD',
+                        default=-1, type=float)
     args = parser.parse_args()
 
-    main(args.name, args.numevents, args.proc, args.gen, args.seed, args.lhe, args.beam_type, args.ebeam1, args.ebeam2, args.pthard)
+    main(args.name, args.numevents, args.proc, args.gen, args.seed, args.lhe, args.beam_type, args.ebeam1, args.ebeam2, args.minpthard, args.maxpthard)

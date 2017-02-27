@@ -41,8 +41,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fLHEFile(),
   fCMSEnergy(-1),
   fTune(kPerugia2011),
-  fPtHardBin(-1),
-  fPtHardBins(),
+  fMinPtHard(-1),
+  fMaxPtHard(-1),
   fJetQA(kFALSE),
   fBeamType(kpp),
   fJetTree(kFALSE),
@@ -63,8 +63,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fLHEFile(),
   fCMSEnergy(-1),
   fTune(kPerugia2011),
-  fPtHardBin(-1),
-  fPtHardBins(),
+  fMinPtHard(-1),
+  fMaxPtHard(-1),
   fJetQA(kFALSE),
   fBeamType(kpp),
   fJetTree(kFALSE),
@@ -85,8 +85,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fLHEFile(lhe),
   fCMSEnergy(-1),
   fTune(kPerugia2011),
-  fPtHardBin(-1),
-  fPtHardBins(),
+  fMinPtHard(-1),
+  fMaxPtHard(-1),
   fJetQA(kFALSE),
   fBeamType(kpp),
   fJetTree(kFALSE),
@@ -129,39 +129,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   */
 
   // Generator and generator handler
-  Double_t ptHardMin = 0;
-  Double_t ptHardMax = 0;
-  if (fPtHardBin >= 0) {
-    if (fPtHardBins.GetSize() == 0) {
-/*      fPtHardBins.Set(7);
-      fPtHardBins[0] = 0;
-      fPtHardBins[1] = 5;
-      fPtHardBins[2] = 11;
-      fPtHardBins[3] = 21;
-      fPtHardBins[4] = 36;
-      fPtHardBins[5] = 57;
-      fPtHardBins[6] = 9999;*/
-/*      fPtHardBins.Set(11);
-      fPtHardBins[0] = 0;
-      fPtHardBins[1] = 5;
-      fPtHardBins[2] = 10;
-      fPtHardBins[3] = 15;
-      fPtHardBins[4] = 20;
-      fPtHardBins[5] = 25;
-      fPtHardBins[6] = 30;
-      fPtHardBins[7] = 40;
-      fPtHardBins[8] = 50;
-      fPtHardBins[9] = 60;
-      fPtHardBins[10] = 9999;*/
-      fPtHardBins.Set(3);
-      fPtHardBins[0] = 5;
-      fPtHardBins[1] = 12;
-      fPtHardBins[3] = 9999;
-    }
-    ptHardMin = fPtHardBins[fPtHardBin];
-    ptHardMax = fPtHardBins[fPtHardBin+1];
-  }
-  AliGenPythia* gen = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fTune, fProcess, fSpecialParticle, ptHardMin, ptHardMax, fForceHadDecay);
+  AliGenPythia* gen = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fTune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, fForceHadDecay);
   if (!fLHEFile.IsNull()) gen->SetReadLHEF(fLHEFile);
 
   AliMCGenHandler* mcInputHandler = new AliMCGenHandler();
@@ -207,6 +175,8 @@ void OnTheFlySimulationGenerator::Start()
 void OnTheFlySimulationGenerator::AddJetQA()
 {
   AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
+  pJetQA->SetPtHardRange(fMinPtHard, fMaxPtHard);
+  pJetQA->SetJetPtFactor(1.);
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetQA->SetMC(kTRUE);
   pJetQA->SetParticleLevel(kTRUE);
@@ -229,6 +199,8 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
 
   AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
   pDMesonJetsTask->SetVzRange(-999,999);
+  pDMesonJetsTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
+  pDMesonJetsTask->SetJetPtFactor(1.);
   pDMesonJetsTask->SetIsPythia(kTRUE);
   pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
   pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
@@ -278,6 +250,8 @@ void OnTheFlySimulationGenerator::AddJetTree()
   pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
 
   AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
+  pJetSpectraTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
+  pJetSpectraTask->SetJetPtFactor(1.);
   pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetSpectraTask->SetVzRange(-999,999);
   pJetSpectraTask->SetIsPythia(kTRUE);
@@ -295,7 +269,7 @@ void OnTheFlySimulationGenerator::CalculateCMSEnergy()
 }
 
 //________________________________________________________________________
-AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Int_t ptHardMin, Int_t ptHardMax, Bool_t forceHadronicDecay)
+AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Bool_t forceHadronicDecay)
 {
   Printf("PYTHIA generator with CMS energy = %.3f TeV", e_cms);
 
@@ -306,17 +280,20 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
   genP->SetVertexSmear(kPerEvent);
   genP->SetProcess(proc);
 
-  if (ptHardMin >= 0.) {
+  if (ptHardMin >= 0. && ptHardMax >= 0.) {
     genP->SetPtHard(ptHardMin, ptHardMax);
     Printf("Setting pt hard bin limits: %.2f, %.2f", ptHardMin, ptHardMax);
   }
 
+  Float_t randcharge = gRandom->Rndm() > 0.5 ? -1 : 1;
   if (specialPart == kccbar) {
-    genP->SetHeavyQuarkYRange(-1.5, 1.5);
+    genP->SetTriggerParticle(4*randcharge, 3., -1., 1000);
   }
   else if (specialPart == kbbbar) {
-    genP->SetHeavyQuarkYRange(-1.5, 1.5);
+    genP->SetTriggerParticle(5*randcharge, 3., -1., 1000);
   }
+
+  genP->SetHeavyQuarkYRange(-1.5, 1.5);
 
   if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4BodiesWithV0);
   //if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4Bodies);

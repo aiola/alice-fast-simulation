@@ -3,7 +3,8 @@
 #include <TSystem.h>
 #include <TInterpreter.h>
 
-void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString beamType, Double_t ebeam1, Double_t ebeam2, Int_t ptHard = -1)
+void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Double_t minPtHard = -1, Double_t maxPtHard = -1)
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
   gSystem->SetFPEMask(TSystem::kNoneMask);
@@ -29,11 +30,11 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
     trainName = Form("FastSim_%s", name.Data());
   }
   else {
-    if (ptHard < 0) {
+    if (minPtHard >= 0 && maxPtHard >= 0) {
       trainName = Form("FastSim_%s_%s", gen.Data(), procStr.Data());
     }
     else {
-      trainName = Form("FastSim_%s_%s_%d", gen.Data(), procStr.Data(), ptHard);
+      trainName = Form("FastSim_%s_%s_%.0f_%.0f", gen.Data(), procStr.Data(), minPtHard, maxPtHard);
     }
   }
 
@@ -50,7 +51,7 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
-      if (ptHard >= 0) {
+      if (minPtHard >= 0 && maxPtHard >= 0) {
         proc = kPyJets;
       }
       else {
@@ -59,7 +60,7 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
-      if (ptHard >= 0) {
+      if (minPtHard >= 0 && maxPtHard >= 0) {
         proc = kPyJets;
       }
       else {
@@ -73,7 +74,7 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
       Printf("Must provide an LHE file if POWHEG is selected as event generator!");
       return;
     }
-    if (ptHard >= 0) {
+    if (minPtHard >= 0 && maxPtHard >= 0) {
       Printf("Pt hard bins are ignored for POWHEG");
     }
     specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
@@ -97,7 +98,7 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
   sim->SetLHEFile(lhe);
   sim->SetEnergyBeam1(ebeam1);
   sim->SetEnergyBeam2(ebeam2);
-  sim->SetPtHardBin(ptHard);
+  sim->SetPtHardRange(minPtHard, maxPtHard);
   if (beamType == "pPb") {
     sim->SetBeamType(OnTheFlySimulationGenerator::kpPb);
   }
