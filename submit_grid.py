@@ -250,7 +250,7 @@ def DetermineMergingStage(AlienPath, TrainName):
 def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHard, MergingStage):
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
-        maxPtHardBin = len(PtHardList)
+        maxPtHardBin = len(PtHardList) - 1
     else:
         minPtHardBin = -1
         maxPtHardBin = -1
@@ -311,7 +311,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHard, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHardList, OldPowhegInit):
     print("Submitting merging jobs for train {0}".format(TrainName))
 
     ValidationScript = "FastSim_validation.sh"
@@ -326,7 +326,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
-        maxPtHardBin = len(PtHardList)
+        maxPtHardBin = len(PtHardList) - 1
     else:
         minPtHardBin = -1
         maxPtHardBin = -1
@@ -359,7 +359,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, MergingStage):
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
-        maxPtHardBin = len(PtHardList)
+        maxPtHardBin = len(PtHardList) - 1
     else:
         minPtHardBin = -1
         maxPtHardBin = -1

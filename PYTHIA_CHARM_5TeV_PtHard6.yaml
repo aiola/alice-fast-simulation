@@ -1,5 +1,5 @@
 name: PYTHIA_CHARM_5TeV_PtHard6
-aliphysics: vAN-20170222-1
+aliphysics: vAN-20170228-1
 numevents: 50000
 numbjobs: 33
 gen: pythia
@@ -10,7 +10,7 @@ renscfact: 1
 lhans: 11000
 beam_type: pp
 ebeam1: 2510
-ebeam1: 2510
+ebeam2: 2510
 nPDFset: 3
 nPDFerrSet: 1
 ttl: 7200
