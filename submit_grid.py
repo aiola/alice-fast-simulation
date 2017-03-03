@@ -247,20 +247,18 @@ def DetermineMergingStage(AlienPath, TrainName):
     MergingStage = len(MergingStages)
     return MergingStage
 
-def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHard, MergingStage):
+def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHardList, MergingStage):
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
         maxPtHardBin = len(PtHardList) - 1
     else:
         minPtHardBin = -1
-        maxPtHardBin = -1
+        maxPtHardBin = 0
 
     for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:
             TrainPtHardName = TrainName
         else:
-            minPtHard = PtHardList[ptHardBin]
-            maxPtHard = PtHardList[ptHardBin + 1]
             TrainPtHardName = "{0}/{1}".format(TrainName, ptHardBin)
 
         if MergingStage < 0:
@@ -329,12 +327,14 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
         maxPtHardBin = len(PtHardList) - 1
     else:
         minPtHardBin = -1
-        maxPtHardBin = -1
+        maxPtHardBin = 0
 
     for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:
             AlienDest = "{0}/{1}".format(AlienPath, TrainName)
             LocalDest = "{0}/{1}".format(LocalPath, TrainName)
+            minPtHard = -1
+            maxPtHard = -1
         else:
             minPtHard = PtHardList[ptHardBin]
             maxPtHard = PtHardList[ptHardBin + 1]
@@ -362,7 +362,7 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, Merg
         maxPtHardBin = len(PtHardList) - 1
     else:
         minPtHardBin = -1
-        maxPtHardBin = -1
+        maxPtHardBin = 0
 
     for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:

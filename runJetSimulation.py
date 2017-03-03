@@ -39,12 +39,18 @@ def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, 
             proc = ROOT.kPyJets
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
-            if minPtHard >= 0 and maxPtHard >= 0: proc = ROOT.kPyJets
-            else: proc = ROOT.kPyCharmppMNRwmi
+            if minPtHard >= 0 and maxPtHard >= 0:
+                proc = ROOT.kPyJets
+            else:
+                proc = ROOT.kPyJets
+                # proc = ROOT.kPyCharmppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kccbar
         elif procStr == "beauty":
-            if minPtHard >= 0 and maxPtHard >= 0: proc = ROOT.kPyJets
-            else: proc = ROOT.kPyBeautyppMNRwmi
+            if minPtHard >= 0 and maxPtHard >= 0:
+                proc = ROOT.kPyJets
+            else:
+                proc = ROOT.kPyJets
+                # proc = ROOT.kPyBeautyppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kbbbar
     elif gen == "powheg":
         if minPtHard >= 0 and maxPtHard >= 0:

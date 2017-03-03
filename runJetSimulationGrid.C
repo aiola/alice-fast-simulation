@@ -55,7 +55,8 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
         proc = kPyJets;
       }
       else {
-        proc = kPyCharmppMNRwmi;
+        proc = kPyJets;
+        //proc = kPyCharmppMNRwmi;
       }
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
@@ -64,7 +65,8 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
         proc = kPyJets;
       }
       else {
-        proc = kPyBeautyppMNRwmi;
+        proc = kPyJets;
+        //proc = kPyBeautyppMNRwmi;
       }
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
