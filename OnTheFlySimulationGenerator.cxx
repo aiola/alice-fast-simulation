@@ -200,7 +200,8 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
   AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
   pDMesonJetsTask->SetVzRange(-999,999);
   pDMesonJetsTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
-  pDMesonJetsTask->SetJetPtFactor(1.);
+  pDMesonJetsTask->SetMCFilter();
+  pDMesonJetsTask->SetJetPtFactor(4);
   pDMesonJetsTask->SetIsPythia(kTRUE);
   pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
   pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
