@@ -310,7 +310,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
     subprocessCall(["ls", LocalDest])
 
 def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHardList, OldPowhegInit):
-    print("Submitting merging jobs for train {0}".format(TrainName))
+    print("Submitting processing jobs for train {0}".format(TrainName))
 
     ValidationScript = "FastSim_validation.sh"
     ExeFile = "runFastSim.py"
