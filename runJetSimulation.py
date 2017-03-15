@@ -35,23 +35,16 @@ def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, 
         if lhe:
             print("An LHE file was provided ({0}) but PYTHIA was selected as generator. The LHE file will be ignored".format(lhe))
             lhe = ""
+        proc = ROOT.kPyJets
         if procStr == "dijet":
-            proc = ROOT.kPyJets
             specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
-            if minPtHard >= 0 and maxPtHard >= 0:
-                proc = ROOT.kPyJets
-            else:
-                proc = ROOT.kPyJets
-                # proc = ROOT.kPyCharmppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kccbar
         elif procStr == "beauty":
-            if minPtHard >= 0 and maxPtHard >= 0:
-                proc = ROOT.kPyJets
-            else:
-                proc = ROOT.kPyJets
-                # proc = ROOT.kPyBeautyppMNRwmi
             specialPart = ROOT.OnTheFlySimulationGenerator.kbbbar
+        else:
+            print("Unknown process {}!".format(procStr))
+            exit(1)
     elif gen == "powheg":
         if minPtHard >= 0 and maxPtHard >= 0:
             print("Pt hard bins are ignored for POWHEG")
@@ -60,15 +53,16 @@ def main(name, pythiaEvents, procStr, gen, seed, lhe, beamType, ebeam1, ebeam2, 
         if not lhe:
             print("Must provide an LHE file if POWHEG is selected as event generator!")
             exit(1)
+        specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         if procStr == "dijet":
             proc = ROOT.kPyJetsPWHG
-            specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "charm":
             proc = ROOT.kPyCharmPWHG
-            specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
         elif procStr == "beauty":
             proc = ROOT.kPyBeautyPWHG
-            specialPart = ROOT.OnTheFlySimulationGenerator.kNoSpecialParticle
+        else:
+            print("Unknown process {}!".format(procStr))
+            exit(1)
 
     sim = ROOT.OnTheFlySimulationGenerator(trainName)
     sim.SetNumberOfEvents(pythiaEvents)
