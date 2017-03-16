@@ -335,12 +335,14 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             LocalDest = "{0}/{1}".format(LocalPath, TrainName)
             minPtHard = -1
             maxPtHard = -1
+            JobsPtHard = Jobs
         else:
             minPtHard = PtHardList[ptHardBin]
             maxPtHard = PtHardList[ptHardBin + 1]
             AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
             LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
-        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, minPtHard, maxPtHard)
+            JobsPtHard = Jobs[ptHardBin]
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, minPtHard, maxPtHard)
 
         f = open(JdlFile, 'w')
         f.write(JdlContent)
