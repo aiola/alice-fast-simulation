@@ -9,6 +9,7 @@ import subprocess
 import argparse
 import random
 import sys
+import yaml
 
 def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, LHEfile, minpthard, maxpthard, grid):
     print("------------------ job starts ---------------------")
@@ -146,32 +147,12 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run fast simulation.')
+    parser.add_argument('config', metavar='config.yaml',
+                        default="default.yaml", help='YAML configuration file')
     parser.add_argument('--numevents', metavar='NEVT',
                         default=50000, type=int)
-    parser.add_argument('--gen', metavar='GEN',
-                        default='pythia')
     parser.add_argument('--lhe', metavar='LHE',
                         default='')
-    parser.add_argument('--proc', metavar='PROC',
-                        default='charm')
-    parser.add_argument('--qmass', metavar='QMASS',
-                        default=-1.0, type=float)
-    parser.add_argument('--facscfact', metavar='FACSCFACT',
-                        default=1.0, type=float)
-    parser.add_argument('--renscfact', metavar='RENSCFACT',
-                        default=1.0 , type=float)
-    parser.add_argument('--lhans', metavar='LHANS',
-                        default=11000, type=int)
-    parser.add_argument('--beam-type', metavar='BEAMTYPE',
-                        default="pp")
-    parser.add_argument('--ebeam1', metavar='EBEAM1',
-                        default=3500, type=int)
-    parser.add_argument('--ebeam2', metavar='EBEAM2',
-                        default=3500, type=int)
-    parser.add_argument('--nPDFset', metavar='3',
-                        default=3, type=int)
-    parser.add_argument('--nPDFerrSet', metavar='1',
-                        default=1, type=int)
     parser.add_argument('--minpthard', metavar="MINPTHARD",
                         default=-1, type=float)
     parser.add_argument('--maxpthard', metavar='MAXPTHARD',
@@ -181,4 +162,20 @@ if __name__ == '__main__':
                         help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.numevents, args.gen, args.proc, args.qmass, args.facscfact, args.renscfact, args.lhans , args.beam_type, args.ebeam1, args.ebeam2, args.nPDFset, args.nPDFerrSet, args.lhe, args.minpthard, args.maxpthard, args.grid)
+    f = open(args.config, 'r')
+    config = yaml.load(f)
+    f.close()
+
+    Gen = config["gen"]
+    Proc = config["proc"]
+    QMass = config["qmass"]
+    FacScFact = config["facscfact"]
+    RenScFact = config["renscfact"]
+    LHANS = config["lhans"]
+    BeamType = config["beam_type"]
+    EBeam1 = config["ebeam1"]
+    EBeam2 = config["ebeam2"]
+    nPDFset = config["nPDFset"]
+    nPDFerrSet = config["nPDFerrSet"]
+
+    main(args.numevents, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, args.lhe, args.minpthard, args.maxpthard, args.grid)

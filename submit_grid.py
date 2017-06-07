@@ -118,7 +118,7 @@ def GenerateComments():
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, MinPtHard, MaxPtHard):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -129,7 +129,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"--gen {Gen} --proc {Proc} --qmass {QMass} --facscfact {FacScFact} --renscfact {RenScFact} --lhans {LHANS} --beam-type {BeamType} --ebeam1 {EBeam1} --ebeam2 {EBeam2} --nPDFset {nPDFset} --nPDFerrSet {nPDFerrSet} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --grid\"; \n\
+Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -145,7 +145,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, Gen=Gen, Proc=Proc, QMass=QMass, FacScFact=FacScFact, RenScFact=RenScFact, LHANS=LHANS, BeamType=BeamType, EBeam1=EBeam1, EBeam2=EBeam2, nPDFset=nPDFset, nPDFerrSet=nPDFerrSet, TTL=TTL)
+".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -309,7 +309,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHardList, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
     ValidationScript = "FastSim_validation.sh"
@@ -318,7 +318,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 
     # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
     FilesToCopy = ["OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulationGrid.C",
-                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input"]
+                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", yamlFileName]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
 
@@ -342,7 +342,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
             LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
             JobsPtHard = Jobs[ptHardBin]
-        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, minPtHard, maxPtHard)
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard)
 
         f = open(JdlFile, 'w')
         f.write(JdlContent)
@@ -429,22 +429,16 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-def main(UserConf, config, Offline, GridUpdate, OldPowhegInit, Merge, Download, MergingStage):
+def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, Merge, Download, MergingStage):
+    f = open(yamlFileName, 'r')
+    config = yaml.load(f)
+    f.close()
 
     AliPhysicsVersion = config["aliphysics"]
     Events = config["numevents"]
     Jobs = config["numbjobs"]
     Gen = config["gen"]
     Proc = config["proc"]
-    QMass = config["qmass"]
-    FacScFact = config["facscfact"]
-    RenScFact = config["renscfact"]
-    LHANS = config["lhans"]
-    BeamType = config["beam_type"]
-    EBeam1 = config["ebeam1"]
-    EBeam2 = config["ebeam2"]
-    nPDFset = config["nPDFset"]
-    nPDFerrSet = config["nPDFerrSet"]
     PtHardList = config["pthard"]
     TTL = config["ttl"]
     MaxFilesPerJob = config["max_files_per_job"]
@@ -499,7 +493,7 @@ def main(UserConf, config, Offline, GridUpdate, OldPowhegInit, Merge, Download, 
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, PtHardList, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit)
 
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
@@ -524,50 +518,8 @@ if __name__ == '__main__':
     parser.add_argument("--old-powheg-init", action='store_const',
                         default=False, const=True,
                         help='Use old POWHEG init files.')
-
-    # The following parameters can be set more conveniently using the YAML configuration file
-    # If provided, the corresponding value from the YAML configuration is ignored
-    parser.add_argument('--aliphysics', metavar='vXXX',
-                        default=None, help='AliPhysics version')
-    parser.add_argument('--numevents', metavar='NEVT',
-                        default=None)
-    parser.add_argument('--numjobs', metavar='NJOBS',
-                        default=None)
-    parser.add_argument('--gen', metavar='GEN',
-                        default=None)
-    parser.add_argument('--proc', metavar='PROC',
-                        default=None)
-    parser.add_argument('--qmass', metavar='QMASS',
-                        default=None)
-    parser.add_argument('--facscfact', metavar='FACSCFACT',
-                        default=None)
-    parser.add_argument('--renscfact', metavar='RENSCFACT',
-                        default=None)
-    parser.add_argument('--lhans', metavar='LHANS',
-                        default=None)
-    parser.add_argument('--beam-type', metavar='BEAMTYPE',
-                        default=None)
-    parser.add_argument('--ebeam1', metavar='ENERGY1',
-                        default=None)
-    parser.add_argument('--ebeam2', metavar='ENERGY2',
-                        default=None)
-    parser.add_argument('--nPDFset', metavar='3',
-                        default=None)
-    parser.add_argument('--nPDFerrSet', metavar='1',
-                        default=None)
-    parser.add_argument('--ttl', metavar='TTL',
-                        default=None)
-    parser.add_argument('--max-files-per-job', metavar='N',
-                        default=None)
     args = parser.parse_args()
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    f = open(args.config, 'r')
-    config = yaml.load(f)
-    f.close()
-
-    pars_name = [a for a in dir(args) if not a.startswith('__') and not callable(getattr(args, a)) and not getattr(args, a) is None]
-    for p in pars_name: config[p] = getattr(args, a)
-
-    main(userConf, config, args.offline, args.update, args.old_powheg_init, args.merge, args.download, args.stage)
+    main(userConf, args.config, args.offline, args.update, args.old_powheg_init, args.merge, args.download, args.stage)
