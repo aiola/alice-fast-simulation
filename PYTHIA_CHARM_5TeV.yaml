@@ -1,4 +1,4 @@
-name: PYTHIA_CHARM_5TeV_PtHard6
+name: PYTHIA_CHARM_5TeV
 aliphysics: vAN-20170316-1
 numevents: 50000
 numbjobs: 350
