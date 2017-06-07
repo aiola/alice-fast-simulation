@@ -3,8 +3,8 @@
 #include <TSystem.h>
 #include <TInterpreter.h>
 
-void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
-    TString beamType, Double_t ebeam1, Double_t ebeam2, Double_t minPtHard = -1, Double_t maxPtHard = -1)
+void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1)
 {
   //gSystem->SetFPEMask(TSystem::kInvalid | TSystem::kDivByZero | TSystem::kOverflow | TSystem::kUnderflow);
   gSystem->SetFPEMask(TSystem::kNoneMask);
@@ -101,6 +101,7 @@ void runJetSimulationGrid(TString name, Int_t pythiaEvents, TString procStr, TSt
   sim->SetEnergyBeam1(ebeam1);
   sim->SetEnergyBeam2(ebeam2);
   sim->SetPtHardRange(minPtHard, maxPtHard);
+  sim->SetRejectISR(rejectISR);
   if (beamType == "pPb") {
     sim->SetBeamType(OnTheFlySimulationGenerator::kpPb);
   }

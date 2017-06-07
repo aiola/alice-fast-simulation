@@ -47,7 +47,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fBeamType(kpp),
   fJetTree(kFALSE),
   fEnergyBeam1(3500),
-  fEnergyBeam2(3500)
+  fEnergyBeam2(3500),
+  fRejectISR(kFALSE)
 {
 }
 
@@ -69,7 +70,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fBeamType(kpp),
   fJetTree(kFALSE),
   fEnergyBeam1(3500),
-  fEnergyBeam2(3500)
+  fEnergyBeam2(3500),
+  fRejectISR(kFALSE)
 {
 }
 
@@ -91,7 +93,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fBeamType(kpp),
   fJetTree(kFALSE),
   fEnergyBeam1(3500),
-  fEnergyBeam2(3500)
+  fEnergyBeam2(3500),
+  fRejectISR(kFALSE)
 {
 }
 
@@ -208,6 +211,7 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
   pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
   pDMesonJetsTask->SetApplyKinematicCuts(kFALSE);
+  pDMesonJetsTask->SetRejectISR(fRejectISR);
   AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
   eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);

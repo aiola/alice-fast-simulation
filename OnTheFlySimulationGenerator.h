@@ -49,6 +49,7 @@ public:
   void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
   void SetBeamType(EBeamType_t b)                         { fBeamType        = b             ; }
   void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
+  void SetRejectISR(Bool_t b)                             { fRejectISR       = b             ; }
 
   static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Bool_t forceHadronicDecay);
 
@@ -94,6 +95,7 @@ protected:
   Bool_t               fJetTree          ;
   Float_t              fEnergyBeam1      ; // in GeV
   Float_t              fEnergyBeam2      ; // in GeV
+  Bool_t               fRejectISR        ;
 
 private:
   OnTheFlySimulationGenerator(const OnTheFlySimulationGenerator&);//not implemented
