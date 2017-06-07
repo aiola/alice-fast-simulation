@@ -176,7 +176,7 @@ void OnTheFlySimulationGenerator::AddJetQA()
 {
   AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
   pJetQA->SetPtHardRange(fMinPtHard, fMaxPtHard);
-  pJetQA->SetMCFilter();
+  if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pJetQA->SetMCFilter();
   pJetQA->SetJetPtFactor(4);
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetQA->SetMC(kTRUE);
@@ -201,7 +201,7 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
   AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
   pDMesonJetsTask->SetVzRange(-999,999);
   pDMesonJetsTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
-  pDMesonJetsTask->SetMCFilter();
+  if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pDMesonJetsTask->SetMCFilter();
   pDMesonJetsTask->SetJetPtFactor(4);
   pDMesonJetsTask->SetIsPythia(kTRUE);
   pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
@@ -209,22 +209,22 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
   pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
   pDMesonJetsTask->SetApplyKinematicCuts(kFALSE);
   AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kD0toKpi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.4);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kChargedJet, 0.6);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
-  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
+  eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
 
@@ -253,16 +253,16 @@ void OnTheFlySimulationGenerator::AddJetTree()
 
   AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
   pJetSpectraTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
-  pJetSpectraTask->SetMCFilter();
+  if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pJetSpectraTask->SetMCFilter();
   pJetSpectraTask->SetJetPtFactor(4);
   pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetSpectraTask->SetVzRange(-999,999);
   pJetSpectraTask->SetIsPythia(kTRUE);
   pJetSpectraTask->SetNeedEmcalGeom(kFALSE);
   pJetSpectraTask->GetParticleContainer("mcparticles")->SetMinPt(0.);
-  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
-  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid);
-  pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid);
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid, "mcparticles", "");
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid, "mcparticles", "");
+  pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid, "mcparticles", "");
 }
 
 //________________________________________________________________________
