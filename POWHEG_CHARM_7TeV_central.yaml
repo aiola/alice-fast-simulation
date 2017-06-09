@@ -1,7 +1,7 @@
 name: PYTHIA_CHARM_7TeV_central
-aliphysics: vAN-20170607-1
-numevents: 5000
-numbjobs: 350
+aliphysics: vAN-20170608-1
+numevents: 50000
+numbjobs: 400
 gen: powheg
 proc: charm
 qmass: -1

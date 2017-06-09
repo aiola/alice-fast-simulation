@@ -133,8 +133,8 @@ Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxp
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
-\"VO_ALICE@POWHEG::r3178-5\", \n\
-\"VO_ALICE@Python-modules::1.0-4\" \n\
+\"VO_ALICE@POWHEG::r3178-alice1-1\", \n\
+\"VO_ALICE@Python-modules::1.0-12\" \n\
 }}; \n\
 # JDL variables \n\
 JDLVariables = \n\
@@ -181,7 +181,7 @@ Arguments = \"{trainName} --xml wn.xml --grid\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
-\"VO_ALICE@Python-modules::1.0-4\" \n\
+\"VO_ALICE@Python-modules::1.0-12\" \n\
 }}; \n\
 # JDL variables \n\
 JDLVariables = \n\
