@@ -40,7 +40,7 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
 
     print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
 
-    if gen == "powheg":
+    if "powheg" in gen:
         if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.input") or os.path.isfile("powheg.log"):
             print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.input, powheg.log")
             exit(1)

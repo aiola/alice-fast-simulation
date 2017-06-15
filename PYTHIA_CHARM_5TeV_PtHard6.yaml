@@ -2,7 +2,7 @@ name: PYTHIA_CHARM_5TeV_PtHard6
 aliphysics: vAN-20170316-1
 numevents: 50000
 numbjobs: [200, 30, 30, 30, 30, 30]
-gen: pythia
+gen: pythia6
 proc: charm
 qmass: -1
 facscfact: 1

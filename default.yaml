@@ -2,7 +2,7 @@ name: default
 aliphysics: vAN-20170222-1
 numevents: 50000
 numbjobs: 10
-gen: pythia
+gen: pythia6
 proc: charm
 qmass: -1
 facscfact: 1

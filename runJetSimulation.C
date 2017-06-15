@@ -41,7 +41,10 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   Process_t proc = kPyMb;
   Bool_t forceDecay = kFALSE;
   OnTheFlySimulationGenerator::ESpecialParticle_t specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-  if (gen == "pythia") {
+  OnTheFlySimulationGenerator::EGenerator_t partonEvent = OnTheFlySimulationGenerator::kPythia6;
+  OnTheFlySimulationGenerator::EGenerator_t hadronization = OnTheFlySimulationGenerator::kPythia6;
+  OnTheFlySimulationGenerator::EGenerator_t decayer = OnTheFlySimulationGenerator::kPythia6;
+  if (gen == "pythia6") {
     if (!lhe.IsNull()) {
       Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored",lhe);
       lhe = "";
@@ -71,7 +74,8 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
   }
-  else if (gen == "powheg") {
+  else if (gen == "powheg+pythia6") {
+    partonEvent = OnTheFlySimulationGenerator::kPowheg;
     if (lhe.IsNull()) {
       Printf("Must provide an LHE file if POWHEG is selected as event generator!");
       return;
@@ -90,12 +94,67 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       proc = kPyBeautyPWHG;
     }
   }
+  else if (gen == "powheg+pythia6+evtgen") {
+    partonEvent = OnTheFlySimulationGenerator::kPowheg;
+    decayer = OnTheFlySimulationGenerator::kEvtGen;
+    if (lhe.IsNull()) {
+      Printf("Must provide an LHE file if POWHEG is selected as event generator!");
+      return;
+    }
+    if (minPtHard >= 0 && maxPtHard >= 0) {
+      Printf("Pt hard bins are ignored for POWHEG");
+    }
+    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    if (procStr == "dijet") {
+      proc = kPyJetsPWHG;
+    }
+    else if (procStr == "charm") {
+      proc = kPyCharmPWHG;
+    }
+    else if (procStr == "beauty") {
+      proc = kPyBeautyPWHG;
+    }
+  }
+  else if (gen == "pythia6+evtgen") {
+    decayer = OnTheFlySimulationGenerator::kEvtGen;
+    if (!lhe.IsNull()) {
+      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored",lhe);
+      lhe = "";
+    }
+    if (procStr == "dijet") {
+      proc = kPyJets;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    }
+    else if (procStr == "charm") {
+      if (minPtHard >= 0 && maxPtHard >= 0) {
+        proc = kPyJets;
+      }
+      else {
+        proc = kPyJets;
+        //proc = kPyCharmppMNRwmi;
+      }
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty") {
+      if (minPtHard >= 0 && maxPtHard >= 0) {
+        proc = kPyJets;
+      }
+      else {
+        proc = kPyJets;
+        //proc = kPyBeautyppMNRwmi;
+      }
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+  }
 
   OnTheFlySimulationGenerator* sim = new OnTheFlySimulationGenerator(trainName);
   sim->SetNumberOfEvents(pythiaEvents);
   sim->SetProcess(proc);
   sim->SetSpecialParticle(specialPart);
   sim->SetForceHadronicDecay(forceDecay);
+  sim->SetPartonEventGenerator(partonEvent);
+  sim->SetHadronization(hadronization);
+  sim->SetDecayer(decayer);
   sim->SetSeed(seed);
   sim->SetLHEFile(lhe);
   sim->SetEnergyBeam1(ebeam1);
