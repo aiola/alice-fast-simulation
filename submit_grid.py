@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 
 # script to submit fast simulation jobs to the grid
 # submit a processing job using POWHEG charm settings with 100 subjobs, each producing 50k events
