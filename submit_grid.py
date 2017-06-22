@@ -239,8 +239,14 @@ def DetermineMergingStage(AlienPath, TrainName):
     AlienOutput = "{0}/{1}".format(AlienPath, TrainName)
     if not AlienFileExists(AlienOutput):
         return -1
-    AlienOuputContent = subprocessCheckOutput(["alien_ls", AlienOutput]).splitlines()
+    AlienOuputContent_orig = subprocessCheckOutput(["alien_ls", AlienOutput]).splitlines()
+    AlienOuputContent = []
+    for p in AlienOuputContent_orig:
+        i = p.rfind("/")
+        if i >= 0: p = p[i + 1:]
+        AlienOuputContent.append(p)
     if not "output" in AlienOuputContent:
+        print(AlienOuputContent)
         return -1
     regex = re.compile("stage_.")
     MergingStages = [string for string in AlienOuputContent if re.match(regex, string)]
@@ -393,12 +399,16 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, Merg
             os.makedirs(LocalDest)
         AlienOuputContent = subprocessCheckOutput(["alien_ls", AlienOutputPath]).splitlines()
         for SubDir in AlienOuputContent:
+            i = SubDir.rfind("/")
+            if i >= 0: SubDir = SubDir[i + 1:]
             SubDirDest = "{0}/{1}".format(LocalDest, SubDir)
             SubDirOrig = "{0}/{1}".format(AlienOutputPath, SubDir)
             if not os.path.isdir(SubDirDest):
                 os.makedirs(SubDirDest)
             FilesToDownload = subprocessCheckOutput(["alien_ls", "{0}/AnalysisResults*.root".format(SubDirOrig)]).splitlines()
             for FileName in FilesToDownload:
+                i = FileName.rfind("/")
+                if i >= 0: FileName = FileName[i + 1:]
                 FileDest = "{0}/{1}".format(SubDirDest, FileName)
                 if os.path.isfile(FileDest):
                     print("File {0} already exists, skipping...".format(FileDest))
