@@ -1,8 +1,8 @@
 name: PYTHIA_CHARM_7TeV_central
-aliphysics: vAN-20170613-1
+aliphysics: vAN-20170629-1
 numevents: 50000
 numbjobs: 400
-gen: powheg+pythia6
+gen: pythia6
 proc: charm
 qmass: -1
 facscfact: 1
@@ -16,4 +16,3 @@ nPDFerrSet: 1
 ttl: 7200
 max_files_per_job: 20
 pthard: no
-rejectISR: yes
