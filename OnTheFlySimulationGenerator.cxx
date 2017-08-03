@@ -203,14 +203,6 @@ void OnTheFlySimulationGenerator::AddJetQA()
 void OnTheFlySimulationGenerator::AddDJet_pp()
 {
   UInt_t rejectOrigin = 0;
-  if (fProcess ==  kPyCharm) {
-    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
-  }
-  else if (fProcess ==  kPyBeauty) {
-    rejectOrigin = AliAnalysisTaskDmesonJets::EMesonOrigin_t::kAnyOrigin & ~AliAnalysisTaskDmesonJets::EMesonOrigin_t::kFromBottom;
-  }
-
-  rejectOrigin |= AliAnalysisTaskDmesonJets::EMesonOrigin_t::kUnknownQuark;
 
   AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
   pDMesonJetsTask->SetVzRange(-999,999);
