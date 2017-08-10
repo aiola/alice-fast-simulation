@@ -72,9 +72,10 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
         with open("powheg.input", "a") as myfile:
             myfile.write("iseed {0}\n".format(rnd))
             myfile.write("numevts {0}\n".format(powhegEvents))
-            myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
+            if proc == "beauty" or proc == "charm":
+                myfile.write("qmass {0}\n".format(qmass))
+                myfile.write("facscfact {0}\n".format(facscfact))
+                myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("lhans1 {0}\n".format(lhans))
             myfile.write("lhans2 {0}\n".format(lhans))
             myfile.write("ebeam1 {0}\n".format(ebeam1))

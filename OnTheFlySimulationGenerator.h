@@ -60,8 +60,9 @@ public:
   void SetPythiaTune(EPythia6Tune_t tune)                 { fPythia6Tune     = tune          ; }
   void SetPtHardRange(Double_t minPtHard, Double_t maxPtHard) { fMinPtHard   = minPtHard ; fMaxPtHard   = maxPtHard ; }
   void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
-  void SetBeamType(EBeamType_t b)                         { fBeamType        = b             ; }
   void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
+  void EnableDMesonJets(Bool_t b = kTRUE)                 { fDMesonJets      = b             ; }
+  void SetBeamType(EBeamType_t b)                         { fBeamType        = b             ; }
   void SetRejectISR(Bool_t b)                             { fRejectISR       = b             ; }
   void SetPartonEventGenerator(EGenerator_t gen)          { fPartonEvent     = gen           ; }
   void SetHadronization(EGenerator_t gen)                 { fHadronization   = gen           ; }
@@ -93,8 +94,7 @@ public:
 protected:
   void               AddJetQA();
   void               AddJetTree();
-  void               AddDJet_pp();
-  void               AddDJet_pPb();
+  void               AddDJet();
 
   void               CalculateCMSEnergy();
 
@@ -110,9 +110,10 @@ protected:
   EPythia6Tune_t       fPythia6Tune      ;
   Double_t             fMinPtHard        ;
   Double_t             fMaxPtHard        ;
-  Bool_t               fJetQA            ;
   EBeamType_t          fBeamType         ;
+  Bool_t               fJetQA            ;
   Bool_t               fJetTree          ;
+  Bool_t               fDMesonJets       ;
   Float_t              fEnergyBeam1      ; // in GeV
   Float_t              fEnergyBeam2      ; // in GeV
   Bool_t               fRejectISR        ;

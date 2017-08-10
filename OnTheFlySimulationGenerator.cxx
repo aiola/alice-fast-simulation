@@ -46,9 +46,10 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fPythia6Tune(kPerugia2011),
   fMinPtHard(-1),
   fMaxPtHard(-1),
-  fJetQA(kFALSE),
   fBeamType(kpp),
+  fJetQA(kFALSE),
   fJetTree(kFALSE),
+  fDMesonJets(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500),
   fRejectISR(kFALSE),
@@ -72,9 +73,10 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fPythia6Tune(kPerugia2011),
   fMinPtHard(-1),
   fMaxPtHard(-1),
-  fJetQA(kFALSE),
   fBeamType(kpp),
+  fJetQA(kFALSE),
   fJetTree(kFALSE),
+  fDMesonJets(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500),
   fRejectISR(kFALSE),
@@ -98,9 +100,10 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fPythia6Tune(kPerugia2011),
   fMinPtHard(-1),
   fMaxPtHard(-1),
-  fJetQA(kFALSE),
   fBeamType(kpp),
+  fJetQA(kFALSE),
   fJetTree(kFALSE),
+  fDMesonJets(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500),
   fRejectISR(kFALSE),
@@ -155,8 +158,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
   AliEmcalMCTrackSelector* pMCTrackSel = AliEmcalMCTrackSelector::AddTaskMCTrackSelector("mcparticles",kFALSE,kFALSE,-1,kFALSE);
 
   if (fJetQA) AddJetQA();
-  if (fBeamType == kpp) AddDJet_pp();
-  else if (fBeamType == kpPb) AddDJet_pPb();
+  if (fDMesonJets) AddDJet();
   if (fJetTree) AddJetTree();
 }
 
@@ -200,7 +202,7 @@ void OnTheFlySimulationGenerator::AddJetQA()
 }
 
 //________________________________________________________________________
-void OnTheFlySimulationGenerator::AddDJet_pp()
+void OnTheFlySimulationGenerator::AddDJet()
 {
   UInt_t rejectOrigin = 0;
 
@@ -235,14 +237,6 @@ void OnTheFlySimulationGenerator::AddDJet_pp()
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
 
-}
-
-//________________________________________________________________________
-void OnTheFlySimulationGenerator::AddDJet_pPb()
-{
-  // Implement user task for pPb analysis here!
-  // For the moment, use pp user task
-  AddDJet_pp();
 }
 
 //________________________________________________________________________
