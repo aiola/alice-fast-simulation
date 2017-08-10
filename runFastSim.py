@@ -166,9 +166,12 @@ if __name__ == '__main__':
 
     Gen = config["gen"]
     Proc = config["proc"]
-    QMass = config["qmass"]
-    FacScFact = config["facscfact"]
-    RenScFact = config["renscfact"]
+    if "qmass" in config: QMass = config["qmass"]
+    else: QMass = None
+    if "facscfact" in config: FacScFact = config["facscfact"]
+    else: FacScFact = None
+    if "renscfact" in config: RenScFact = config["renscfact"]
+    else: RenScFact = None
     LHANS = config["lhans"]
     BeamType = config["beam_type"]
     EBeam1 = config["ebeam1"]
