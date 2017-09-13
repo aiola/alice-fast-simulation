@@ -1,10 +1,10 @@
-name: PYTHIA_BEAUTY_7TeV_central
+name: PYTHIA_BEAUTY_7TeV_mass_low
 aliphysics: vAN-20170910-1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
 proc: beauty
-qmass: -1
+qmass: 4.5
 facscfact: 1
 renscfact: 1
 lhans: 11000
