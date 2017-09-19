@@ -1,13 +1,13 @@
-name: PYTHIA_BEAUTY_7TeV_PDF10042
+name: PYTHIA_BEAUTY_7TeV_FS05RS05
 aliphysics: vAN-20170910-1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
 proc: beauty
 qmass: -1
-facscfact: 1
-renscfact: 1
-lhans: 10042
+facscfact: 0.5
+renscfact: 0.5
+lhans: 11000
 beam_type: pp
 ebeam1: 3500
 ebeam2: 3500
