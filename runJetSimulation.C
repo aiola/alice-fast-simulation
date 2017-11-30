@@ -1,32 +1,16 @@
 //runJetSimulationGrid.C
 
-//#include <TSystem.h>
-//#include <TInterpreter.h>
-//#include <TRoot.h>
+#include <TSystem.h>
+#include <TInterpreter.h>
+#include <TROOT.h>
 
-//#include "OnTheFlySimulationGenerator.h"
+#include "OnTheFlySimulationGenerator.h"
 
 void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
     TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1)
 {
   //gSystem->SetFPEMask(kInvalid | kDivByZero | kOverflow | kUnderflow);
   gSystem->SetFPEMask(kNoneMask);
-
-  gInterpreter->AddIncludePath("$ALICE_ROOT/include");
-  gInterpreter->AddIncludePath("$ALICE_PHYSICS/include");
-  gInterpreter->AddIncludePath("$FASTJET/include");
-
-  //load fastjet libraries 3.x
-  gSystem->Load("libCGAL");
-
-  gSystem->Load("libfastjet");
-  gSystem->Load("libsiscone");
-  gSystem->Load("libsiscone_spherical");
-  gSystem->Load("libfastjetplugins");
-  gSystem->Load("libfastjetcontribfragile");
-
-  gSystem->Load("libpythia6_4_28.so");
-  gROOT->ProcessLine(".L OnTheFlySimulationGenerator.cxx+g");
 
   TString trainName;
   if (!name.IsNull()) {
@@ -49,7 +33,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   OnTheFlySimulationGenerator::EGenerator_t decayer = OnTheFlySimulationGenerator::kPythia6;
   if (gen == "pythia6") {
     if (!lhe.IsNull()) {
-      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored",lhe);
+      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored", lhe.Data());
       lhe = "";
     }
     if (procStr == "dijet") {
@@ -121,7 +105,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   else if (gen == "pythia6+evtgen") {
     decayer = OnTheFlySimulationGenerator::kEvtGen;
     if (!lhe.IsNull()) {
-      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored",lhe);
+      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored", lhe.Data());
       lhe = "";
     }
     if (procStr == "dijet") {

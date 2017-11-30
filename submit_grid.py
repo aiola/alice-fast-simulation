@@ -27,6 +27,7 @@ import UserConfiguration
 goodSites = []
 badSites = []
 
+
 def AlienDelete(fileName):
     if fileName.find("alien://") == -1:
         fname = fileName
@@ -35,6 +36,7 @@ def AlienDelete(fileName):
 
     subprocessCall(["alien_rm", fname])
 
+
 def AlienDeleteDir(fileName):
     if fileName.find("alien://") == -1:
         fname = fileName
@@ -42,6 +44,7 @@ def AlienDeleteDir(fileName):
         fname = fileName[8:]
 
     subprocessCall(["alien_rmdir", fname])
+
 
 def AlienFileExists(fileName):
     if fileName.find("alien://") == -1:
@@ -56,6 +59,7 @@ def AlienFileExists(fileName):
         fileExists = False
 
     return fileExists
+
 
 def AlienCopy(source, destination, attempts=3, overwrite=False):
     i = 0
@@ -84,17 +88,21 @@ def AlienCopy(source, destination, attempts=3, overwrite=False):
 
     return fileExists
 
+
 def subprocessCall(cmd):
     print(cmd)
     return subprocess.call(cmd)
+
 
 def subprocessCheckCall(cmd):
     print(cmd)
     return subprocess.check_call(cmd)
 
+
 def subprocessCheckOutput(cmd):
     print(cmd)
     return subprocess.check_output(cmd, universal_newlines=True)
+
 
 def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
     if not Offline:
@@ -109,6 +117,7 @@ def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
             AlienCopy(file, "alien://{0}/{1}".format(AlienDest, file), 3, GridUpdate)
         shutil.copy(file, LocalDest)
 
+
 def GenerateComments():
     branch = subprocessCheckOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     hash = subprocessCheckOutput(["git", "rev-parse", "HEAD"])
@@ -117,6 +126,7 @@ def GenerateComments():
 # Generated using branch {branch} ({hash}) \n\
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
+
 
 def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard):
     comments = GenerateComments()
@@ -163,8 +173,10 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
     jdlContent += requirements
     return jdlContent
 
+
 def GenerateXMLCollection(Path, XmlName):
     return subprocessCheckOutput(["alien_find", "-x", XmlName, Path, "*/AnalysisResults*.root"])
+
 
 def GenerateMergingJDL(Exe, Xml, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod):
     comments = GenerateComments()
@@ -214,6 +226,7 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
     jdlContent += requirements
     return jdlContent
 
+
 def GenerateSiteRequirements():
     PosRequirements = ""
     NegRequirements = ""
@@ -235,6 +248,7 @@ def GenerateSiteRequirements():
         requirements = ""
     return requirements
 
+
 def DetermineMergingStage(AlienPath, TrainName):
     AlienOutput = "{0}/{1}".format(AlienPath, TrainName)
     if not AlienFileExists(AlienOutput):
@@ -252,6 +266,7 @@ def DetermineMergingStage(AlienPath, TrainName):
     MergingStages = [string for string in AlienOuputContent if re.match(regex, string)]
     MergingStage = len(MergingStages)
     return MergingStage
+
 
 def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHardList, MergingStage):
     if PtHardList and len(PtHardList) > 1:
@@ -315,6 +330,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
+
 def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
@@ -324,7 +340,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 
     # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
     FilesToCopy = ["OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulation.C",
-                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", yamlFileName]
+                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "start_simulation.C", yamlFileName]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
 
@@ -363,6 +379,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     print "Done."
 
     subprocessCall(["ls", LocalDest])
+
 
 def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, MergingStage):
     if PtHardList and len(PtHardList) > 1:
@@ -426,6 +443,7 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, Merg
                     print("ERROR ***** Downloading of {0} failed!".format(FileOrig))
                     os.remove(FileDestTemp)
 
+
 def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName = "FastSim_{0}_{1}".format(Gen, Proc)
     AlienPathContent = subprocessCheckOutput(["alien_ls", AlienPath]).splitlines()
@@ -438,6 +456,7 @@ def GetLastTrainName(AlienPath, Gen, Proc):
         return None
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
+
 
 def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, Merge, Download, MergingStage):
     f = open(yamlFileName, 'r')
@@ -505,8 +524,10 @@ def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, Merge, Down
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
         SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit)
 
+
 if __name__ == '__main__':
     # FinalMergeLocal.py executed as script
+
 
     parser = argparse.ArgumentParser(description='Local final merging for LEGO train results.')
     parser.add_argument('config', metavar='config.yaml',

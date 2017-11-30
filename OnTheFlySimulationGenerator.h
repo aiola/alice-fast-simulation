@@ -1,5 +1,8 @@
 // OnTheFlySimulationGenerator
 
+#ifndef ONTHEFLYSIMULATIONGENERATOR_H
+#define ONTHEFLYSIMULATIONGENERATOR_H
+
 #include <TString.h>
 #include <PythiaProcesses.h>
 
@@ -8,6 +11,7 @@ class AliAnalysisTaskSE;
 class AliAnalysisManager;
 class AliGenEvtGen;
 class AliGenerator;
+class AliGenCocktail;
 //class AliPythia8;
 
 class OnTheFlySimulationGenerator {
@@ -125,3 +129,5 @@ private:
   OnTheFlySimulationGenerator(const OnTheFlySimulationGenerator&);//not implemented
   OnTheFlySimulationGenerator& operator=(const OnTheFlySimulationGenerator&); //not implemented
 };
+
+#endif

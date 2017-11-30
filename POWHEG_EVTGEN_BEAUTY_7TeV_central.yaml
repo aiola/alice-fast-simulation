@@ -1,4 +1,4 @@
-name: PYTHIA_CHARM_7TeV_central
+name: POWHEG_EVTGEN_BEAUTY_7TeV_central
 aliphysics: vAN-20170613-1
 numevents: 50000
 numbjobs: 400

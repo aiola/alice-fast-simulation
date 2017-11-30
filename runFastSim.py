@@ -11,6 +11,7 @@ import random
 import sys
 import yaml
 
+
 def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, rejectISR, LHEfile, minpthard, maxpthard, grid):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
@@ -125,11 +126,11 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
 
     print("Running PYTHIA simulation...")
     with open("sim.log", "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard)], stdout=myfile, stderr=myfile)
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard)], stdout=myfile, stderr=myfile)
 
     if not grid:
         os.rename("sim.log", "sim_{0}.log".format(fname))
-        print("Simulation log backed up in {0}.log".format(fname))
+        print("Simulation log backed up in sim_{0}.log".format(fname))
 
     print("Done")
     print("...see results in the log files")
@@ -142,6 +143,7 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
     print("------------------ job ends ----------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run fast simulation.')
