@@ -1,13 +1,18 @@
 //runJetSimulationGrid.C
 
+#include <iostream>
+
 #include <TSystem.h>
 #include <TInterpreter.h>
 #include <TROOT.h>
 
+#include "AliLog.h"
+
 #include "OnTheFlySimulationGenerator.h"
 
 void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
-    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1)
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1,
+    UInt_t debug_level = 0)
 {
   //gSystem->SetFPEMask(kInvalid | kDivByZero | kOverflow | kUnderflow);
   gSystem->SetFPEMask(kNoneMask);
@@ -33,7 +38,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   OnTheFlySimulationGenerator::EGenerator_t decayer = OnTheFlySimulationGenerator::kPythia6;
   if (gen == "pythia6") {
     if (!lhe.IsNull()) {
-      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored", lhe.Data());
+      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA was selected as generator. The LHE file will be ignored" << std::endl;
       lhe = "";
     }
     if (procStr == "dijet") {
@@ -61,14 +66,40 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
   }
+  if (gen == "pythia8") {
+    partonEvent = OnTheFlySimulationGenerator::kPythia8;
+    hadronization = OnTheFlySimulationGenerator::kPythia8;
+    decayer = OnTheFlySimulationGenerator::kPythia8;
+    if (!lhe.IsNull()) {
+      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA was selected as generator. The LHE file will be ignored" << std::endl;
+      lhe = "";
+    }
+    if (procStr == "dijet") {
+      proc = kPyJets;
+    }
+    else if (procStr == "charm") {
+      if (minPtHard == 0) {
+        minPtHard = 2.75;
+        if (maxPtHard <= minPtHard) maxPtHard = 99999.;
+      }
+      proc = kPyCharmppMNRwmi;
+    }
+    else if (procStr == "beauty") {
+      if (minPtHard == 0) {
+        minPtHard = 2.75;
+        if (maxPtHard <= minPtHard) maxPtHard = 99999.;
+      }
+      proc = kPyBeautyppMNR;
+    }
+  }
   else if (gen == "powheg+pythia6") {
     partonEvent = OnTheFlySimulationGenerator::kPowheg;
     if (lhe.IsNull()) {
-      Printf("Must provide an LHE file if POWHEG is selected as event generator!");
+      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator!" << std::endl;
       return;
     }
     if (minPtHard >= 0 && maxPtHard >= 0) {
-      Printf("Pt hard bins are ignored for POWHEG");
+      AliWarningGeneralStream("") << "Pt hard bins are ignored for POWHEG" << std::endl;
     }
     specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     if (procStr == "dijet") {
@@ -85,11 +116,11 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     partonEvent = OnTheFlySimulationGenerator::kPowheg;
     decayer = OnTheFlySimulationGenerator::kEvtGen;
     if (lhe.IsNull()) {
-      Printf("Must provide an LHE file if POWHEG is selected as event generator!");
+      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator!" << std::endl;
       return;
     }
     if (minPtHard >= 0 && maxPtHard >= 0) {
-      Printf("Pt hard bins are ignored for POWHEG");
+      AliWarningGeneralStream("") << "Pt hard bins are ignored for POWHEG" << std::endl;
     }
     specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     if (procStr == "dijet") {
@@ -105,7 +136,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   else if (gen == "pythia6+evtgen") {
     decayer = OnTheFlySimulationGenerator::kEvtGen;
     if (!lhe.IsNull()) {
-      Printf("An LHE file was provided (%s) but PYTHIA was selected as generator. The LHE file will be ignored", lhe.Data());
+      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA was selected as generator. The LHE file will be ignored" << std::endl;
       lhe = "";
     }
     if (procStr == "dijet") {
@@ -132,6 +163,32 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       }
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
+  }
+  else if (gen == "powheg+pythia8") {
+    partonEvent = OnTheFlySimulationGenerator::kPowheg;
+    hadronization = OnTheFlySimulationGenerator::kPythia8;
+    decayer = OnTheFlySimulationGenerator::kPythia8;
+    if (lhe.IsNull()) {
+      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator!" << std::endl;
+      return;
+    }
+    if (minPtHard >= 0 && maxPtHard >= 0) {
+      AliWarningGeneralStream("") << "Pt hard bins are ignored for POWHEG" << std::endl;
+    }
+    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    if (procStr == "dijet") {
+      proc = kPyJetsPWHG;
+    }
+    else if (procStr == "charm") {
+      proc = kPyCharmPWHG;
+    }
+    else if (procStr == "beauty") {
+      proc = kPyBeautyPWHG;
+    }
+  }
+  else {
+    AliErrorGeneralStream("") << "Generator '" << gen.Data() << "' not recognized!" << std::endl;
+    return;
   }
 
   OnTheFlySimulationGenerator* sim = new OnTheFlySimulationGenerator(trainName);
@@ -161,8 +218,8 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     sim->SetBeamType(OnTheFlySimulationGenerator::kpp);
   }
   else {
-    Printf("ERROR: Beam type %s not recognized!! Not running...", beamType.Data());
+    AliErrorGeneralStream("") << "ERROR: Beam type " << beamType.Data() << " not recognized!! Not running..." << std::endl;
     return;
   }
-  sim->Start();
+  sim->Start(debug_level);
 }

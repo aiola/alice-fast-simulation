@@ -12,6 +12,7 @@
 
 // AliRoot classes
 #include <AliGenPythia.h>
+#include <AliGenPythiaPlus.h>
 #include <AliESDInputHandler.h>
 #include <AliAnalysisAlien.h>
 #include <AliAnalysisManager.h>
@@ -21,7 +22,8 @@
 #include <AliAnalysisTaskSE.h>
 #include <AliGenEvtGen.h>
 #include <AliGenCocktail.h>
-//#include <AliPythia8.h>
+#include <AliPythia8.h>
+#include <AliLog.h>
 
 // AliPhysics classes
 #include <AliAnalysisTaskDmesonJets.h>
@@ -44,6 +46,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fLHEFile(),
   fCMSEnergy(-1),
   fPythia6Tune(kPerugia2011),
+  fPythia8Tune(kMonash2013),
   fMinPtHard(-1),
   fMaxPtHard(-1),
   fBeamType(kpp),
@@ -71,6 +74,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fLHEFile(),
   fCMSEnergy(-1),
   fPythia6Tune(kPerugia2011),
+  fPythia8Tune(kMonash2013),
   fMinPtHard(-1),
   fMaxPtHard(-1),
   fBeamType(kpp),
@@ -98,6 +102,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fLHEFile(lhe),
   fCMSEnergy(-1),
   fPythia6Tune(kPerugia2011),
+  fPythia8Tune(kMonash2013),
   fMinPtHard(-1),
   fMaxPtHard(-1),
   fBeamType(kpp),
@@ -163,7 +168,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
 }
 
 //________________________________________________________________________
-void OnTheFlySimulationGenerator::Start()
+void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
 {
   if (!fAnalysisManager) PrepareAnalysisManager();
 
@@ -180,8 +185,7 @@ void OnTheFlySimulationGenerator::Start()
 
   // start analysis
   std::cout << "Starting Analysis...";
-  fAnalysisManager->SetUseProgressBar(1, 25);
-  fAnalysisManager->SetDebugLevel(0);
+  fAnalysisManager->SetDebugLevel(debug_level);
   //mgr->AddClassDebug("AliJetTriggerSelectionTask",AliLog::kDebug+100);
   fAnalysisManager->SetCacheSize(0);
   fAnalysisManager->EventLoop(fEvents);
@@ -275,32 +279,56 @@ void OnTheFlySimulationGenerator::CalculateCMSEnergy()
 //________________________________________________________________________
 AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 {
-  AliGenerator* gen = 0;
+  AliGenerator* gen = nullptr;
+
+  Decay_t forceDecay = kAll;
+
+  if (fForceHadDecay) {
+    forceDecay = kHadronicDWithout4BodiesWithV0;
+    //kHadronicDWithout4Bodies
+  }
 
   if (fHadronization == kPythia6 && fDecayer == kPythia6) {
-    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, fForceHadDecay);
+    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
     if (fPartonEvent == kPowheg) {
       if (fLHEFile.IsNull()) {
-        ::Error("OnTheFlySimulationGenerator::CreateGenerator", "Generator set to POWHEG but no LHE file provided!!!");
+        AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but no LHE file provided!!!" << std::endl;
       }
-      else {
-        genPythia->SetReadLHEF(fLHEFile);
-      }
+    }
+    else if (fPartonEvent != kPythia6) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be either PYTHIA6 or POWHEG" << std::endl;
+      return nullptr;
+    }
+    gen = genPythia;
+  }
+  else if (fHadronization == kPythia8 && fDecayer == kPythia8) {
+    AliGenPythiaPlus* genPythia = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, forceDecay);
+    if (fPartonEvent == kPowheg) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but PYTHIA8 cannot be set to read LHE!!!" << std::endl;
+      return nullptr;
+    }
+    else if (fPartonEvent != kPythia8) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be PYTHIA8" << std::endl;
+      return nullptr;
     }
     gen = genPythia;
   }
   else if (fHadronization == kPythia6 && fDecayer == kEvtGen) {
-    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, fForceHadDecay);
+    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecay);
     if (fPartonEvent == kPowheg) {
       if (fLHEFile.IsNull()) {
-        ::Error("OnTheFlySimulationGenerator::CreateGenerator", "Generator set to POWHEG but no LHE file provided!!!");
+        AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but no LHE file provided!!!" << std::endl;
       }
       else {
         genPythia->SetReadLHEF(fLHEFile);
       }
     }
+    else if (fPartonEvent != kPythia6) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be either PYTHIA6 or POWHEG" << std::endl;
+      return nullptr;
+    }
 
-    AliGenEvtGen *gene = CreateEvtGen();
+    AliGenEvtGen *gene = CreateEvtGen(forceDecay);
 
     AliGenCocktail *cocktail = CreateCocktailGen(fBeamType, GetCMSEnergy());
     cocktail->AddGenerator(genPythia, "MC_pythia6", 1.);
@@ -308,17 +336,38 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 
     gen = cocktail;
   }
+  else if (fHadronization == kPythia8 && fDecayer == kEvtGen) {
+    AliGenPythiaPlus* genPythia = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecay);
+    if (fPartonEvent == kPowheg) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but PYTHIA8 cannot be set to read LHE!!!" << std::endl;
+      return nullptr;
+    }
+    else if (fPartonEvent != kPythia8) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be PYTHIA8" << std::endl;
+      return nullptr;
+    }
+
+    AliGenEvtGen *gene = CreateEvtGen(forceDecay);
+
+    AliGenCocktail *cocktail = CreateCocktailGen(fBeamType, GetCMSEnergy());
+    cocktail->AddGenerator(genPythia, "MC_pythia8", 1.);
+    cocktail->AddGenerator(gene,"MC_evtGen", 1.);
+
+    gen = cocktail;
+  }
   else{
-    ::Error("OnTheFlySimulationGenerator::CreateGenerator", "Combination of generators not implemented! Verify your configuration.");
+    AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Combination of generators not implemented! Verify your configuration." << std::endl;
+    return nullptr;
   }
 
   return gen;
 }
 
 //________________________________________________________________________
-AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen()
+AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay)
 {
   AliGenEvtGen *gene = new AliGenEvtGen();
+  gene->SetForceDecay(forceDecay);
   return gene;
 }
 
@@ -348,9 +397,9 @@ AliGenCocktail* OnTheFlySimulationGenerator::CreateCocktailGen(EBeamType_t beam,
 }
 
 //________________________________________________________________________
-AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Bool_t forceHadronicDecay)
+AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
 {
-  Printf("PYTHIA generator with CMS energy = %.3f TeV", e_cms);
+  AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA6 generator with CMS energy = " << e_cms << " TeV" << std::endl;
 
   AliGenPythia* genP = new AliGenPythia(-1);
   genP->SetTune(tune);
@@ -361,7 +410,7 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
 
   if (ptHardMin >= 0. && ptHardMax >= 0. && ptHardMax > ptHardMin) {
     genP->SetPtHard(ptHardMin, ptHardMax);
-    Printf("Setting pt hard bin limits: %.2f, %.2f", ptHardMin, ptHardMax);
+    AliInfoGeneralStream("OnTheFlySimulationGenerator") << "Setting pt hard bin limits: " << ptHardMin << ", " << ptHardMax << std::endl;
   }
 
   Float_t randcharge = gRandom->Rndm() > 0.5 ? -1 : 1;
@@ -374,8 +423,7 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
 
   genP->SetHeavyQuarkYRange(-1.5, 1.5);
 
-  if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4BodiesWithV0);
-  //if (forceHadronicDecay) genP->SetForceDecay(kHadronicDWithout4Bodies);
+  genP->SetForceDecay(forceDecay);
 
   //   Center of mass energy
   genP->SetEnergyCMS(e_cms*1000); // in GeV
@@ -400,6 +448,43 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
   genP->SetYRange(-12.,12.);
   genP->SetPtRange(0,1000.);
   //genP->SetTrackingFlag(0);
+
+  genP->Print();
+  return genP;
+}
+
+//________________________________________________________________________
+AliGenPythiaPlus* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
+{
+  AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA8 generator with CMS energy = " << e_cms << " TeV" << std::endl;
+
+  AliGenPythiaPlus* genP = new AliGenPythiaPlus(AliPythia8::Instance());
+  genP->SetTune(tune);
+
+  // vertex position and smearing
+  genP->SetVertexSmear(kPerEvent);
+  genP->SetProcess(proc);
+
+  if (ptHardMin >= 0. && ptHardMax >= 0. && ptHardMax > ptHardMin) {
+    genP->SetPtHard(ptHardMin, ptHardMax);
+    AliInfoGeneralStream("OnTheFlySimulationGenerator") << "Setting pt hard bin limits: " << ptHardMin << ", " << ptHardMax << std::endl;
+  }
+
+  genP->SetForceDecay(forceDecay);
+
+  //   Center of mass energy
+  genP->SetEnergyCMS(e_cms*1000); // in GeV
+
+  //genP->UseNewMultipleInteractionsScenario(); // for all Pythia versions >= 6.3 BUT DO NOT USE FOR PYTHIA 8!
+
+  if (beam == kpp) {
+    genP->SetProjectile("p", 1, 1);
+    genP->SetTarget(    "p", 1, 1);
+  }
+  else if (beam == kpPb) {
+    genP->SetProjectile("p",208,82);
+    genP->SetTarget("p",1,1);
+  }
 
   genP->Print();
   return genP;

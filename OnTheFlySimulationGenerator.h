@@ -5,6 +5,7 @@
 
 #include <TString.h>
 #include <PythiaProcesses.h>
+#include "AliDecayer.h"
 
 class AliGenPythia;
 class AliAnalysisTaskSE;
@@ -12,7 +13,7 @@ class AliAnalysisManager;
 class AliGenEvtGen;
 class AliGenerator;
 class AliGenCocktail;
-//class AliPythia8;
+class AliGenPythiaPlus;
 
 class OnTheFlySimulationGenerator {
 public:
@@ -28,6 +29,7 @@ public:
   };
 
   enum EPythia8Tune_t {
+    kMonash2013  = 14
   };
 
   enum EGenerator_t {
@@ -61,7 +63,8 @@ public:
   void SetLHEFile(TString lhe)                            { fLHEFile         = lhe           ; }
   void SetEnergyBeam1(Float_t e)                          { fEnergyBeam1     = e             ; }
   void SetEnergyBeam2(Float_t e)                          { fEnergyBeam2     = e             ; }
-  void SetPythiaTune(EPythia6Tune_t tune)                 { fPythia6Tune     = tune          ; }
+  void SetPythia6Tune(EPythia6Tune_t tune)                { fPythia6Tune     = tune          ; }
+  void SetPythia8Tune(EPythia8Tune_t tune)                { fPythia8Tune     = tune          ; }
   void SetPtHardRange(Double_t minPtHard, Double_t maxPtHard) { fMinPtHard   = minPtHard ; fMaxPtHard   = maxPtHard ; }
   void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
   void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
@@ -72,14 +75,14 @@ public:
   void SetHadronization(EGenerator_t gen)                 { fHadronization   = gen           ; }
   void SetDecayer(EGenerator_t gen)                       { fDecayer         = gen           ; }
 
-  static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Bool_t forceHadronicDecay);
-  //static AliPythia8* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Bool_t forceHadronicDecay);
-  static AliGenEvtGen* CreateEvtGen();
+  static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
+  static AliGenPythiaPlus* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
+  static AliGenEvtGen* CreateEvtGen(Decay_t forceDecay);
   static AliGenCocktail* CreateCocktailGen(EBeamType_t beam, Float_t e_cms);
 
   AliGenerator* CreateGenerator();
   void PrepareAnalysisManager();
-  void Start();
+  void Start(UInt_t debug_level = 0);
 
   const TString&     GetName()               const { return fName           ; }
   Int_t              GetNumberOfEvents()     const { return fEvents         ; }
@@ -112,6 +115,7 @@ protected:
   TString              fLHEFile          ;
   Float_t              fCMSEnergy        ; // in TeV
   EPythia6Tune_t       fPythia6Tune      ;
+  EPythia8Tune_t       fPythia8Tune      ;
   Double_t             fMinPtHard        ;
   Double_t             fMaxPtHard        ;
   EBeamType_t          fBeamType         ;

@@ -12,7 +12,7 @@ import sys
 import yaml
 
 
-def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, rejectISR, LHEfile, minpthard, maxpthard, grid):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, rejectISR, LHEfile, minpthard, maxpthard, grid, debug_level):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -126,7 +126,7 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
 
     print("Running PYTHIA simulation...")
     with open("sim.log", "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard)], stdout=myfile, stderr=myfile)
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     if not grid:
         os.rename("sim.log", "sim_{0}.log".format(fname))
@@ -160,6 +160,8 @@ if __name__ == '__main__':
     parser.add_argument("--grid", action='store_const',
                         default=False, const=True,
                         help='Grid analysis.')
+    parser.add_argument('-d', metavar='debug_level',
+                        default=0, type=int)
     args = parser.parse_args()
 
     f = open(args.config, 'r')
@@ -185,4 +187,4 @@ if __name__ == '__main__':
     else:
         rejectISR = False
 
-    main(args.numevents, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, rejectISR, args.lhe, args.minpthard, args.maxpthard, args.grid)
+    main(args.numevents, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, rejectISR, args.lhe, args.minpthard, args.maxpthard, args.grid, args.d)

@@ -1,8 +1,8 @@
-name: POWHEG_EVTGEN_BEAUTY_7TeV_central
+name: PYTHIA8_CHARM_7TeV_central
 aliphysics: vAN-20171129-1
 numevents: 50000
 numbjobs: 400
-gen: powheg+pythia6+evtgen
+gen: pythia8
 proc: beauty
 qmass: -1
 facscfact: 1
