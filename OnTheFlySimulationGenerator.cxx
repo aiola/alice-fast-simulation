@@ -314,7 +314,7 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
     gen = genPythia;
   }
   else if (fHadronization == kPythia6 && fDecayer == kEvtGen) {
-    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecay);
+    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
     if (fPartonEvent == kPowheg) {
       if (fLHEFile.IsNull()) {
         AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but no LHE file provided!!!" << std::endl;
@@ -337,7 +337,7 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
     gen = cocktail;
   }
   else if (fHadronization == kPythia8 && fDecayer == kEvtGen) {
-    AliGenPythiaPlus* genPythia = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecay);
+    AliGenPythiaPlus* genPythia = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
     if (fPartonEvent == kPowheg) {
       AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but PYTHIA8 cannot be set to read LHE!!!" << std::endl;
       return nullptr;
@@ -368,6 +368,7 @@ AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay)
 {
   AliGenEvtGen *gene = new AliGenEvtGen();
   gene->SetForceDecay(forceDecay);
+  gene->SetParticleSwitchedOff(AliGenEvtGen::kBeautyPart);
   return gene;
 }
 

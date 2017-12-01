@@ -3,8 +3,10 @@
 #include <TSystem.h>
 #include <TInterpreter.h>
 #include <TROOT.h>
+#include <AliLog.h>
 
 #include <cstdio>
+#include <iostream>
 
 void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
     TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1,
@@ -24,23 +26,22 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
   gSystem->Load("libfastjetplugins");
   gSystem->Load("libfastjetcontribfragile");
 
-  if (gen.Contains("pythia6")) {
-    gSystem->Load("libpythia6_4_28.so");
-  }
+  AliInfoGeneralStream("") << "Loading libraries for PYTHIA6" << std::endl;
+  gSystem->Load("libpythia6_4_28.so");
 
-  if (gen.Contains("pythia8")) { // || gen.Contains("evtgen")) {
-    gSystem->Load("libpythia8.so");
-    gSystem->Load("libAliPythia8.so");
-
-    gSystem->Setenv("PYTHIA8DATA", gSystem->ExpandPathName("$ALICE_ROOT/PYTHIA8/pythia8/xmldoc"));
-    gSystem->Setenv("LHAPDF",      gSystem->ExpandPathName("$ALICE_ROOT/LHAPDF"));
-    gSystem->Setenv("LHAPATH",     gSystem->ExpandPathName("$ALICE_ROOT/LHAPDF/PDFsets"));
-  }
+  AliInfoGeneralStream("") << "Loading libraries for PYTHIA8" << std::endl;
+  gSystem->Load("libpythia8210dev.so");
+  gSystem->Load("libAliPythia8.so");
+  gSystem->Setenv("PYTHIA8DATA", gSystem->ExpandPathName("$ALICE_ROOT/PYTHIA8/pythia8/xmldoc"));
+  gSystem->Setenv("LHAPDF",      gSystem->ExpandPathName("$ALICE_ROOT/LHAPDF"));
+  gSystem->Setenv("LHAPATH",     gSystem->ExpandPathName("$ALICE_ROOT/LHAPDF/PDFsets"));
 
   if (gen.Contains("evtgen")) {
+    AliInfoGeneralStream("") << "Loading libraries for EvtGen" << std::endl;
+
     gSystem->Load("libPhotos");
     gSystem->Load("libEvtGen");
-    gSystem->Load("libEvtGenExternal");
+    //gSystem->Load("libEvtGenExternal");
     gSystem->Load("libTEvtGen");
   }
 

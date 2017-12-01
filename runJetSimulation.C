@@ -16,6 +16,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
 {
   //gSystem->SetFPEMask(kInvalid | kDivByZero | kOverflow | kUnderflow);
   gSystem->SetFPEMask(kNoneMask);
+  //gSystem->SetFPEMask(kDivByZero);
 
   TString trainName;
   if (!name.IsNull()) {
