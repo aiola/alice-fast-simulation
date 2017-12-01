@@ -26,10 +26,10 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
   gSystem->Load("libfastjetplugins");
   gSystem->Load("libfastjetcontribfragile");
 
-  AliInfoGeneralStream("") << "Loading libraries for PYTHIA6" << std::endl;
+  std::cout << "Loading libraries for PYTHIA6" << std::endl;
   gSystem->Load("libpythia6_4_28.so");
 
-  AliInfoGeneralStream("") << "Loading libraries for PYTHIA8" << std::endl;
+  std::cout << "Loading libraries for PYTHIA8" << std::endl;
   gSystem->Load("libpythia8210dev.so");
   gSystem->Load("libAliPythia8.so");
   gSystem->Setenv("PYTHIA8DATA", gSystem->ExpandPathName("$ALICE_ROOT/PYTHIA8/pythia8/xmldoc"));
@@ -37,7 +37,7 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
   gSystem->Setenv("LHAPATH",     gSystem->ExpandPathName("$ALICE_ROOT/LHAPDF/PDFsets"));
 
   if (gen.Contains("evtgen")) {
-    AliInfoGeneralStream("") << "Loading libraries for EvtGen" << std::endl;
+    std::cout << "Loading libraries for EvtGen" << std::endl;
 
     gSystem->Load("libPhotos");
     gSystem->Load("libEvtGen");
