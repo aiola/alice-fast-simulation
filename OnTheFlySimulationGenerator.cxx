@@ -185,9 +185,7 @@ void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
   // start analysis
   std::cout << "Starting Analysis...";
   fAnalysisManager->SetDebugLevel(debug_level);
-  fAnalysisManager->AddClassDebug("AliGenEvtGen",AliLog::kDebug+100);
-  fAnalysisManager->AddClassDebug("AliMCGenHandler",AliLog::kDebug+100);
-  fAnalysisManager->AddClassDebug("AliGenCocktail",AliLog::kDebug+100);
+  //fAnalysisManager->AddClassDebug("AliGenEvtGen",AliLog::kDebug+100);
   fAnalysisManager->SetCacheSize(0);
   fAnalysisManager->EventLoop(fEvents);
 }

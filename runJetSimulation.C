@@ -43,13 +43,13 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   TObjArray* generators = gen.Tokenize("+");
   UInt_t n = generators->GetEntries();
   if (n == 1) {
-    partonEvent_str = generators[0].GetName();
-    hadronization_str = generators[0].GetName();
-    decayer_str = generators[0].GetName();
+    partonEvent_str = generators->At(0)->GetName();
+    hadronization_str = generators->At(0)->GetName();
+    decayer_str = generators->At(0)->GetName();
   }
   else if (n == 2) {
-    partonEvent_str = generators[0].GetName();
-    decayer_str = generators[1].GetName();
+    partonEvent_str = generators->At(0)->GetName();
+    decayer_str = generators->At(1)->GetName();
     if (decayer_str == "pythia6" || decayer_str == "pythia8") {
       hadronization_str = decayer_str;
     }
@@ -58,10 +58,14 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     }
   }
   else if (n == 3) {
-    partonEvent_str = generators[0].GetName();
-    hadronization_str = generators[1].GetName();
-    decayer_str = generators[2].GetName();
+    partonEvent_str = generators->At(0)->GetName();
+    hadronization_str = generators->At(1)->GetName();
+    decayer_str = generators->At(2)->GetName();
   }
+
+  AliInfoGeneralStream("") << "Parton event: " << partonEvent_str.Data() << std::endl;
+  AliInfoGeneralStream("") << "Hadron event: " << hadronization_str.Data() << std::endl;
+  AliInfoGeneralStream("") << "Decayer: " << decayer_str.Data() << std::endl;
 
   // Parton event generator selection
   if (partonEvent_str == "powheg") {
