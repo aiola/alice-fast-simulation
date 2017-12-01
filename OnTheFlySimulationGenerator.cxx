@@ -20,7 +20,6 @@
 #include <AliMCGenHandler.h>
 #include <AliRun.h>
 #include <AliAnalysisTaskSE.h>
-#include <AliGenEvtGen.h>
 #include <AliGenCocktail.h>
 #include <AliPythia8.h>
 #include <AliLog.h>
@@ -186,7 +185,9 @@ void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
   // start analysis
   std::cout << "Starting Analysis...";
   fAnalysisManager->SetDebugLevel(debug_level);
-  //mgr->AddClassDebug("AliJetTriggerSelectionTask",AliLog::kDebug+100);
+  fAnalysisManager->AddClassDebug("AliGenEvtGen",AliLog::kDebug+100);
+  fAnalysisManager->AddClassDebug("AliMCGenHandler",AliLog::kDebug+100);
+  fAnalysisManager->AddClassDebug("AliGenCocktail",AliLog::kDebug+100);
   fAnalysisManager->SetCacheSize(0);
   fAnalysisManager->EventLoop(fEvents);
 }
@@ -288,87 +289,69 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
     //kHadronicDWithout4Bodies
   }
 
-  if (fHadronization == kPythia6 && fDecayer == kPythia6) {
-    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
-    if (fPartonEvent == kPowheg) {
-      if (fLHEFile.IsNull()) {
-        AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but no LHE file provided!!!" << std::endl;
-      }
+  AliGenerator* genHadronization = nullptr;
+
+  if (fHadronization == kPythia6) {
+    if (fDecayer == kPythia6) {
+      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
     }
-    else if (fPartonEvent != kPythia6) {
-      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be either PYTHIA6 or POWHEG" << std::endl;
+    else if (fDecayer == kEvtGen) {
+      // Assuming that the decayer EvtGen is used only for BEUATY
+      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
+    }
+    else {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
       return nullptr;
     }
-    gen = genPythia;
+    if (!fLHEFile.IsNull() && fPartonEvent == kPowheg) static_cast<AliGenPythia*>(genHadronization)->SetReadLHEF(fLHEFile);
   }
-  else if (fHadronization == kPythia8 && fDecayer == kPythia8) {
-    AliGenPythiaPlus* genPythia = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, forceDecay);
-    if (fPartonEvent == kPowheg) {
-      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but PYTHIA8 cannot be set to read LHE!!!" << std::endl;
+  else if (fHadronization == kPythia8) {
+    if (fDecayer == kPythia8) {
+      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, forceDecay);
+    }
+    else if (fDecayer == kEvtGen) {
+      // Assuming that the decayer EvtGen is used only for BEUATY
+      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
+    }
+    else {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
       return nullptr;
     }
-    else if (fPartonEvent != kPythia8) {
-      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be PYTHIA8" << std::endl;
-      return nullptr;
-    }
-    gen = genPythia;
   }
-  else if (fHadronization == kPythia6 && fDecayer == kEvtGen) {
-    AliGenPythia* genPythia = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
-    if (fPartonEvent == kPowheg) {
-      if (fLHEFile.IsNull()) {
-        AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but no LHE file provided!!!" << std::endl;
-      }
-      else {
-        genPythia->SetReadLHEF(fLHEFile);
-      }
-    }
-    else if (fPartonEvent != kPythia6) {
-      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be either PYTHIA6 or POWHEG" << std::endl;
-      return nullptr;
-    }
-
-    AliGenEvtGen *gene = CreateEvtGen(forceDecay);
-
-    AliGenCocktail *cocktail = CreateCocktailGen(fBeamType, GetCMSEnergy());
-    cocktail->AddGenerator(genPythia, "MC_pythia6", 1.);
-    cocktail->AddGenerator(gene,"MC_evtGen", 1.);
-
-    gen = cocktail;
-  }
-  else if (fHadronization == kPythia8 && fDecayer == kEvtGen) {
-    AliGenPythiaPlus* genPythia = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
-    if (fPartonEvent == kPowheg) {
-      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Generator set to POWHEG but PYTHIA8 cannot be set to read LHE!!!" << std::endl;
-      return nullptr;
-    }
-    else if (fPartonEvent != kPythia8) {
-      AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Parton event must be PYTHIA8" << std::endl;
-      return nullptr;
-    }
-
-    AliGenEvtGen *gene = CreateEvtGen(forceDecay);
-
-    AliGenCocktail *cocktail = CreateCocktailGen(fBeamType, GetCMSEnergy());
-    cocktail->AddGenerator(genPythia, "MC_pythia8", 1.);
-    cocktail->AddGenerator(gene,"MC_evtGen", 1.);
-
-    gen = cocktail;
-  }
-  else{
-    AliErrorGeneralStream("OnTheFlySimulationGenerator::CreateGenerator") << "Combination of generators not implemented! Verify your configuration." << std::endl;
+  else {
+    AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Hadronizator '" << fHadronization << "' not valid!!!" << std::endl;
     return nullptr;
+  }
+
+  if (fHadronization != fDecayer) {
+    // Need a cocktail generator
+    AliGenCocktail *cocktail = CreateCocktailGen(fBeamType, GetCMSEnergy());
+    cocktail->AddGenerator(genHadronization, "MC_pythia", 1.);
+
+    if (fDecayer == kEvtGen) {
+      // Assuming you want to use EvtGen to decay beauty
+      AliGenEvtGen *gene = CreateEvtGen(forceDecay, AliGenEvtGen::kBeautyPart);
+      cocktail->AddGenerator(gene,"MC_evtGen", 1.);
+    }
+    else {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
+      return nullptr;
+    }
+    gen = cocktail;
+  }
+  else {
+    gen = genHadronization;
   }
 
   return gen;
 }
 
 //________________________________________________________________________
-AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay)
+AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay, AliGenEvtGen::DecayOff_t decayOff)
 {
   AliGenEvtGen *gene = new AliGenEvtGen();
   gene->SetForceDecay(forceDecay);
-  gene->SetParticleSwitchedOff(AliGenEvtGen::kBeautyPart);
+  gene->SetParticleSwitchedOff(decayOff);
   return gene;
 }
 

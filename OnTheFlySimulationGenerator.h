@@ -5,12 +5,12 @@
 
 #include <TString.h>
 #include <PythiaProcesses.h>
-#include "AliDecayer.h"
+#include <AliDecayer.h>
+#include <AliGenEvtGen.h>
 
 class AliGenPythia;
 class AliAnalysisTaskSE;
 class AliAnalysisManager;
-class AliGenEvtGen;
 class AliGenerator;
 class AliGenCocktail;
 class AliGenPythiaPlus;
@@ -77,7 +77,7 @@ public:
 
   static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
   static AliGenPythiaPlus* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
-  static AliGenEvtGen* CreateEvtGen(Decay_t forceDecay);
+  static AliGenEvtGen* CreateEvtGen(Decay_t forceDecay, AliGenEvtGen::DecayOff_t decayOff);
   static AliGenCocktail* CreateCocktailGen(EBeamType_t beam, Float_t e_cms);
 
   AliGenerator* CreateGenerator();
