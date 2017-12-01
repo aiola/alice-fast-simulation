@@ -37,44 +37,93 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   OnTheFlySimulationGenerator::EGenerator_t partonEvent = OnTheFlySimulationGenerator::kPythia6;
   OnTheFlySimulationGenerator::EGenerator_t hadronization = OnTheFlySimulationGenerator::kPythia6;
   OnTheFlySimulationGenerator::EGenerator_t decayer = OnTheFlySimulationGenerator::kPythia6;
-  if (gen == "pythia6") {
+
+  // Parsing generator string into parton event, hadronizer, decayer
+  TString partonEvent_str, hadronization_str, decayer_str;
+  TObjArray* generators = gen.Tokenize("+");
+  UInt_t n = generators->GetEntries();
+  if (n == 1) {
+    partonEvent_str = generators[0].GetName();
+    hadronization_str = generators[0].GetName();
+    decayer_str = generators[0].GetName();
+  }
+  else if (n == 2) {
+    partonEvent_str = generators[0].GetName();
+    decayer_str = generators[1].GetName();
+    if (decayer_str == "pythia6" || decayer_str == "pythia8") {
+      hadronization_str = decayer_str;
+    }
+    else {
+      hadronization_str = partonEvent_str;
+    }
+  }
+  else if (n == 3) {
+    partonEvent_str = generators[0].GetName();
+    hadronization_str = generators[1].GetName();
+    decayer_str = generators[2].GetName();
+  }
+
+  // Parton event generator selection
+  if (partonEvent_str == "powheg") {
+    partonEvent = OnTheFlySimulationGenerator::kPowheg;
+
+    // POWHEG selection needs an LHE file (POWHEG runs standalone before the execution of this program)
+    if (lhe.IsNull()) {
+      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator! Aborting." << std::endl;
+      return;
+    }
+
+    // Select the PYTHIA process
+    if (procStr == "dijet") {
+      proc = kPyJetsPWHG;
+    }
+    else if (procStr == "charm") {
+      proc = kPyCharmPWHG;
+    }
+    else if (procStr == "beauty") {
+      proc = kPyBeautyPWHG;
+    }
+    else {
+      AliWarningGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simualte. Aborting." << std::endl;
+      return;
+    }
+
+    // No need to trigger on special particles
+    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+  }
+  else if (partonEvent_str == "pythia6") {
+    partonEvent = OnTheFlySimulationGenerator::kPythia6;
+
+    // No LHE file needed in this case
     if (!lhe.IsNull()) {
-      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA was selected as generator. The LHE file will be ignored" << std::endl;
+      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA6 was selected as generator. The LHE file will be ignored" << std::endl;
       lhe = "";
     }
+
+    // Always use jet-jet mode for PYTHIA6
+    proc = kPyJets;
+
+    // Trigger on HF particle if required
     if (procStr == "dijet") {
-      proc = kPyJets;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
-      if (minPtHard >= 0 && maxPtHard >= 0) {
-        proc = kPyJets;
-      }
-      else {
-        proc = kPyJets;
-        //proc = kPyCharmppMNRwmi;
-      }
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
-      if (minPtHard >= 0 && maxPtHard >= 0) {
-        proc = kPyJets;
-      }
-      else {
-        proc = kPyJets;
-        //proc = kPyBeautyppMNRwmi;
-      }
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
   }
-  if (gen == "pythia8") {
+  else if (partonEvent_str == "pythia8") {
     partonEvent = OnTheFlySimulationGenerator::kPythia8;
-    hadronization = OnTheFlySimulationGenerator::kPythia8;
-    decayer = OnTheFlySimulationGenerator::kPythia8;
+
+    // No LHE file needed in this case
     if (!lhe.IsNull()) {
-      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA was selected as generator. The LHE file will be ignored" << std::endl;
+      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA8 was selected as generator. The LHE file will be ignored" << std::endl;
       lhe = "";
     }
+
+    // Select the PYTHIA process
     if (procStr == "dijet") {
       proc = kPyJets;
     }
@@ -92,103 +141,60 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       }
       proc = kPyBeautyppMNR;
     }
+
+    // No need to trigger on special particles
+    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
   }
-  else if (gen == "powheg+pythia6") {
-    partonEvent = OnTheFlySimulationGenerator::kPowheg;
-    if (lhe.IsNull()) {
-      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator!" << std::endl;
+  else {
+    AliErrorGeneralStream("") << "Parton event generator selection '" << partonEvent_str.Data() << "' is not valid. Aborting." << std::endl;
+    return;
+  }
+
+  // Hadronization must be either PYTHIA6 or PYTHIA8
+  if (hadronization_str == "pythia6") {
+    hadronization = OnTheFlySimulationGenerator::kPythia6;
+
+    if (partonEvent != OnTheFlySimulationGenerator::kPythia6 && partonEvent != OnTheFlySimulationGenerator::kPowheg) {
+      AliErrorGeneralStream("") << "Hadronization '" << hadronization_str.Data() << "' not compatible with parton event from '" << partonEvent_str.Data() << "'. Aborting." << std::endl;
       return;
     }
-    if (minPtHard >= 0 && maxPtHard >= 0) {
-      AliWarningGeneralStream("") << "Pt hard bins are ignored for POWHEG" << std::endl;
-    }
-    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    if (procStr == "dijet") {
-      proc = kPyJetsPWHG;
-    }
-    else if (procStr == "charm") {
-      proc = kPyCharmPWHG;
-    }
-    else if (procStr == "beauty") {
-      proc = kPyBeautyPWHG;
-    }
   }
-  else if (gen == "powheg+pythia6+evtgen") {
-    partonEvent = OnTheFlySimulationGenerator::kPowheg;
-    decayer = OnTheFlySimulationGenerator::kEvtGen;
-    if (lhe.IsNull()) {
-      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator!" << std::endl;
-      return;
-    }
-    if (minPtHard >= 0 && maxPtHard >= 0) {
-      AliWarningGeneralStream("") << "Pt hard bins are ignored for POWHEG" << std::endl;
-    }
-    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    if (procStr == "dijet") {
-      proc = kPyJetsPWHG;
-    }
-    else if (procStr == "charm") {
-      proc = kPyCharmPWHG;
-    }
-    else if (procStr == "beauty") {
-      proc = kPyBeautyPWHG;
-    }
-  }
-  else if (gen == "pythia6+evtgen") {
-    decayer = OnTheFlySimulationGenerator::kEvtGen;
-    if (!lhe.IsNull()) {
-      AliWarningGeneralStream("") << "An LHE file was provided ("<< lhe.Data() << ") but PYTHIA was selected as generator. The LHE file will be ignored" << std::endl;
-      lhe = "";
-    }
-    if (procStr == "dijet") {
-      proc = kPyJets;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "charm") {
-      if (minPtHard >= 0 && maxPtHard >= 0) {
-        proc = kPyJets;
-      }
-      else {
-        proc = kPyJets;
-        //proc = kPyCharmppMNRwmi;
-      }
-      specialPart = OnTheFlySimulationGenerator::kccbar;
-    }
-    else if (procStr == "beauty") {
-      if (minPtHard >= 0 && maxPtHard >= 0) {
-        proc = kPyJets;
-      }
-      else {
-        proc = kPyJets;
-        //proc = kPyBeautyppMNRwmi;
-      }
-      specialPart = OnTheFlySimulationGenerator::kbbbar;
-    }
-  }
-  else if (gen == "powheg+pythia8") {
-    partonEvent = OnTheFlySimulationGenerator::kPowheg;
+  else if (hadronization_str == "pythia8") {
     hadronization = OnTheFlySimulationGenerator::kPythia8;
-    decayer = OnTheFlySimulationGenerator::kPythia8;
-    if (lhe.IsNull()) {
-      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator!" << std::endl;
+
+    // Current implementation of PYTHIA8 wrapper in AliRoot cannot read LHE files
+    if (partonEvent != OnTheFlySimulationGenerator::kPythia8) {
+      AliErrorGeneralStream("") << "Hadronization '" << hadronization_str.Data() << "' not compatible with parton event from '" << partonEvent_str.Data() << "'. Aborting." << std::endl;
       return;
-    }
-    if (minPtHard >= 0 && maxPtHard >= 0) {
-      AliWarningGeneralStream("") << "Pt hard bins are ignored for POWHEG" << std::endl;
-    }
-    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    if (procStr == "dijet") {
-      proc = kPyJetsPWHG;
-    }
-    else if (procStr == "charm") {
-      proc = kPyCharmPWHG;
-    }
-    else if (procStr == "beauty") {
-      proc = kPyBeautyPWHG;
     }
   }
   else {
-    AliErrorGeneralStream("") << "Generator '" << gen.Data() << "' not recognized!" << std::endl;
+    AliErrorGeneralStream("") << "Hadronization generator selection '" << hadronization_str.Data() << "' is not valid. Aborting." << std::endl;
+    return;
+  }
+
+  // Decayer selection
+  if (decayer_str == "pythia6") {
+    decayer = OnTheFlySimulationGenerator::kPythia6;
+
+    if (hadronization != OnTheFlySimulationGenerator::kPythia6) {
+      AliErrorGeneralStream("") << "Decayer '" << decayer_str.Data() << "' not compatible with hadronization from '" << hadronization_str.Data() << "'. Aborting." << std::endl;
+      return;
+    }
+  }
+  else if (decayer_str == "pythia8") {
+    decayer = OnTheFlySimulationGenerator::kPythia8;
+
+    if (hadronization != OnTheFlySimulationGenerator::kPythia8) {
+      AliErrorGeneralStream("") << "Decayer '" << decayer_str.Data() << "' not compatible with hadronization from '" << hadronization_str.Data() << "'. Aborting." << std::endl;
+      return;
+    }
+  }
+  else if (decayer_str == "evtgen") {
+    decayer = OnTheFlySimulationGenerator::kEvtGen;
+  }
+  else {
+    AliErrorGeneralStream("") << "Decayer generator selection '" << decayer_str.Data() << "' is not valid. Aborting." << std::endl;
     return;
   }
 
