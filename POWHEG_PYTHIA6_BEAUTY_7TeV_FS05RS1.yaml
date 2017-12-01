@@ -1,4 +1,4 @@
-name: PYTHIA_BEAUTY_7TeV_FS05RS1
+name: POWHEG_PYTHIA6_BEAUTY_7TeV_FS05RS1
 aliphysics: vAN-20170910-1
 numevents: 50000
 numbjobs: 400

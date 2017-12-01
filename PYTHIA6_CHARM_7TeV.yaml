@@ -1,5 +1,5 @@
-name: PYTHIA_CHARM_7TeV_central
-aliphysics: vAN-20170629-1
+name: PYTHIA6_CHARM_7TeV_central
+aliphysics: vAN-20171129-1
 numevents: 50000
 numbjobs: 400
 gen: pythia6
