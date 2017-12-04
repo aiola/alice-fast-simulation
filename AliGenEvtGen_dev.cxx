@@ -130,7 +130,7 @@ void AliGenEvtGen_dev::Generate()
 
     //check if particle is already decayed by Pythia
     if (part->GetStatusCode() != 1 || part->GetNDaughters() > 0) {
-      if (TMath::Abs(pdg) > 10) AliWarningStream() << "Attention: particle " << pdg << " is already decayed by Pythia!" << std::endl;
+      if (TMath::Abs(pdg) > 10) AliDebugStream(1) << "Attention: particle " << pdg << " is already decayed by Pythia!" << std::endl;
       continue;
     }
 
@@ -216,7 +216,7 @@ void AliGenEvtGen_dev::Generate()
 
     particles->Clear();
   }
-  AliInfoStream() << "AliGenEvtGen_dev DONE" << std::endl;
+  AliDebugStream(1) << "AliGenEvtGen_dev DONE" << std::endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
