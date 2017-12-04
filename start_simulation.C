@@ -1,9 +1,11 @@
 //start_simulation.C
 
+#ifndef __CINT__
 #include <TSystem.h>
 #include <TInterpreter.h>
 #include <TROOT.h>
 #include <AliLog.h>
+#endif
 
 #include <cstdio>
 #include <iostream>
@@ -12,7 +14,6 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
     TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
-
   gInterpreter->AddIncludePath("$ALICE_ROOT/include");
   gInterpreter->AddIncludePath("$ALICE_PHYSICS/include");
   gInterpreter->AddIncludePath("$FASTJET/include");
@@ -44,9 +45,7 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
     gSystem->Load("libTEvtGen");
   }
 
-  gROOT->ProcessLine(".L AliGenEvtGen_dev.cxx+g");
-
-  gROOT->ProcessLine(".L OnTheFlySimulationGenerator.cxx+g");
+  gSystem->Load("AnalysisCode.so");
 
   char command[500] = {0};
 

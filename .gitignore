@@ -1,6 +1,9 @@
 *.so
 *.d
 *.pyc
+*.pcm
+*_Dict*
+*.o
 FastSim_*.root
 FastSimAnalysis_*
 *AnalysisResults*.root
@@ -18,3 +21,4 @@ powheg_*.tar
 sim_*.log
 userConf.yaml
 README.html
+

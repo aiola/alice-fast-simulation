@@ -124,6 +124,9 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
     rnd = random.randint(0, 1073741824)  # 2^30
     print("Setting PYTHIA seed to {0}".format(rnd))
 
+    print("Compiling analysis code...")
+    subprocess.call(["make"])
+
     print("Running PYTHIA simulation...")
     with open("sim.log", "w") as myfile:
         subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
