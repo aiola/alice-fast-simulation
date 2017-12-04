@@ -339,8 +339,9 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
     # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
-    FilesToCopy = ["OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulation.C",
-                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "start_simulation.C", yamlFileName]
+    FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulation.C",
+                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "start_simulation.C",
+                   "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
 

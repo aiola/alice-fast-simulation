@@ -3,10 +3,18 @@
 #ifndef ONTHEFLYSIMULATIONGENERATOR_H
 #define ONTHEFLYSIMULATIONGENERATOR_H
 
+#define EVTGEN_DEV 1
+
+#if EVTGEN_DEV == 1
+#include "AliGenEvtGen_dev.h"
+#else
+#include <AliGenEvtGen.h>
+#endif
+
 #include <TString.h>
 #include <PythiaProcesses.h>
 #include <AliDecayer.h>
-#include <AliGenEvtGen.h>
+
 
 class AliGenPythia;
 class AliAnalysisTaskSE;
@@ -77,7 +85,13 @@ public:
 
   static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
   static AliGenPythiaPlus* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
+
+#if EVTGEN_DEV == 1
+  static AliGenEvtGen_dev* CreateEvtGen(Decay_t forceDecay, AliGenEvtGen_dev::DecayOff_t decayOff);
+#else
   static AliGenEvtGen* CreateEvtGen(Decay_t forceDecay, AliGenEvtGen::DecayOff_t decayOff);
+#endif
+
   static AliGenCocktail* CreateCocktailGen(EBeamType_t beam, Float_t e_cms);
 
   AliGenerator* CreateGenerator();

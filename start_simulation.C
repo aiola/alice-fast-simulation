@@ -41,9 +41,10 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
 
     gSystem->Load("libPhotos");
     gSystem->Load("libEvtGen");
-    //gSystem->Load("libEvtGenExternal");
     gSystem->Load("libTEvtGen");
   }
+
+  gROOT->ProcessLine(".L AliGenEvtGen_dev.cxx+g");
 
   gROOT->ProcessLine(".L OnTheFlySimulationGenerator.cxx+g");
 

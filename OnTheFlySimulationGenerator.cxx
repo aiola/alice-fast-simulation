@@ -185,7 +185,7 @@ void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
   // start analysis
   std::cout << "Starting Analysis...";
   fAnalysisManager->SetDebugLevel(debug_level);
-  //fAnalysisManager->AddClassDebug("AliGenEvtGen",AliLog::kDebug+100);
+  //fAnalysisManager->AddClassDebug("AliGenEvtGen_dev",AliLog::kDebug+100);
   fAnalysisManager->SetCacheSize(0);
   fAnalysisManager->EventLoop(fEvents);
 }
@@ -328,7 +328,11 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 
     if (fDecayer == kEvtGen) {
       // Assuming you want to use EvtGen to decay beauty
+#if EVTGEN_DEV == 1
+      AliGenEvtGen_dev *gene = CreateEvtGen(forceDecay, AliGenEvtGen_dev::kBeautyPart);
+#else
       AliGenEvtGen *gene = CreateEvtGen(forceDecay, AliGenEvtGen::kBeautyPart);
+#endif
       cocktail->AddGenerator(gene,"MC_evtGen", 1.);
     }
     else {
@@ -345,13 +349,25 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 }
 
 //________________________________________________________________________
+#if EVTGEN_DEV == 1
+AliGenEvtGen_dev* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay, AliGenEvtGen_dev::DecayOff_t decayOff)
+{
+  AliGenEvtGen_dev *gene = new AliGenEvtGen_dev();
+  //gene->SetForceDecay(forceDecay);
+  gene->SetParticleSwitchedOff(decayOff);
+  //gene->SetUserDecayTable("./DECAY_fix.DEC");
+  return gene;
+}
+#else
 AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay, AliGenEvtGen::DecayOff_t decayOff)
 {
   AliGenEvtGen *gene = new AliGenEvtGen();
-  gene->SetForceDecay(forceDecay);
+  //gene->SetForceDecay(forceDecay);
   gene->SetParticleSwitchedOff(decayOff);
+  //gene->SetUserDecayTable("./DECAY_fix.DEC");
   return gene;
 }
+#endif
 
 //________________________________________________________________________
 AliGenCocktail* OnTheFlySimulationGenerator::CreateCocktailGen(EBeamType_t beam, Float_t e_cms)
