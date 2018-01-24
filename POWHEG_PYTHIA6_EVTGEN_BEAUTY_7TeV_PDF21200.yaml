@@ -7,12 +7,12 @@ proc: beauty
 qmass: -1
 facscfact: 1
 renscfact: 1
-lhans: 11000
+lhans: 21200
 beam_type: pp
 ebeam1: 3500
 ebeam2: 3500
 nPDFset: 3
 nPDFerrSet: 1
-ttl: 7200
+ttl: 21600
 max_files_per_job: 20
 pthard: no

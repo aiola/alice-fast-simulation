@@ -1,11 +1,11 @@
-name: POWHEG_PYTHIA6_EVTGEN_BEAUTY_7TeV_central
+name: POWHEG_PYTHIA6_EVTGEN_BEAUTY_7TeV_FS05RS1
 aliphysics: v5-09-21-01-1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6+evtgen
 proc: beauty
 qmass: -1
-facscfact: 1
+facscfact: 0.5
 renscfact: 1
 lhans: 11000
 beam_type: pp
