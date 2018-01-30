@@ -2,7 +2,7 @@
 
 files=(realequiv realequivregions virtequiv bornequiv pwhg_checklimits pwg-btlgrid.top 
 pwgborngrid.top pwghistnorms.top FlavRegList pwgboundviolations.dat pwg-stat.dat pwgubound.dat 
-pwgcounters.dat pwggrid.dat pwgxgrid.dat)
+pwgcounters.dat pwggrid.dat pwgxgrid.dat pwgevents.lhe powheg.input powheg.log)
 
 tarfile=$1
 

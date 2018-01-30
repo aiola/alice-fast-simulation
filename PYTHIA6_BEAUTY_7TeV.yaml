@@ -1,7 +1,7 @@
 name: PYTHIA6_BEAUTY_7TeV
-aliphysics: vAN-20171129-1
-numevents: 500
-numbjobs: 10
+aliphysics: v5-09-21-01-1
+numevents: 50000
+numbjobs: 400
 gen: pythia6
 proc: beauty
 qmass: -1

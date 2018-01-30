@@ -1,5 +1,5 @@
 name: POWHEG_PYTHIA6_BEAUTY_7TeV_FS1RS2
-aliphysics: vAN-20170910-1
+aliphysics: v5-09-21-01-1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
