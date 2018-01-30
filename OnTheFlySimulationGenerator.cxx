@@ -298,25 +298,24 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 
   if (fHadronization == kPythia6) {
     if (fDecayer == kPythia6) {
-      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
+      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
     }
     else if (fDecayer == kEvtGen) {
       // Assuming that the decayer EvtGen is used only for BEUATY
-      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
+      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
     }
     else {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
       return nullptr;
     }
-    if (!fLHEFile.IsNull() && fPartonEvent == kPowheg) static_cast<AliGenPythia*>(genHadronization)->SetReadLHEF(fLHEFile);
   }
   else if (fHadronization == kPythia8) {
     if (fDecayer == kPythia8) {
-      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, forceDecay);
+      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, forceDecay);
     }
     else if (fDecayer == kEvtGen) {
       // Assuming that the decayer EvtGen is used only for BEUATY
-      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
+      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
     }
     else {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
@@ -402,12 +401,16 @@ AliGenCocktail* OnTheFlySimulationGenerator::CreateCocktailGen(EBeamType_t beam,
 }
 
 //________________________________________________________________________
-AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
+AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
 {
   AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA6 generator with CMS energy = " << e_cms << " TeV" << std::endl;
 
   AliGenPythia* genP = new AliGenPythia(-1);
   genP->SetTune(tune);
+
+  if (!lhe.IsNull() && partonEvent == kPowheg) {
+    genP->SetReadLHEF(fLHEFile);
+  }
 
   // vertex position and smearing
   genP->SetVertexSmear(kPerEvent);
@@ -459,11 +462,18 @@ AliGenPythia* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Fl
 }
 
 //________________________________________________________________________
-AliGenPythiaPlus* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
+AliGenPythiaPlus* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
 {
   AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA8 generator with CMS energy = " << e_cms << " TeV" << std::endl;
 
-  AliGenPythiaPlus* genP = new AliGenPythiaPlus(AliPythia8::Instance());
+  AliPythia8* pythia8 = AliPythia8::Instance();
+
+  if (!lhe.IsNull() && partonEvent == kPowheg) {
+    pythia8->ReadConfigFile("powheg_pythia8_conf.cmnd");
+    pythia8->ReadString(TString::Format("Beams:LHEF = %s", lhe.Data()));
+  }
+
+  AliGenPythiaPlus* genP = new AliGenPythiaPlus(pythia8);
   genP->SetTune(tune);
 
   // vertex position and smearing

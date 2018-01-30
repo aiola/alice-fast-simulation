@@ -83,8 +83,8 @@ public:
   void SetHadronization(EGenerator_t gen)                 { fHadronization   = gen           ; }
   void SetDecayer(EGenerator_t gen)                       { fDecayer         = gen           ; }
 
-  static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
-  static AliGenPythiaPlus* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
+  static AliGenPythia* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythia6Tune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
+  static AliGenPythiaPlus* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythia8Tune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
 
 #if EVTGEN_DEV == 1
   static AliGenEvtGen_dev* CreateEvtGen(Decay_t forceDecay, AliGenEvtGen_dev::DecayOff_t decayOff);
