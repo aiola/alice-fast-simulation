@@ -13,6 +13,6 @@ ebeam1: 3500
 ebeam2: 3500
 nPDFset: 3
 nPDFerrSet: 1
-ttl: 28800
+ttl: 80000
 max_files_per_job: 20
 pthard: no
