@@ -14,4 +14,4 @@ $(LIBRARY): $(OBJECTS)
 	$(CC) $(CFLAGS) -I`root-config --incdir` -I$$ALICE_ROOT/include -I$$ALICE_PHYSICS/include -I$$FASTJET/include $(@:.o=_Dict.cxx) $(@:.o=.cxx)
 	
 clean:
-	rm ./*~ ./*.o ./AnalysisCode.so
+	rm  ./*.pcm ./*.o ./AnalysisCode.so ./*Dict*
