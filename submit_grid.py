@@ -18,14 +18,7 @@ import time
 import shutil
 import re
 import UserConfiguration
-
-# goodSites = ["ALICE::LUNARC::SLURM", "ALICE::ORNL::LCG", "ALICE::SNIC::SLURM", "ALICE::Torino::Torino-CREAM",
-#             "ALICE::Bari::CREAM", "ALICE::GRIF_IRFU::LCG", "ALICE::NIHAM::PBS64", "ALICE::RRC_KI_T1::LCG",
-#             "ALICE::Catania::Catania_VF", "ALICE::RRC_KI_T1::LCG"]
-# badSites = ["ALICE::UiB::ARC"]
-
-goodSites = []
-badSites = []
+import datetime
 
 
 def AlienDelete(fileName):
@@ -222,31 +215,7 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
             jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
         jdlContent += "}; \n"
 
-    requirements = GenerateSiteRequirements()
-    jdlContent += requirements
     return jdlContent
-
-
-def GenerateSiteRequirements():
-    PosRequirements = ""
-    NegRequirements = ""
-    if len(goodSites) > 0:
-        for site in goodSites:
-            PosRequirements += "(other.CE == \"{0}\") ||".format(site)
-        PosRequirements = PosRequirements[:-3]
-    if len(badSites) > 0:
-        for site in badSites:
-            NegRequirements += "(other.CE != \"{0}\") &&".format(site)
-        NegRequirements = NegRequirements[:-3]
-    if PosRequirements and not NegRequirements:
-        requirements = "Requirements = ({0});\n".format(PosRequirements)
-    elif NegRequirements and not PosRequirements:
-        requirements = "Requirements = ({0});\n".format(NegRequirements)
-    elif NegRequirements and PosRequirements:
-        requirements = "Requirements = ({0} && {1});\n".format(PosRequirements, NegRequirements)
-    else:
-        requirements = ""
-    return requirements
 
 
 def DetermineMergingStage(AlienPath, TrainName):
@@ -459,12 +428,20 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     return TrainName
 
 
+def GetAliPhysicsVersion(ver):
+    if ver == "_last_":
+        now = datetime.datetime.now()
+        if now.hour < 18: now -= datetime.timedelta(days=1)
+        ver = now.strftime("vAN-%Y%m%d-1")
+    return ver
+
+
 def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, Merge, Download, MergingStage):
     f = open(yamlFileName, 'r')
     config = yaml.load(f)
     f.close()
 
-    AliPhysicsVersion = config["aliphysics"]
+    AliPhysicsVersion = GetAliPhysicsVersion(config["aliphysics"])
     Events = config["numevents"]
     Jobs = config["numbjobs"]
     Gen = config["gen"]
