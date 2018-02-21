@@ -104,17 +104,17 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       lhe = "";
     }
 
-    // Always use jet-jet mode for PYTHIA6
-    proc = kPyJets;
-
     // Trigger on HF particle if required
     if (procStr == "dijet") {
+      proc = kPyJets;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
+      proc = kPyCharm;
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
+      proc = kPyBeauty;
       specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
   }
@@ -130,24 +130,24 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     // Select the PYTHIA process
     if (procStr == "dijet") {
       proc = kPyJets;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
       if (minPtHard == 0) {
         minPtHard = 2.75;
         if (maxPtHard <= minPtHard) maxPtHard = 99999.;
       }
-      proc = kPyCharmppMNRwmi;
+      proc = kPyCharm;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
       if (minPtHard == 0) {
         minPtHard = 2.75;
         if (maxPtHard <= minPtHard) maxPtHard = 99999.;
       }
-      proc = kPyBeautyppMNR;
+      proc = kPyBeauty;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
-
-    // No need to trigger on special particles
-    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
   }
   else {
     AliErrorGeneralStream("") << "Parton event generator selection '" << partonEvent_str.Data() << "' is not valid. Aborting." << std::endl;
