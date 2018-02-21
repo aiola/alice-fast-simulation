@@ -185,7 +185,22 @@ void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
   // start analysis
   std::cout << "Starting Analysis...";
   fAnalysisManager->SetDebugLevel(debug_level);
-  //fAnalysisManager->AddClassDebug("AliGenEvtGen_dev",AliLog::kDebug+100);
+  if (debug_level > 2) {
+    fAnalysisManager->AddClassDebug("AliGenPythia_dev",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliPythia6_dev",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliPythia8_dev",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliGenEvtGen_dev",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliGenPythia",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliPythia",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliPythia8",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliGenEvtGen",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliMCGenHandler",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliEmcalMCTrackSelector",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliAnalysisTaskEmcalJetQA",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliAnalysisTaskDmesonJets",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliEmcalJetTask",AliLog::kDebug+debug_level);
+    fAnalysisManager->AddClassDebug("AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>",AliLog::kDebug+debug_level);
+  }
   fAnalysisManager->SetCacheSize(0);
   fAnalysisManager->EventLoop(fEvents);
 }
