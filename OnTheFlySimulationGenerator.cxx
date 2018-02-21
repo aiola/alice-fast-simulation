@@ -198,6 +198,7 @@ void OnTheFlySimulationGenerator::AddJetQA()
   if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pJetQA->SetMCFilter();
   pJetQA->SetJetPtFactor(4);
   pJetQA->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
+  pJetQA->SetCentralityEstimation(AliAnalysisTaskEmcalLight::kNoCentrality);
   pJetQA->SetMC(kTRUE);
   pJetQA->SetParticleLevel(kTRUE);
   pJetQA->SetIsPythia(kTRUE);
@@ -257,6 +258,7 @@ void OnTheFlySimulationGenerator::AddJetTree()
 
   AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
   pJetSpectraTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
+  pJetSpectraTask->SetCentralityEstimation(AliAnalysisTaskEmcalLight::kNoCentrality);
   if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pJetSpectraTask->SetMCFilter();
   pJetSpectraTask->SetJetPtFactor(4);
   pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
