@@ -212,6 +212,9 @@ void AliGenPythia_dev::Generate()
     if (TMath::Abs(fXingAngleY) > 1.e-10) BeamCrossAngle();
 
     fNprimaries = DoGenerate();
+
+    if (fNprimaries == 0) continue;
+
     fTrialsRun += fTrials;
     fNev++;
     MakeHeader();
