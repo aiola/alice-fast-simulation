@@ -253,20 +253,14 @@ Bool_t AliGenPythia_dev::IsFromHeavyFlavor(const TParticle* part) const
 
 Int_t AliGenPythia_dev::DoGenerate()
 {
-  Int_t nc = 0;
-  Double_t p[4];
-  Double_t polar[3]   =   {0,0,0};
-  Double_t origin[3]  =   {0,0,0};
   //  converts from mm/c to s
   const Float_t kconv = 0.001 / TMath::C();
-
 
   Int_t np = fParticles.GetEntriesFast();
 
   fNParent.clear();
   fNParent.resize(np, 0);
 
-  Bool_t triggered = kTRUE;
   if (fTriggerParticlePDG >= 0) {
     Bool_t triggered = kFALSE;
     for (Int_t i = 0; i < np; i++) {
@@ -283,16 +277,21 @@ Int_t AliGenPythia_dev::DoGenerate()
     if (!triggered) return 0;
   }
 
+  Int_t nc = 0;
   for (Int_t i = 0; i < np; i++) {
     Int_t trackIt = 0;
     TParticle *  iparticle = static_cast<TParticle*>(fParticles.At(i));
     Int_t kf = CheckPDGCode(iparticle->GetPdgCode());
     Int_t ks = iparticle->GetStatusCode();
     Int_t km = iparticle->GetFirstMother();
-    if (
-        (((ks == 1  && kf!=0 && KinematicSelection(iparticle, 0)) || (ks !=1)) && IsFromHeavyFlavor(iparticle)) ||
-        ((fProcess == kPyJets || fProcess == kPyJetsPWHG || fProcess == kPyCharmPWHG || fProcess == kPyBeautyPWHG) && ks == 21 && km == 0 && i > 1)
-    )
+
+    AliDebugStream(2) << "Particle " << i << ": pt = " << iparticle->Pt() << ", PDG = " << kf <<
+        ", mother " << km <<
+        ", status " << ks <<
+        ", HF " << IsFromHeavyFlavor(iparticle) <<
+        std::endl;
+
+    if ((ks == 1  && kf != 0 && KinematicSelection(iparticle, 0)) || (ks != 1))
     {
       nc++;
       if (ks == 1) trackIt = 1;
@@ -301,14 +300,8 @@ Int_t AliGenPythia_dev::DoGenerate()
       Int_t iparent = (ipa > -1) ? fNParent[ipa] : -1;
 
       // store track information
-      p[0] = iparticle->Px();
-      p[1] = iparticle->Py();
-      p[2] = iparticle->Pz();
-      p[3] = iparticle->Energy();
-
-      origin[0] = fVertex[0]+iparticle->Vx()/10; // [cm]
-      origin[1] = fVertex[1]+iparticle->Vy()/10; // [cm]
-      origin[2] = fVertex[2]+iparticle->Vz()/10; // [cm]
+      Double_t p[4] = {iparticle->Px(), iparticle->Py(), iparticle->Pz(), iparticle->Energy()};
+      Double_t origin[3]  =   { fVertex[0]+iparticle->Vx()/10, fVertex[1]+iparticle->Vy()/10, fVertex[2]+iparticle->Vz()/10 }; // [cm]
 
       Float_t tof = fTime + kconv * iparticle->T();
 
@@ -316,7 +309,7 @@ Int_t AliGenPythia_dev::DoGenerate()
       PushTrack(fTrackIt * trackIt, iparent, kf,
           p[0], p[1], p[2], p[3],
           origin[0], origin[1], origin[2], tof,
-          polar[0], polar[1], polar[2],
+          0, 0, 0,
           kPPrimary, nt, 1., ks);
       nc++;
       KeepTrack(nt);
@@ -324,6 +317,9 @@ Int_t AliGenPythia_dev::DoGenerate()
       SetHighWaterMark(nt);
 
     } // select particle
+    else {
+      AliDebugStream(2) << "Particle rejected!" << std::endl;
+    }
   } // particle loop
 
   return nc;
