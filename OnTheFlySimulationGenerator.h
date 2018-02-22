@@ -142,6 +142,8 @@ protected:
   EGenerator_t         fPartonEvent      ;
   EGenerator_t         fHadronization    ;
   EGenerator_t         fDecayer          ;
+  std::vector<std::string>
+                       fDebugClassNames  ;
 
 private:
   OnTheFlySimulationGenerator(const OnTheFlySimulationGenerator&);//not implemented

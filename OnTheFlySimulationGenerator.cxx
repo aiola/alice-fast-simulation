@@ -57,7 +57,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fRejectISR(kFALSE),
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
-  fDecayer(kPythia6)
+  fDecayer(kPythia6),
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
 
@@ -85,7 +86,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fRejectISR(kFALSE),
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
-  fDecayer(kPythia6)
+  fDecayer(kPythia6),
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
 
@@ -113,7 +115,8 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fRejectISR(kFALSE),
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
-  fDecayer(kPythia6)
+  fDecayer(kPythia6),
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
 
@@ -185,21 +188,8 @@ void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
   // start analysis
   std::cout << "Starting Analysis...";
   fAnalysisManager->SetDebugLevel(debug_level);
-  if (debug_level > 2) {
-    fAnalysisManager->AddClassDebug("AliGenPythia_dev",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliPythia6_dev",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliPythia8_dev",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliGenEvtGen_dev",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliGenPythia",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliPythia",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliPythia8",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliGenEvtGen",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliMCGenHandler",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliEmcalMCTrackSelector",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliAnalysisTaskEmcalJetQA",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliAnalysisTaskDmesonJets",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliEmcalJetTask",AliLog::kDebug+debug_level);
-    fAnalysisManager->AddClassDebug("AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>",AliLog::kDebug+debug_level);
+  if (debug_level > 5) {
+    for (auto cname : fDebugClassNames) fAnalysisManager->AddClassDebug(cname.c_str(), AliLog::kDebug+debug_level);
   }
   fAnalysisManager->SetCacheSize(0);
   fAnalysisManager->EventLoop(fEvents);
