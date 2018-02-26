@@ -1,4 +1,4 @@
-name: POWHEG_PYTHIA6_CHARM_7TeV_central
+name: PYTHIA6_DIJET_7TeV
 aliphysics: _last_
 numevents: 50000
 numbjobs: 400

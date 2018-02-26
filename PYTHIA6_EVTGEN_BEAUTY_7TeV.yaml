@@ -1,5 +1,5 @@
 name: PYTHIA6_EVTGEN_BEAUTY_7TeV
-aliphysics: v5-09-21-01-1
+aliphysics: _last_
 numevents: 50000
 numbjobs: 400
 gen: pythia6+evtgen
