@@ -62,7 +62,7 @@ extern "C" void type_of_call qpygin0();
 extern "C" void type_of_call setpowwght(Double_t &);
 
 AliPythia6_dev::AliPythia6_dev():
-  fProcess(kPyMb),
+  fProcess(kPyMbDefault),
   fItune(-1),
   fEcms(0.),
   fStrucFunc(kCTEQ5L),
@@ -101,11 +101,22 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   // Initialise the process to generate
   if (!AliPythiaRndm::GetPythiaRandom()) AliPythiaRndm::SetPythiaRandom(GetRandom());
 
-  fItune = itune;
-
   fProcess = process;
   fEcms = energy;
   fStrucFunc = strucfunc;
+  fItune = itune;
+
+  //  Select the tune
+  if (itune > -1) {
+    Pytune(itune);
+    if (GetMSTP(192) > 1 || GetMSTP(193) > 1) {
+      AliWarningStream() << "Structure function for tune " << itune << " set to " << AliStructFuncType::PDFsetName(strucfunc).Data() << std::endl;
+      SetMSTP(52,2);
+      SetMSTP(51, AliStructFuncType::PDFsetIndex(strucfunc));
+    }
+  }
+
+
   //...Switch off decay of pi0, K0S, Lambda, Sigma+-, Xi0-, Omega-.
   SetMDCY(Pycomp(111) ,1,0); // pi0
   SetMDCY(Pycomp(310) ,1,0); // K0S
@@ -216,16 +227,6 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   if (AliLog::GetDebugLevel("","AliPythia6_dev") >= 1 ) {
     Pystat(4);
     Pystat(5);
-  }
-
-  //  Select the tune
-  if (itune > -1) {
-    Pytune(itune);
-    if (GetMSTP(192) > 1 || GetMSTP(193) > 1) {
-      AliWarningStream() << "Structure function for tune " << itune << " set to " << AliStructFuncType::PDFsetName(strucfunc).Data() << std::endl;
-      SetMSTP(52,2);
-      SetMSTP(51, AliStructFuncType::PDFsetIndex(strucfunc));
-    }
   }
 
   // all resonance decays switched on

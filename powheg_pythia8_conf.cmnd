@@ -21,12 +21,10 @@ Main:timesAllowErrors = 10
 Init:showChangedSettings = on
 Init:showChangedParticleData = off
 
-! Input file.
+! Frame: 1 = beams colliding in their CM; 4 = LHE
 Beams:frameType = 4
-! t tbar pair production.
-#Beams:LHEF = powheg-hvq.lhe
-! QCD 2- and 3-jet events.
-Beams:LHEF = powheg-dijets.lhe
+! Input file
+! Beams:LHEF = powheg-events.lhe
 
 ! Number of outgoing particles of POWHEG Born level process
 ! (i.e. not counting additional POWHEG radiation)
@@ -38,6 +36,10 @@ POWHEG:nFinal = 2
 !      Emissions are vetoed if pTemt > pThard.
 !      See also POWHEG:vetoCount below
 POWHEG:veto = 1
+
+! If veto > 0
+SpaceShower:pTmaxMatch = 2
+TimeShower:pTmaxMatch = 2
 
 ! After 'vetoCount' accepted emissions in a row, no more emissions
 ! are checked. 'vetoCount = 0' means all emissions are checked.
@@ -80,6 +82,9 @@ POWHEG:pTdef = 1
 !  1 - When there is no radiation, MPIs with a scale above pT_1 are vetoed,
 !      else MPIs with a scale above (pT_1 + pT_2 + pT_3) / 2 are vetoed
 POWHEG:MPIveto = 0
+
+! If MPIveto > 0
+! MultipartonInteractions:pTmaxMatch = 2
 
 ! QED vetoing
 !  0 - No QED vetoing is done for pTemt > 0.

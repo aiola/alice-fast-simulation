@@ -30,6 +30,8 @@ public:
     kPowheg,
     kPythia6,
     kPythia8,
+    kHerwig6,
+    kHerwig7,
     kEvtGen
   };
 
@@ -57,8 +59,10 @@ public:
   void SetLHEFile(TString lhe)                            { fLHEFile         = lhe           ; }
   void SetEnergyBeam1(Float_t e)                          { fEnergyBeam1     = e             ; }
   void SetEnergyBeam2(Float_t e)                          { fEnergyBeam2     = e             ; }
-  void SetPythia6Tune(EPythiaTune_t tune)                 { fPythiaTune      = tune          ; }
-  void SetPtHardRange(Double_t minPtHard, Double_t maxPtHard) { fMinPtHard   = minPtHard ; fMaxPtHard   = maxPtHard ; }
+  void SetPythia6Tune(EPythiaTune_t tune)                 { fPythia6Tune      = tune         ; }
+  void SetPythia8Tune(EPythiaTune_t tune)                 { fPythia8Tune      = tune         ; }
+  void SetPtHardRange(Double_t minPtHard, Double_t maxPtHard)
+                                                          { fMinPtHard       = minPtHard     ; fMaxPtHard        = maxPtHard    ; }
   void EnableJetQA(Bool_t b = kTRUE)                      { fJetQA           = b             ; }
   void EnableJetTree(Bool_t b = kTRUE)                    { fJetTree         = b             ; }
   void EnableDMesonJets(Bool_t b = kTRUE)                 { fDMesonJets      = b             ; }
@@ -93,7 +97,8 @@ public:
   Float_t            GetCMSEnergy()                { if (fCMSEnergy < 0) CalculateCMSEnergy(); return fCMSEnergy; }
   Float_t            GetEnergyBeam1()        const { return fEnergyBeam1    ; }
   Float_t            GetEnergyBeam2()        const { return fEnergyBeam2    ; }
-  EPythiaTune_t      GetPythiaTune()         const { return fPythiaTune     ; }
+  EPythiaTune_t      GetPythia6Tune()        const { return fPythia6Tune    ; }
+  EPythiaTune_t      GetPythia8Tune()        const { return fPythia8Tune    ; }
   Double_t           GetPtHardMin()          const { return fMinPtHard      ; }
   Double_t           GetPtHardMax()          const { return fMaxPtHard      ; }
 
@@ -113,7 +118,8 @@ protected:
   Int_t                fSeed             ;
   TString              fLHEFile          ;
   Float_t              fCMSEnergy        ; // in TeV
-  EPythiaTune_t        fPythiaTune      ;
+  EPythiaTune_t        fPythia6Tune      ;
+  EPythiaTune_t        fPythia8Tune      ;
   Double_t             fMinPtHard        ;
   Double_t             fMaxPtHard        ;
   EBeamType_t          fBeamType         ;

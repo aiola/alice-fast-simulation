@@ -30,8 +30,9 @@
 
 #include <vector>
 
-#include "AliGenMC.h"
-#include "AliPythia.h"
+#include <PythiaProcesses.h>
+#include <AliStructFuncType.h>
+#include <AliGenMC.h>
 
 class AliGenPythiaEventHeader;
 class AliPythiaBase_dev;
@@ -95,7 +96,6 @@ public:
 
 protected:
   void     MakeHeader();
-  Bool_t   IsFromHeavyFlavor(const TParticle* part) const;
 
   inline static Int_t GetFlavor(Int_t pdg) { return Int_t(pdg / TMath::Power(10, Int_t(TMath::Log10(pdg)))); }
 

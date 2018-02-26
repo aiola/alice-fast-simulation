@@ -6,8 +6,8 @@
 #include <TObject.h>
 
 #include <AliRndm.h>
-#include "AliStructFuncType.h"
-#include "PythiaProcesses.h"
+#include <AliStructFuncType.h>
+#include <PythiaProcesses.h>
 
 class AliFastGlauber;
 class AliQuenchingWeights;

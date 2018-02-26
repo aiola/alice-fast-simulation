@@ -228,29 +228,6 @@ void AliGenPythia_dev::Generate()
   fXsection = fPythia->GetXSection();
 }
 
-Bool_t AliGenPythia_dev::IsFromHeavyFlavor(const TParticle* part) const
-{
-  // Check if this is a heavy flavor decay product
-  Int_t mfl = GetFlavor(TMath::Abs(part->GetPdgCode()));
-
-  // Heavy flavor hadron
-  if (mfl >= 4 && mfl < 6) return kTRUE;
-
-  // Light hadron
-  Int_t imo = part->GetFirstMother() - 1;
-  const TParticle* pm = part;
-
-  // Heavy flavor hadron produced by generator
-  while (imo >  -1) {
-    pm  =  static_cast<TParticle*>(fParticles.At(imo));
-    Int_t mpdg = TMath::Abs(pm->GetPdgCode());
-    mfl  = GetFlavor(mpdg);
-    if ((mfl > 3) && (mfl < 6) && mpdg > 400) return kTRUE;
-    imo = pm->GetFirstMother() - 1;
-  }
-  return kFALSE;
-}
-
 Int_t AliGenPythia_dev::DoGenerate()
 {
   //  converts from mm/c to s
@@ -288,7 +265,6 @@ Int_t AliGenPythia_dev::DoGenerate()
     AliDebugStream(2) << "Particle " << i << ": pt = " << iparticle->Pt() << ", PDG = " << kf <<
         ", mother " << km <<
         ", status " << ks <<
-        ", HF " << IsFromHeavyFlavor(iparticle) <<
         std::endl;
 
     if ((ks == 1  && kf != 0 && KinematicSelection(iparticle, 0)) || (ks != 1))

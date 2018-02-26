@@ -50,7 +50,8 @@ ClassImp(AliPythia8_dev)
 AliPythia8_dev::AliPythia8_dev():
   AliTPythia8(),
   AliPythiaBase_dev(),
-  fProcess(kPyMb),
+  fProcess(kPyMbDefault),
+  fItune(-1),
   fEcms(0.),
   fStrucFunc(kCTEQ5L),
   fLHEFile()
@@ -70,6 +71,10 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   fProcess   = process;
   fEcms      = energy;
   fStrucFunc = strucfunc;
+  fItune     = tune;
+
+  if (tune > -1) ReadString(Form("Tune:pp = %3d", tune));
+
   ReadString("111:mayDecay  = on");
 
   // Select structure function
@@ -83,6 +88,7 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   //
   // Pythia initialisation for selected processes//
   //
+
   switch (process)
   {
   case kPyCharm:
@@ -119,12 +125,17 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
     // Minimum Bias pp-Collisions
     // select Pythia min. bias model
     ReadString("SoftQCD:inelastic = on");
-    if (tune > -1) ReadString(Form("Tune:pp = %3d", tune));
     break;
 
   case kPyJets:
     //  QCD Jets
     ReadString("HardQCD:all = on");
+    break;
+
+  case kPyJetsPWHG:
+  case kPyCharmPWHG:
+  case kPyBeautyPWHG:
+    // POWHEG
     break;
 
   default:
@@ -212,7 +223,6 @@ void AliPythia8_dev::GetXandQ(Float_t& x1, Float_t& x2, Float_t& q)
   q  = Pythia8()->info.QFac();
   x1 = Pythia8()->info.x1();
   x2 = Pythia8()->info.x2();
-
 }
 
 Float_t AliPythia8_dev::GetXSection()
