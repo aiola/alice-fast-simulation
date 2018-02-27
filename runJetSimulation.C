@@ -88,7 +88,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       proc = kPyBeautyPWHG;
     }
     else {
-      AliWarningGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simualte. Aborting." << std::endl;
+      AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
       return;
     }
 
@@ -104,18 +104,55 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       lhe = "";
     }
 
+    // Select the PYTHIA process
     // Trigger on HF particle if required
     if (procStr == "dijet") {
       proc = kPyJets;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
+    else if (procStr == "soft") {
+      proc = kPyMbDefault;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    }
+    else if (procStr == "mb") {
+      proc = kPyMbNonDiffr;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    }
+    else if (procStr == "charm_jets") {
+      proc = kPyJets;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_jets") {
+      proc = kPyJets;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+    else if (procStr == "charm_tot") {
+      proc = kPyMbDefault;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_tot") {
+      proc = kPyMbDefault;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
     else if (procStr == "charm") {
-      proc = kPyCharm;
+      proc = kPyMbNonDiffr;
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
+      proc = kPyMbNonDiffr;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+    else if (procStr == "charm_lo") {
+      proc = kPyCharm;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_lo") {
       proc = kPyBeauty;
       specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+    else {
+      AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
+      return;
     }
   }
   else if (partonEvent_str == "pythia8") {
@@ -128,25 +165,54 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     }
 
     // Select the PYTHIA process
+    // Trigger on HF particle if required
     if (procStr == "dijet") {
       proc = kPyJets;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
+    else if (procStr == "soft") {
+      proc = kPyMbDefault;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    }
+    else if (procStr == "mb") {
+      proc = kPyMbNonDiffr;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+    }
+    else if (procStr == "charm_jets") {
+      proc = kPyJets;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_jets") {
+      proc = kPyJets;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+    else if (procStr == "charm_tot") {
+      proc = kPyMbDefault;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_tot") {
+      proc = kPyMbDefault;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
     else if (procStr == "charm") {
-      if (minPtHard == 0) {
-        minPtHard = 2.75;
-        if (maxPtHard <= minPtHard) maxPtHard = 99999.;
-      }
-      proc = kPyCharm;
+      proc = kPyMbNonDiffr;
       specialPart = OnTheFlySimulationGenerator::kccbar;
     }
     else if (procStr == "beauty") {
-      if (minPtHard == 0) {
-        minPtHard = 2.75;
-        if (maxPtHard <= minPtHard) maxPtHard = 99999.;
-      }
+      proc = kPyMbNonDiffr;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+    else if (procStr == "charm_lo") {
+      proc = kPyCharm;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_lo") {
       proc = kPyBeauty;
       specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+    else {
+      AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simualte. Aborting." << std::endl;
+      return;
     }
   }
   else {
@@ -166,8 +232,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   else if (hadronization_str == "pythia8") {
     hadronization = OnTheFlySimulationGenerator::kPythia8;
 
-    // Current implementation of PYTHIA8 wrapper in AliRoot cannot read LHE files
-    if (partonEvent != OnTheFlySimulationGenerator::kPythia8) {
+    if (partonEvent != OnTheFlySimulationGenerator::kPythia8 && partonEvent != OnTheFlySimulationGenerator::kPowheg) {
       AliErrorGeneralStream("") << "Hadronization '" << hadronization_str.Data() << "' not compatible with parton event from '" << partonEvent_str.Data() << "'. Aborting." << std::endl;
       return;
     }
@@ -217,7 +282,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   sim->SetEnergyBeam2(ebeam2);
   sim->SetPtHardRange(minPtHard, maxPtHard);
   sim->SetRejectISR(rejectISR);
-  if (procStr == "dijet") {
+  if (procStr == "dijet" || procStr == "mb") {
     sim->EnableJetTree();
   }
   else if (procStr == "charm" || procStr == "beauty") {

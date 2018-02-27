@@ -143,48 +143,36 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   }
   //  select charm production
   switch (process) {
-  case kPyCharm:
-    SetMSEL(4);
-    //  heavy quark masses
-
-    SetPMAS(4,1,1.2);
-    //
-    //    primordial pT
-    SetMSTP(91,1);
-    SetPARP(91,1.);
-    SetPARP(93,5.);
-    //
-    break;
-
-  case kPyBeauty:
-    SetMSEL(5);
-    SetPMAS(5,1,4.75);
-    break;
-
-  case kPyCharmUnforced:
-  case kPyBeautyUnforced:
-    SetMSEL(0);
-    // gq->qg
-    SetMSUB(28,1);
-    // gg->qq
-    SetMSUB(53,1);
-    // gg->gg
-    SetMSUB(68,1);
-    break;
-
   case kPyMbDefault:
-    // Minimum Bias pp-Collisions
-    // select Pythia min. bias model
+    // All soft QCD processes
     SetMSEL(0);
-    SetMSUB(92,1);             // single diffraction AB-->XB
-    SetMSUB(93,1);             // single diffraction AB-->AX
-    SetMSUB(94,1);             // double diffraction
-    SetMSUB(95,1);	           // low pt production
+    SetMSUB(92, 1);             // single diffraction AB-->XB
+    SetMSUB(93, 1);             // single diffraction AB-->AX
+    SetMSUB(94, 1);             // double diffraction
+    SetMSUB(95, 1);             // low pt production
+    break;
+
+  case kPyMbNonDiffr:
+    // Inelastic non-diffractive collisions -> should correspond to experimental minimum-bias
+    SetMSEL(0);
+    SetMSUB(95, 1); // low pt production
     break;
 
   case kPyJets:
     //  QCD Jets
     SetMSEL(1);
+    break;
+
+  case kPyCharm:
+    SetMSEL(4);
+    // heavy quark mass
+    SetPMAS(4, 1, 1.5);
+    break;
+
+  case kPyBeauty:
+    SetMSEL(5);
+    // heavy quark mass
+    SetPMAS(5, 1, 4.75);
     break;
 
   case kPyJetsPWHG:
@@ -207,7 +195,6 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   case kPyBeautyPWHG:
     //    number of warnings printed on the shell
     SetMSTU(26,20);
-
     break;
 
   default:
@@ -216,14 +203,6 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   }
 
   //  Initialize PYTHIA
-
-  // TODO: from AliGenPythia::Init ... not sure what it does!
-  SetMSTP(91,0);
-  SetPARJ(200, 0.0);
-  SetPARJ(199, 0.0);
-  SetPARJ(198, 0.0);
-  SetPARJ(197, 0.0);
-
   if (AliLog::GetDebugLevel("","AliPythia6_dev") >= 1 ) {
     Pystat(4);
     Pystat(5);

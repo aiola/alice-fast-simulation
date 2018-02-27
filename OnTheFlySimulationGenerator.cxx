@@ -422,6 +422,10 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam
     genP->SetPtHard(ptHardMin, ptHardMax);
     AliInfoGeneralStream("OnTheFlySimulationGenerator") << "Setting pt hard bin limits: " << ptHardMin << ", " << ptHardMax << std::endl;
   }
+  else if (proc == kPyJets) {
+    genP->SetPtHard(5, 1e3);
+    AliWarningGeneralStream("OnTheFlySimulationGenerator") << "kPyJets process selected but not pt hard limits: setting pt hard bin limits: " << 5 << ", " << 1e3 << std::endl;
+  }
 
   Float_t randcharge = gRandom->Rndm() > 0.5 ? -1 : 1;
   if (specialPart == kccbar) {
@@ -481,6 +485,10 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam
   if (ptHardMin >= 0. && ptHardMax >= 0. && ptHardMax > ptHardMin) {
     genP->SetPtHard(ptHardMin, ptHardMax);
     AliInfoGeneralStream("OnTheFlySimulationGenerator") << "Setting pt hard bin limits: " << ptHardMin << ", " << ptHardMax << std::endl;
+  }
+  else if (proc == kPyJets) {
+    genP->SetPtHard(5, 1e3);
+    AliWarningGeneralStream("OnTheFlySimulationGenerator") << "kPyJets process selected but not pt hard limits: setting pt hard bin limits: " << 5 << ", " << 1e3 << std::endl;
   }
 
   genP->SetForceDecay(forceDecay);

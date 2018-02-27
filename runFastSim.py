@@ -62,6 +62,8 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
             powhegExe = "pwhg_main_hvq"
         elif proc == "beauty":
             powhegExe = "pwhg_main_hvq"
+        else:
+            print("Process '{}' not recognized!".format(proc))
 
         if not grid:
             powhegExe = "./POWHEG_bins/{0}".format(powhegExe)

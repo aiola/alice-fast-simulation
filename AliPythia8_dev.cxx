@@ -91,45 +91,33 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
 
   switch (process)
   {
-  case kPyCharm:
-    ReadString("HardQCD:gg2ccbar = on");
-    ReadString("HardQCD:qqbar2ccbar = on");
-    //  heavy quark masses
-    ReadString("ParticleData:mcRun = 1.2");
-    //
-    //    primordial pT
-    ReadString("BeamRemnants:primordialKT = on");
-    ReadString("BeamRemnants:primordialKTsoft = 0.");
-    ReadString("BeamRemnants:primordialKThard = 1.");
-    ReadString("BeamRemnants:halfScaleForKT = 0.");
-    ReadString("BeamRemnants:halfMassForKT = 0.");
-    break;
-
-  case kPyBeauty:
-    ReadString("HardQCD:gg2bbbar = on");
-    ReadString("HardQCD:qqbar2bbbar = on");
-    ReadString("ParticleData:mbRun = 4.75");
-    break;
-
-  case kPyCharmUnforced:
-  case kPyBeautyUnforced:
-    // gq->qg
-    ReadString("HardQCD:gq2qg = on");
-    // gg->qq
-    ReadString("HardQCD:gg2qq = on");
-    // gg->gg
-    ReadString("HardQCD:gg2gg = on");
-    break;
-
   case kPyMbDefault:
-    // Minimum Bias pp-Collisions
-    // select Pythia min. bias model
+    // All soft QCD processes
     ReadString("SoftQCD:inelastic = on");
+    break;
+
+  case kPyMbNonDiffr:
+    // Inelastic non-diffractive collisions -> should correspond to experimental minimum-bias
+    ReadString("SoftQCD:nonDiffractive = on");
     break;
 
   case kPyJets:
     //  QCD Jets
     ReadString("HardQCD:all = on");
+    break;
+
+  case kPyCharm:
+    ReadString("HardQCD:gg2ccbar = on");
+    ReadString("HardQCD:qqbar2ccbar = on");
+    //  heavy quark mass
+    ReadString("ParticleData:mcRun = 1.5");
+    break;
+
+  case kPyBeauty:
+    ReadString("HardQCD:gg2bbbar = on");
+    ReadString("HardQCD:qqbar2bbbar = on");
+    //  heavy quark mass
+    ReadString("ParticleData:mbRun = 4.75");
     break;
 
   case kPyJetsPWHG:
