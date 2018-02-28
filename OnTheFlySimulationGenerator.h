@@ -3,14 +3,8 @@
 #ifndef ONTHEFLYSIMULATIONGENERATOR_H
 #define ONTHEFLYSIMULATIONGENERATOR_H
 
-#define EVTGEN_DEV 1
 
-#if EVTGEN_DEV == 1
 #include "AliGenEvtGen_dev.h"
-#else
-#include <AliGenEvtGen.h>
-#endif
-
 #include "AliGenPythia_dev.h"
 
 #include <TString.h>
@@ -54,7 +48,6 @@ public:
   void SetNumberOfEvents(Int_t numevents)                 { fEvents          = numevents     ; }
   void SetProcess(Process_t proc)                         { fProcess         = proc          ; }
   void SetSpecialParticle(ESpecialParticle_t specialPart) { fSpecialParticle = specialPart   ; }
-  void SetForceHadronicDecay(Bool_t forceHadDecay)        { fForceHadDecay   = forceHadDecay ; }
   void SetSeed(Int_t seed)                                { fSeed            = seed          ; }
   void SetLHEFile(TString lhe)                            { fLHEFile         = lhe           ; }
   void SetEnergyBeam1(Float_t e)                          { fEnergyBeam1     = e             ; }
@@ -72,14 +65,10 @@ public:
   void SetHadronization(EGenerator_t gen)                 { fHadronization   = gen           ; }
   void SetDecayer(EGenerator_t gen)                       { fDecayer         = gen           ; }
 
-  static AliGenPythia_dev* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
-  static AliGenPythia_dev* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay);
+  static AliGenPythia_dev* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax);
+  static AliGenPythia_dev* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax);
 
-#if EVTGEN_DEV == 1
-  static AliGenEvtGen_dev* CreateEvtGen(Decay_t forceDecay, AliGenEvtGen_dev::DecayOff_t decayOff);
-#else
-  static AliGenEvtGen* CreateEvtGen(Decay_t forceDecay, AliGenEvtGen::DecayOff_t decayOff);
-#endif
+  static AliGenEvtGen_dev* CreateEvtGen(AliGenEvtGen_dev::DecayOff_t decayOff);
 
   static AliGenCocktail* CreateCocktailGen(EBeamType_t beam, Float_t e_cms);
 
@@ -91,7 +80,6 @@ public:
   Int_t              GetNumberOfEvents()     const { return fEvents         ; }
   Process_t          GetProcess()            const { return fProcess        ; }
   ESpecialParticle_t GetSpecialParticle()    const { return fSpecialParticle; }
-  Bool_t             GetForceHadronicDecay() const { return fForceHadDecay  ; }
   Int_t              GetSeed()               const { return fSeed           ; }
   const TString&     GetLHEFile()            const { return fLHEFile        ; }
   Float_t            GetCMSEnergy()                { if (fCMSEnergy < 0) CalculateCMSEnergy(); return fCMSEnergy; }
@@ -114,7 +102,6 @@ protected:
   Int_t                fEvents           ;
   Process_t            fProcess          ;
   ESpecialParticle_t   fSpecialParticle  ;
-  Bool_t               fForceHadDecay    ;
   Int_t                fSeed             ;
   TString              fLHEFile          ;
   Float_t              fCMSEnergy        ; // in TeV

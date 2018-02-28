@@ -2,6 +2,7 @@
 
 // std library
 #include <iostream>
+#include <set>
 
 // Root classes
 #include <TSystem.h>
@@ -40,7 +41,6 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fEvents(50000),
   fProcess(kPyMbDefault),
   fSpecialParticle(kNoSpecialParticle),
-  fForceHadDecay(kFALSE),
   fSeed(0.),
   fLHEFile(),
   fCMSEnergy(-1),
@@ -69,7 +69,6 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fEvents(50000),
   fProcess(kPyMbDefault),
   fSpecialParticle(kNoSpecialParticle),
-  fForceHadDecay(kFALSE),
   fSeed(0.),
   fLHEFile(),
   fCMSEnergy(-1),
@@ -98,7 +97,6 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fEvents(numevents),
   fProcess(proc),
   fSpecialParticle(specialPart),
-  fForceHadDecay(forceHadDecay),
   fSeed(seed),
   fLHEFile(lhe),
   fCMSEnergy(-1),
@@ -287,37 +285,18 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 {
   AliGenerator* gen = nullptr;
 
-  Decay_t forceDecay = kAll;
-
-  if (fForceHadDecay) {
-    forceDecay = kHadronicDWithout4BodiesWithV0;
-    //kHadronicDWithout4Bodies
-  }
-
-  AliGenerator* genHadronization = nullptr;
+  AliGenPythia_dev* genHadronization = nullptr;
 
   if (fHadronization == kPythia6) {
-    if (fDecayer == kPythia6) {
-      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
-    }
-    else if (fDecayer == kEvtGen) {
-      // Assuming that the decayer EvtGen is used only for BEUATY
-      genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
-    }
-    else {
+    genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard);
+    if (fDecayer != kPythia6 && fDecayer != kEvtGen) {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
       return nullptr;
     }
   }
   else if (fHadronization == kPythia8) {
-    if (fDecayer == kPythia8) {
-      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
-    }
-    else if (fDecayer == kEvtGen) {
-      // Assuming that the decayer EvtGen is used only for BEUATY
-      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
-    }
-    else {
+    genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard);
+    if (fDecayer != kPythia8 && fDecayer != kEvtGen) {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
       return nullptr;
     }
@@ -334,11 +313,9 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 
     if (fDecayer == kEvtGen) {
       // Assuming you want to use EvtGen to decay beauty
-#if EVTGEN_DEV == 1
-      AliGenEvtGen_dev *gene = CreateEvtGen(forceDecay, AliGenEvtGen_dev::kBeautyPart);
-#else
-      AliGenEvtGen *gene = CreateEvtGen(forceDecay, AliGenEvtGen::kBeautyPart);
-#endif
+      std::set<int> B_hadrons = {511,521,531,5122,5132,5232,5332};
+      genHadronization->SetDecayOff(B_hadrons);
+      AliGenEvtGen_dev *gene = CreateEvtGen(AliGenEvtGen_dev::kBeautyPart);
       cocktail->AddGenerator(gene,"MC_evtGen", 1.);
     }
     else {
@@ -355,25 +332,13 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 }
 
 //________________________________________________________________________
-#if EVTGEN_DEV == 1
-AliGenEvtGen_dev* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay, AliGenEvtGen_dev::DecayOff_t decayOff)
+AliGenEvtGen_dev* OnTheFlySimulationGenerator::CreateEvtGen(AliGenEvtGen_dev::DecayOff_t decayOff)
 {
   AliGenEvtGen_dev *gene = new AliGenEvtGen_dev();
-  //gene->SetForceDecay(forceDecay);
   gene->SetParticleSwitchedOff(decayOff);
   //gene->SetUserDecayTable("./DECAY_fix.DEC");
   return gene;
 }
-#else
-AliGenEvtGen* OnTheFlySimulationGenerator::CreateEvtGen(Decay_t forceDecay, AliGenEvtGen::DecayOff_t decayOff)
-{
-  AliGenEvtGen *gene = new AliGenEvtGen();
-  //gene->SetForceDecay(forceDecay);
-  gene->SetParticleSwitchedOff(decayOff);
-  //gene->SetUserDecayTable("./DECAY_fix.DEC");
-  return gene;
-}
-#endif
 
 //________________________________________________________________________
 AliGenCocktail* OnTheFlySimulationGenerator::CreateCocktailGen(EBeamType_t beam, Float_t e_cms)
@@ -401,7 +366,7 @@ AliGenCocktail* OnTheFlySimulationGenerator::CreateCocktailGen(EBeamType_t beam,
 }
 
 //________________________________________________________________________
-AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
+AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax)
 {
   AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA6 generator with CMS energy = " << e_cms << " TeV" << std::endl;
 
@@ -428,13 +393,11 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam
   }
 
   if (specialPart == kccbar) {
-    genP->SetTriggerParticle(4, -1, -1, -3, 3);
+    genP->SetTriggerParticle(4, -1, -1, -10, 10);
   }
   else if (specialPart == kbbbar) {
-    genP->SetTriggerParticle(5, -1, -1, -3, 3);
+    genP->SetTriggerParticle(5, -1, -1, -10, 10);
   }
-
-  genP->SetForceDecay(forceDecay);
 
   //   Center of mass energy
   genP->SetEnergyCMS(e_cms*1000); // in GeV
@@ -456,7 +419,7 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam
 }
 
 //________________________________________________________________________
-AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
+AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax)
 {
   AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA8 generator with CMS energy = " << e_cms << " TeV" << std::endl;
 
@@ -484,14 +447,11 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam
   }
 
   if (specialPart == kccbar) {
-    genP->SetTriggerParticle(4, -1, -1, -3, 3);
+    genP->SetTriggerParticle(4, -1, -1, -10, 10);
   }
   else if (specialPart == kbbbar) {
-    genP->SetTriggerParticle(5, -1, -1, -3, 3);
+    genP->SetTriggerParticle(5, -1, -1, -10, 10);
   }
-
-
-  genP->SetForceDecay(forceDecay);
 
   //   Center of mass energy
   genP->SetEnergyCMS(e_cms*1000); // in GeV

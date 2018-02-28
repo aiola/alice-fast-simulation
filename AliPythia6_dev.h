@@ -31,6 +31,7 @@ public:
   virtual void  PrintStatistics();
   virtual void  EventListing();
   virtual Int_t GetParticles(TClonesArray *particles);
+  virtual void  SetDecayOff(const std::set<int>& pdg_codes);
 
   // Treat protons as inside nuclei
   virtual void  SetNuclei(Int_t a1, Int_t a2, Int_t pdf);

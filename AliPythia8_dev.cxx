@@ -134,6 +134,12 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   Initialize(2212, 2212, fEcms);
 }
 
+void AliPythia8_dev::SetDecayOff(const std::set<int>& pdg_codes)
+{
+  for (auto pdg : pdg_codes) ReadString(Form("%d:onMode = off",pdg));
+}
+
+
 void AliPythia8_dev::SetSeed(UInt_t seed)
 {
   //

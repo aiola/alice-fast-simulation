@@ -130,12 +130,8 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
     subprocess.call(["make"])
 
     print("Running PYTHIA simulation...")
-    with open("sim.log", "w") as myfile:
+    with open("sim_{0}.log".format(fname), "w") as myfile:
         subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
-
-    if not grid:
-        os.rename("sim.log", "sim_{0}.log".format(fname))
-        print("Simulation log backed up in sim_{0}.log".format(fname))
 
     print("Done")
     print("...see results in the log files")

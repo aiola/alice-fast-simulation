@@ -3,6 +3,8 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
+#include <set>
+
 #include <TObject.h>
 
 #include <AliRndm.h>
@@ -35,6 +37,8 @@ class AliPythiaBase_dev : public AliRndm
     virtual Int_t GetParticles(TClonesArray */*particles*/) = 0;
     virtual void  PrintStatistics() = 0;
     virtual void  EventListing() = 0;
+
+    virtual void  SetDecayOff(const std::set<int>& pdg_codes) = 0;
 
     // Treat protons as inside nuclei
     virtual void  SetNuclei(Int_t /*a1*/, Int_t /*a2*/, Int_t /*pdf*/) = 0;

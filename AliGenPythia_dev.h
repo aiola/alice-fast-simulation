@@ -29,6 +29,7 @@
  **************************************************************************/
 
 #include <vector>
+#include <set>
 
 #include <PythiaProcesses.h>
 #include <AliStructFuncType.h>
@@ -78,6 +79,8 @@ public:
   virtual void    SetGluonRadiation(Int_t iIn, Int_t iFin)               { fGinit        = iIn     ; fGfinal = iFin; }
   virtual void    UsePYTHIA6NewMultipleInteractionsScenario(Bool_t b)    { fNewMIS       = b       ; }
 
+  virtual void    SetDecayOff(const std::set<int>& pdg_codes)            { fDecayOffPDGCodes = pdg_codes; }
+
   // Treat protons as inside nuclei with mass numbers a1 and a2
   virtual void    SetNuclei(Int_t a1, Int_t a2, Int_t pdfset);
   virtual void    SetCollisionSystem(TString projectile, TString target) { fProjectile      = projectile; fTarget = target; }
@@ -122,12 +125,12 @@ protected:
   Float_t                  fTriggerParticleMaxPt ; ///<  Maximum pt of the trigger particle
   Float_t                  fTriggerParticleMinEta; ///<  Minimum eta of the trigger particle
   Float_t                  fTriggerParticleMaxEta; ///<  Maximum eta of the trigger particle
+  std::set<int>            fDecayOffPDGCodes     ; ///<
   Int_t                    fNev                  ; //!<! Number of events
   Float_t                  fXsection             ; //!<! Cross-section
   AliPythiaBase_dev       *fPythia               ; //!<! Pythia
   Int_t                    fTrials               ; //!<! Number of trials for current event
   Int_t                    fTrialsRun            ; //!<! Number of trials for run
-  AliDecayer              *fDecayer              ; //!<! Pointer to the decayer instance
   Int_t                    fDebugEventFirst      ; //!<! First event to debug
   Int_t                    fDebugEventLast       ; //!<! Last  event to debug
   AliGenPythiaEventHeader *fHeader               ; //!<! Event header

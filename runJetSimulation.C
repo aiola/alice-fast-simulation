@@ -31,8 +31,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     }
   }
 
-  Process_t proc = kPyMb;
-  Bool_t forceDecay = kFALSE;
+  Process_t proc = kPyMbDefault;
   OnTheFlySimulationGenerator::ESpecialParticle_t specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
   OnTheFlySimulationGenerator::EGenerator_t partonEvent = OnTheFlySimulationGenerator::kPythia6;
   OnTheFlySimulationGenerator::EGenerator_t hadronization = OnTheFlySimulationGenerator::kPythia6;
@@ -272,7 +271,6 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   sim->SetNumberOfEvents(pythiaEvents);
   sim->SetProcess(proc);
   sim->SetSpecialParticle(specialPart);
-  sim->SetForceHadronicDecay(forceDecay);
   sim->SetPartonEventGenerator(partonEvent);
   sim->SetHadronization(hadronization);
   sim->SetDecayer(decayer);

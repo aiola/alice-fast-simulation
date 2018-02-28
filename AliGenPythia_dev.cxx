@@ -20,7 +20,6 @@
 #include <TFile.h>
 
 #include <AliPythiaRndm.h>
-#include <AliDecayerPythia.h>
 #include <AliLog.h>
 #include <AliRun.h>
 #include <AliGenPythiaEventHeader.h>
@@ -61,11 +60,11 @@ AliGenPythia_dev::AliGenPythia_dev():
   fTriggerParticleMaxPt(-1),
   fTriggerParticleMinEta(-1),
   fTriggerParticleMaxEta(-1),
+  fDecayOffPDGCodes(),
   fNev(0),
   fXsection(0.),
   fTrials(0),
   fTrialsRun(0),
-  fDecayer(new AliDecayerPythia()),
   fDebugEventFirst(-1),
   fDebugEventLast(-1),
   fHeader(0),
@@ -102,11 +101,11 @@ AliGenPythia_dev::AliGenPythia_dev(AliPythiaBase_dev* pythia):
   fTriggerParticleMaxPt(-1),
   fTriggerParticleMinEta(-1),
   fTriggerParticleMaxEta(-1),
+  fDecayOffPDGCodes(),
   fNev(0),
   fXsection(0.),
   fTrials(0),
   fTrialsRun(0),
-  fDecayer(new AliDecayerPythia()),
   fDebugEventFirst(-1),
   fDebugEventLast(-1),
   fHeader(0),
@@ -150,11 +149,9 @@ void AliGenPythia_dev::Init()
 
   fPythia->SetLHEFile(fLHEFile);
 
-  fPythia->ProcInit(fProcess, fEnergyCMS, fStrucFunc, fItune);
-  //  Forward Paramters to the AliPythia object
-  fDecayer->SetForceDecay(fForceDecay);
+  fPythia->SetDecayOff(fDecayOffPDGCodes);
 
-  fDecayer->Init();
+  fPythia->ProcInit(fProcess, fEnergyCMS, fStrucFunc, fItune);
 
   //  This counts the total number of calls to Pyevnt() per run.
   fTrialsRun = 0;
@@ -178,8 +175,6 @@ void AliGenPythia_dev::Generate()
     AliErrorStream() << "No PYTHIA generator found! No event generated!" << std::endl;
     return;
   }
-
-  fDecayer->ForceDecay();
 
   Double_t polar[3]   = {0};
   Double_t origin[3]  = {0};

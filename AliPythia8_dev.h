@@ -28,6 +28,8 @@ class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
     virtual void  EventListing();    
     virtual Int_t GetParticles(TClonesArray *particles) {return ImportParticles(particles, "All");}
 
+    virtual void  SetDecayOff(const std::set<int>& pdg_codes);
+
     virtual void SetLHEFile(const char* fname) { fLHEFile = fname; }
 
     // Treat protons as inside nuclei

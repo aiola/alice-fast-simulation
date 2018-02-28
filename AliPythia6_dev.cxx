@@ -226,6 +226,11 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   }
 }
 
+void AliPythia6_dev::SetDecayOff(const std::set<int>& pdg_codes)
+{
+  for (auto pdg : pdg_codes) SetMDCY(Pycomp(pdg), 1, 0);
+}
+
 Int_t AliPythia6_dev::CheckedLuComp(Int_t kf)
 {
   // Check Lund particle code (for debugging)
