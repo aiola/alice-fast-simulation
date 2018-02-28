@@ -197,8 +197,7 @@ void AliGenPythia_dev::Generate()
   if (fVertexSmear == kPerEvent) Vertex();
 
   //  event loop
-  do
-  {
+  do {
     // Produce new event
     fPythia->GenerateEvent();
 
@@ -260,18 +259,18 @@ Int_t AliGenPythia_dev::DoGenerate()
     TParticle *  iparticle = static_cast<TParticle*>(fParticles.At(i));
     Int_t kf = CheckPDGCode(iparticle->GetPdgCode());
     Int_t ks = iparticle->GetStatusCode();
-    Int_t km = iparticle->GetFirstMother();
 
     AliDebugStream(2) << "Particle " << i << ": pt = " << iparticle->Pt() << ", PDG = " << kf <<
-        ", mother " << km <<
+        ", first mother " << iparticle->GetFirstMother() <<
+        ", second mother " << iparticle->GetSecondMother() <<
         ", status " << ks <<
         std::endl;
 
-    if ((ks == 1  && kf != 0 && KinematicSelection(iparticle, 0)) || (ks != 1))
-    {
+    if ((ks == 1  && kf != 0 && KinematicSelection(iparticle, 0)) || (ks != 1)) {
       nc++;
       if (ks == 1) trackIt = 1;
-      Int_t ipa = iparticle->GetFirstMother() - 1;
+
+      Int_t ipa = GetMother(iparticle);
 
       Int_t iparent = (ipa > -1) ? fNParent[ipa] : -1;
 
@@ -300,6 +299,40 @@ Int_t AliGenPythia_dev::DoGenerate()
 
   return nc;
 }
+
+Int_t AliGenPythia_dev::GetMother(TParticle* iparticle)
+{
+  Int_t ipa1 = iparticle->GetFirstMother();
+  Int_t ipa2 = iparticle->GetSecondMother();
+
+  if (ipa1 < 0) return ipa2;
+  if (ipa2 < 0) return ipa1;
+
+  TParticle* p1 = static_cast<TParticle*>(fParticles.At(ipa1));
+  if (!p1) return ipa2;
+
+  TParticle* p2 = static_cast<TParticle*>(fParticles.At(ipa2));
+  if (!p2) return ipa1;
+
+  Int_t absPdgCode1 = TMath::Abs(p1->GetPdgCode());
+  Int_t absPdgCode2 = TMath::Abs(p2->GetPdgCode());
+
+  // Only one mother can be stored
+  // If one of the originating particles is a HF quark prefer it over the other possibility
+  // If both are HF quarks, prefer beauty over charm
+  // If both are charm or both are beauty, return the first mother
+
+  // If the first mother is a beuaty quark, return mother 1
+  if (absPdgCode1 == 5) return ipa1;
+
+  // If the second mother is a charm or beauty quark return mother 2
+  if (absPdgCode2 == 4 || absPdgCode2 == 5) return ipa2;
+
+  // If the second mother is not a HF quark, return mother 1
+  return ipa1;
+}
+
+
 
 /**
  * Print x-section summary

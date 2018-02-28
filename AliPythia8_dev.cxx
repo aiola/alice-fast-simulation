@@ -89,8 +89,7 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   // Pythia initialisation for selected processes//
   //
 
-  switch (process)
-  {
+  switch (process) {
   case kPyMbDefault:
     // All soft QCD processes
     ReadString("SoftQCD:inelastic = on");

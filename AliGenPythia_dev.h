@@ -96,6 +96,7 @@ public:
 
 protected:
   void     MakeHeader();
+  Int_t    GetMother(TParticle* iparticle);
 
   inline static Int_t GetFlavor(Int_t pdg) { return Int_t(pdg / TMath::Power(10, Int_t(TMath::Log10(pdg)))); }
 

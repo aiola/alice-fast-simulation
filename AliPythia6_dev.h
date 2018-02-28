@@ -30,7 +30,7 @@ public:
   virtual void  EditEventList(Int_t i) {Pyedit(i);}
   virtual void  PrintStatistics();
   virtual void  EventListing();
-  virtual Int_t GetParticles(TClonesArray *particles) {return ImportParticles(particles, "All");}
+  virtual Int_t GetParticles(TClonesArray *particles);
 
   // Treat protons as inside nuclei
   virtual void  SetNuclei(Int_t a1, Int_t a2, Int_t pdf);

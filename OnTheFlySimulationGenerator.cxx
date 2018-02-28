@@ -311,11 +311,11 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
   }
   else if (fHadronization == kPythia8) {
     if (fDecayer == kPythia8) {
-      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, forceDecay);
+      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, forceDecay);
     }
     else if (fDecayer == kEvtGen) {
       // Assuming that the decayer EvtGen is used only for BEUATY
-      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
+      genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard, kNoDecayBeauty);
     }
     else {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
@@ -427,12 +427,11 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam
     AliWarningGeneralStream("OnTheFlySimulationGenerator") << "kPyJets process selected but not pt hard limits: setting pt hard bin limits: " << 5 << ", " << 1e3 << std::endl;
   }
 
-  Float_t randcharge = gRandom->Rndm() > 0.5 ? -1 : 1;
   if (specialPart == kccbar) {
-    genP->SetTriggerParticle(4*randcharge, -1, -1, -3, 3);
+    genP->SetTriggerParticle(4, -1, -1, -3, 3);
   }
   else if (specialPart == kbbbar) {
-    genP->SetTriggerParticle(5*randcharge, -1, -1, -3, 3);
+    genP->SetTriggerParticle(5, -1, -1, -3, 3);
   }
 
   genP->SetForceDecay(forceDecay);
@@ -447,24 +446,17 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam
   else if (beam == kpPb) {
     genP->SetProjectile("p",208,82);
     genP->SetTarget("p",1,1);
-    //genP->SetNuclearPDF(19);
-    //genP->SetUseNuclearPDF(kTRUE);
+    genP->SetNuclearPDF(19);
+    genP->SetUseNuclearPDF(kTRUE);
     genP->SetUseLorentzBoost(kTRUE);
   }
-
-  // Additional settings from A. Rossi
-  genP->SetMomentumRange(0, 999999.);
-  genP->SetThetaRange(0., 180.);
-  genP->SetYRange(-12.,12.);
-  genP->SetPtRange(0,1000.);
-  //genP->SetTrackingFlag(0);
 
   genP->Print();
   return genP;
 }
 
 //________________________________________________________________________
-AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
+AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax, Decay_t forceDecay)
 {
   AliInfoGeneralStream("OnTheFlySimulationGenerator") << "PYTHIA8 generator with CMS energy = " << e_cms << " TeV" << std::endl;
 
@@ -491,6 +483,14 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam
     AliWarningGeneralStream("OnTheFlySimulationGenerator") << "kPyJets process selected but not pt hard limits: setting pt hard bin limits: " << 5 << ", " << 1e3 << std::endl;
   }
 
+  if (specialPart == kccbar) {
+    genP->SetTriggerParticle(4, -1, -1, -3, 3);
+  }
+  else if (specialPart == kbbbar) {
+    genP->SetTriggerParticle(5, -1, -1, -3, 3);
+  }
+
+
   genP->SetForceDecay(forceDecay);
 
   //   Center of mass energy
@@ -503,6 +503,9 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam
   else if (beam == kpPb) {
     genP->SetProjectile("p",208,82);
     genP->SetTarget("p",1,1);
+    genP->SetNuclearPDF(19);
+    genP->SetUseNuclearPDF(kTRUE);
+    genP->SetUseLorentzBoost(kTRUE);
   }
 
   genP->Print();

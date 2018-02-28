@@ -15,6 +15,9 @@
 
 #include <iostream>
 
+#include <TParticle.h>
+#include <TClonesArray.h>
+
 #include <AliPythiaRndm.h>
 #include <AliLog.h>
 
@@ -332,4 +335,15 @@ Int_t AliPythia6_dev::GetNMPI()
 {
   // returns the number of parton-parton interactions
   return (GetMSTI(31));
+}
+
+Int_t AliPythia6_dev::GetParticles(TClonesArray *particles)
+{
+  Int_t n = ImportParticles(particles, "All");
+  for (auto obj : *particles) {
+    TParticle* p = static_cast<TParticle*>(obj);
+    p->SetFirstMother(p->GetFirstMother() - 1);
+    p->SetLastMother(p->GetSecondMother() - 1);
+  }
+  return n;
 }
