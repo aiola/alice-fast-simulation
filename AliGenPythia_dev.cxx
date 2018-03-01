@@ -127,6 +127,12 @@ void AliGenPythia_dev::SetEventListRange(Int_t eventFirst, Int_t eventLast)
   if (fDebugEventLast==-1) fDebugEventLast=fDebugEventFirst;
 }
 
+void AliGenPythia_dev::SetSeed(UInt_t seed)
+{
+  AliGenMC::SetSeed(seed);
+  fPythia->SetSeed(seed);
+}
+
 /**
  * Initialization
  */

@@ -63,7 +63,7 @@ public:
   // Interface of the generator (Used by AliMCGenHandler)
   virtual void    Generate();
   virtual void    Init();
-  virtual void    SetSeed(UInt_t seed)                                    { GetRandom()->SetSeed(seed); }
+  virtual void    SetSeed(UInt_t seed);
 
   virtual void    SetProcess(Process_t proc)                             { fProcess      = proc    ; }
   virtual void    SetTune(EPythiaTune_t itune)                           { fItune        = itune   ; }
