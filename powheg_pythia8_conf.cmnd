@@ -38,8 +38,8 @@ POWHEG:nFinal = 2
 POWHEG:veto = 1
 
 ! If veto > 0
-SpaceShower:pTmaxMatch = 2
-TimeShower:pTmaxMatch = 2
+SpaceShower:pTmaxMatch = 0
+TimeShower:pTmaxMatch = 0
 
 ! After 'vetoCount' accepted emissions in a row, no more emissions
 ! are checked. 'vetoCount = 0' means all emissions are checked.
@@ -52,7 +52,7 @@ POWHEG:vetoCount = 3
 !      incoming and outgoing partons, with the minimal value chosen
 !  2 - the pT of all final-state partons is tested against all other
 !      incoming and outgoing partons, with the minimal value chosen
-POWHEG:pThard = 2
+POWHEG:pThard = 0
 
 ! Selection of pTemt:
 !  0 - pTemt is pT of the emitted parton w.r.t. radiating parton
@@ -81,10 +81,10 @@ POWHEG:pTdef = 1
 !  0 - No MPI vetoing is done
 !  1 - When there is no radiation, MPIs with a scale above pT_1 are vetoed,
 !      else MPIs with a scale above (pT_1 + pT_2 + pT_3) / 2 are vetoed
-POWHEG:MPIveto = 0
+POWHEG:MPIveto = 1
 
 ! If MPIveto > 0
-! MultipartonInteractions:pTmaxMatch = 2
+MultipartonInteractions:pTmaxMatch = 0
 
 ! QED vetoing
 !  0 - No QED vetoing is done for pTemt > 0.
