@@ -41,6 +41,8 @@ public:
   // Print particle properties
   virtual void PrintParticles();
 
+  void Pytune(int itune);
+
   // Common Physics Configuration
   virtual void SetWeightPower(Double_t pow); // use pT,hard dependent weight instead of p_T,hard bins
   virtual void SetPtHardRange(Float_t ptmin, Float_t ptmax);

@@ -100,6 +100,12 @@ void AliPythia6_dev::SetInitialAndFinalStateRadiation(Int_t flag1, Int_t flag2)
   SetMSTP(71, flag2);
 }
 
+void AliPythia6_dev::Pytune(int itune)
+{
+  //interface with fortran routine pytune
+  pytune(itune);
+}
+
 void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc, Int_t itune)
 {
   // Initialise the process to generate
