@@ -87,6 +87,10 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc
   case kPyCharmPWHG:
   case kPyBeautyPWHG:
     // POWHEG
+    if (!fLHEFile.IsNull()) {
+      ReadConfigFile("powheg_pythia8_conf.cmnd");
+      ReadString(TString::Format("Beams:LHEF = %s", fLHEFile.Data()));
+    }
     break;
 
   default:
@@ -112,11 +116,8 @@ void AliPythia8_dev::SetDecayOff(const std::set<int>& pdg_codes)
 
 void AliPythia8_dev::SetSeed(UInt_t seed)
 {
-  //
   // set seed in PYTHIA8
   // NB. 900000000 is the maximum seed (0 is not allowed)
-  //
-
   SetPythiaSeed(seed);
 }
 

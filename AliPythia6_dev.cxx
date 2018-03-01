@@ -110,14 +110,6 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc
   fStrucFunc = strucfunc;
   fItune = itune;
 
-  if (!fLHEFile.IsNull() && (process == kPyJetsPWHG || process == kPyCharmPWHG || process == kPyBeautyPWHG)) {
-    char* fname = new char[fLHEFile.Length() + 1];
-    strcpy(fname, fLHEFile.Data());
-    AliInfoStream() << "Opening LHE file '" << fname << "'" << std::endl;
-    OpenFortranFile(97, fname);
-    delete[] fname;
-  }
-
   //  Select the tune
   if (itune > -1) Pytune(itune);
 
@@ -191,6 +183,10 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc
     Pystat(5);
   }
 
+  // Particles produced in string fragmentation point directly to either of the two endpoints
+  // of the string (depending in the side they were generated from).
+  SetMSTU(16,2);
+
   // Select structure function
   if (strucfunc >= 0) {
     AliWarningStream() << "Structure function for tune " << itune << " set to " << AliStructFuncType::PDFsetName((StrucFunc_t)strucfunc).Data() << std::endl;
@@ -200,6 +196,11 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc
 
   //  Initialize PYTHIA
   if (!fLHEFile.IsNull() && (process == kPyJetsPWHG || process == kPyCharmPWHG || process == kPyBeautyPWHG)) {
+    char* fname = new char[fLHEFile.Length() + 1];
+    strcpy(fname, fLHEFile.Data());
+    AliInfoStream() << "Opening LHE file '" << fname << "'" << std::endl;
+    OpenFortranFile(97, fname);
+    delete[] fname;
     Initialize("USER","","",0.);
   }
   else {

@@ -255,7 +255,13 @@ Int_t AliGenPythia_dev::DoGenerate()
     Int_t kf = CheckPDGCode(iparticle->GetPdgCode());
     Int_t ks = iparticle->GetStatusCode();
 
-    AliDebugStream(2) << "Particle " << i << ": pt = " << iparticle->Pt() << ", PDG = " << kf <<
+    AliDebugStream(2) << "Particle " << i << ": "
+        ", PDG = " << kf <<
+        ", px = " << iparticle->Px() <<
+        ", py = " << iparticle->Py() <<
+        ", pz = " << iparticle->Pz() <<
+        ", e = " << iparticle->Energy() <<
+        ", m = " << iparticle->GetCalcMass() <<
         ", first mother " << iparticle->GetFirstMother() <<
         ", second mother " << iparticle->GetSecondMother() <<
         ", status " << ks <<

@@ -58,7 +58,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
   fDecayer(kPythia6),
-  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
 
@@ -86,7 +86,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
   fDecayer(kPythia6),
-  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
 
@@ -426,13 +426,13 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam
 
   AliPythia8_dev* pythia8 = new AliPythia8_dev();
 
-  if (!lhe.IsNull() && partonEvent == kPowheg) {
-    pythia8->ReadConfigFile("powheg_pythia8_conf.cmnd");
-    pythia8->ReadString(TString::Format("Beams:LHEF = %s", lhe.Data()));
-  }
-
   AliGenPythia_dev* genP = new AliGenPythia_dev(pythia8);
   genP->SetTune(tune);
+
+  if (!lhe.IsNull() && partonEvent == kPowheg) {
+    AliInfoGeneralStream("OnTheFlySimulationGenerator") << "Setting LHE file '" << lhe.Data() << "'" << std::endl;
+    genP->SetLHEFile(lhe);
+  }
 
   // vertex position and smearing
   genP->SetVertexSmear(kPerEvent);
