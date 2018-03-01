@@ -310,7 +310,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulation.C",
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "start_simulation.C",
-                   "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx", "Makefile"]
+                   "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx", "Makefile", "powheg_pythia8_conf.cmnd"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
 
