@@ -27,6 +27,8 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
   gSystem->Load("libfastjetplugins");
   gSystem->Load("libfastjetcontribfragile");
 
+  gSystem->Load("liblhapdf_5_9_1.so");
+
   std::cout << "Loading libraries for PYTHIA6" << std::endl;
   gSystem->Load("libpythia6_4_28.so");
 

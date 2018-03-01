@@ -22,7 +22,7 @@ public:
   virtual Int_t CheckedLuComp(Int_t kf);
 
   // Pythia initialisation for selected processes
-  virtual void ProcInit(Process_t process, Float_t energy, StrucFunc_t strucfunc, Int_t tune);
+  virtual void ProcInit(Process_t process, Float_t energy, Int_t strucfunc, Int_t tune);
 
   virtual void  GenerateEvent()   { if (fNewMIS) Pyevnw(); else Pyevnt(); }
   virtual Int_t GetNumberOfParticles() { return GetN(); }
@@ -63,7 +63,7 @@ protected:
   Process_t             fProcess;           // Process type
   Int_t                 fItune;
   Float_t               fEcms;              // Centre of mass energy
-  StrucFunc_t           fStrucFunc;         // Structure function
+  Int_t                 fStrucFunc;         // Structure function
   TString               fLHEFile;         //
   Bool_t                fNewMIS;     //
 private:

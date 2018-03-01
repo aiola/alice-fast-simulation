@@ -20,6 +20,7 @@
 
 #include <AliPythiaRndm.h>
 #include <AliLog.h>
+#include <AliStructFuncType.h>
 
 #include "AliPythia6_dev.h"
 
@@ -68,7 +69,7 @@ AliPythia6_dev::AliPythia6_dev():
   fProcess(kPyMbDefault),
   fItune(-1),
   fEcms(0.),
-  fStrucFunc(kCTEQ5L),
+  fStrucFunc(-1),
   fLHEFile(),
   fNewMIS(kTRUE)
 {
@@ -99,7 +100,7 @@ void AliPythia6_dev::SetInitialAndFinalStateRadiation(Int_t flag1, Int_t flag2)
   SetMSTP(71, flag2);
 }
 
-void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t strucfunc, Int_t itune)
+void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc, Int_t itune)
 {
   // Initialise the process to generate
   if (!AliPythiaRndm::GetPythiaRandom()) AliPythiaRndm::SetPythiaRandom(GetRandom());
@@ -109,41 +110,21 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   fStrucFunc = strucfunc;
   fItune = itune;
 
+  if (!fLHEFile.IsNull() && (process == kPyJetsPWHG || process == kPyCharmPWHG || process == kPyBeautyPWHG)) {
+    char* fname = new char[fLHEFile.Length() + 1];
+    strcpy(fname, fLHEFile.Data());
+    AliInfoStream() << "Opening LHE file '" << fname << "'" << std::endl;
+    OpenFortranFile(97, fname);
+    delete[] fname;
+  }
+
   //  Select the tune
-  if (itune > -1) {
-    Pytune(itune);
-    if (GetMSTP(192) > 1 || GetMSTP(193) > 1) {
-      AliWarningStream() << "Structure function for tune " << itune << " set to " << AliStructFuncType::PDFsetName(strucfunc).Data() << std::endl;
-      SetMSTP(52,2);
-      SetMSTP(51, AliStructFuncType::PDFsetIndex(strucfunc));
-    }
-  }
+  if (itune > -1) Pytune(itune);
 
-
-  //...Switch off decay of pi0, K0S, Lambda, Sigma+-, Xi0-, Omega-.
-  SetMDCY(Pycomp(111) ,1,0); // pi0
-  SetMDCY(Pycomp(310) ,1,0); // K0S
-  SetMDCY(Pycomp(3122),1,0); // kLambda
-  SetMDCY(Pycomp(3112),1,0); // sigma -
-  SetMDCY(Pycomp(3222),1,0); // sigma +
-  SetMDCY(Pycomp(3312),1,0); // xi -
-  SetMDCY(Pycomp(3322),1,0); // xi 0
-  SetMDCY(Pycomp(3334),1,0); // omega-
-  // Select structure function
-  SetMSTP(52,2);
-  SetMSTP(51, AliStructFuncType::PDFsetIndex(strucfunc));
-  // Particles produced in string fragmentation point directly to either of the two endpoints
-  // of the string (depending in the side they were generated from).
-  SetMSTU(16,2);
-
-  //
-  // Pythia initialisation for selected processes//
-  //
+  // Pythia initialisation for selected processes
   // Make MSEL clean
-  //
-  for (Int_t i=1; i<= 200; i++) {
-    SetMSUB(i,0);
-  }
+  for (Int_t i = 1; i <= 200; i++) SetMSUB(i,0);
+
   //  select charm production
   switch (process) {
   case kPyMbDefault:
@@ -205,20 +186,20 @@ void AliPythia6_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
     break;
   }
 
-  //  Initialize PYTHIA
   if (AliLog::GetDebugLevel("","AliPythia6_dev") >= 1 ) {
     Pystat(4);
     Pystat(5);
   }
 
-  // all resonance decays switched on
-  SetMSTP(41,1);
+  // Select structure function
+  if (strucfunc >= 0) {
+    AliWarningStream() << "Structure function for tune " << itune << " set to " << AliStructFuncType::PDFsetName((StrucFunc_t)strucfunc).Data() << std::endl;
+    SetMSTP(52,2);
+    SetMSTP(51, AliStructFuncType::PDFsetIndex((StrucFunc_t)strucfunc));
+  }
 
-  if (!fLHEFile.IsNull() && (process == kPyJetsPWHG || process == kPyCharmPWHG || process == kPyBeautyPWHG || process == kPyWPWHG)) {
-    char* fname = new char[fLHEFile.Length() + 1];
-    strcpy(fname, fLHEFile.Data());
-    if (!fLHEFile.IsNull()) OpenFortranFile(97, fname);
-    delete[] fname;
+  //  Initialize PYTHIA
+  if (!fLHEFile.IsNull() && (process == kPyJetsPWHG || process == kPyCharmPWHG || process == kPyBeautyPWHG)) {
     Initialize("USER","","",0.);
   }
   else {

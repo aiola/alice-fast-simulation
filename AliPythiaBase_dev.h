@@ -8,7 +8,6 @@
 #include <TObject.h>
 
 #include <AliRndm.h>
-#include <AliStructFuncType.h>
 #include <PythiaProcesses.h>
 
 class AliFastGlauber;
@@ -28,7 +27,7 @@ class AliPythiaBase_dev : public AliRndm
     virtual Int_t CheckedLuComp(Int_t /*kf*/) = 0;
 
     // Pythia initialisation for selected processes
-    virtual void  ProcInit (Process_t /*process*/, Float_t /*energy*/, StrucFunc_t /*strucfunc*/, Int_t /* tune */) = 0;
+    virtual void  ProcInit (Process_t /*process*/, Float_t /*energy*/, Int_t /*strucfunc*/, Int_t /* tune */) = 0;
 
     virtual void  SetSeed(UInt_t /*seed*/);
     virtual void  GenerateEvent() = 0;

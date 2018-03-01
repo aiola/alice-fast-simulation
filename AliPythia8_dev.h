@@ -19,7 +19,7 @@ class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
     virtual Int_t CheckedLuComp(Int_t /*kf*/) {return -1;}
 
     // Pythia initialisation for selected processes
-    virtual void  ProcInit (Process_t process, Float_t energy, StrucFunc_t strucfunc, Int_t tune);
+    virtual void  ProcInit (Process_t process, Float_t energy, Int_t strucfunc, Int_t tune);
 
     virtual void  SetSeed(UInt_t seed);
     virtual void  GenerateEvent();
@@ -56,7 +56,7 @@ class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
     Process_t             fProcess;           // Process type
     Int_t                 fItune;
     Float_t               fEcms;              // Centre of mass energy
-    StrucFunc_t           fStrucFunc;         // Structure function
+    Int_t                 fStrucFunc;         // Structure function
     TString               fLHEFile;         //
 
  private:

@@ -14,38 +14,15 @@
  * provided "as is" without express or implied warranty.                  *
  **************************************************************************/
 
-#include "AliLog.h"
-#include "AliStack.h"
-#include "AliPythiaRndm.h"
-#include "Pythia8/Analysis.h"
+#include <AliLog.h>
+#include <AliStack.h>
+#include <AliPythiaRndm.h>
+#include <Pythia8/Analysis.h>
+#include <AliStructFuncType.h>
 
 #include "AliPythia8_dev.h"
 
 ClassImp(AliPythia8_dev)
-
-// Particles produced in string fragmentation point directly to either of the two endpoints
-// of the string (depending in the side they were generated from).
-//    SetMSTU(16,2); // ????
-//  String drawing almost completely minimizes string length.
-//  Probability that an additional interaction gives two gluons
-//  ... with color connection to nearest neighbours
-//    SetPARP(85,0.9);
-//  ... as closed gluon loop
-//    SetPARP(86,0.95);
-// Lambda_FSR scale.
-//	SetPARJ(81, 0.29);
-// Baryon production model
-//	SetMSTJ(12,3); 
-// String fragmentation
-//	SetMSTJ(1,1);  
-// sea quarks can be used for baryon formation
-//      SetMSTP(88,2); 
-// choice of max. virtuality for ISR
-//	SetMSTP(68,1);
-// regularisation scheme of ISR 
-//	SetMSTP(70,2);
-// all resonance decays switched on
-//    SetMSTP(41,1);   
 
 AliPythia8_dev::AliPythia8_dev():
   AliTPythia8(),
@@ -53,7 +30,7 @@ AliPythia8_dev::AliPythia8_dev():
   fProcess(kPyMbDefault),
   fItune(-1),
   fEcms(0.),
-  fStrucFunc(kCTEQ5L),
+  fStrucFunc(-1),
   fLHEFile()
 {
   // Default Constructor
@@ -62,7 +39,7 @@ AliPythia8_dev::AliPythia8_dev():
   if (!AliPythiaRndm::GetPythiaRandom()) AliPythiaRndm::SetPythiaRandom(GetRandom());
 }
 
-void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t strucfunc, Int_t tune)
+void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc, Int_t tune)
 {
   // Initialise the process to generate
   if (!AliPythiaRndm::GetPythiaRandom())
@@ -75,20 +52,7 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
 
   if (tune > -1) ReadString(Form("Tune:pp = %3d", tune));
 
-  ReadString("111:mayDecay  = on");
-
-  // Select structure function
-  //          ReadString("PDF:useLHAPDF = on");
-  //	  ReadString(Form("PDF:LHAPDFset = %s", AliStructFuncType::PDFsetName(fStrucFunc).Data()));
-  // Particles produced in string fragmentation point directly to either of the two endpoints
-  // of the string (depending in the side they were generated from).
-
-  //    SetMSTU(16,2); // ????
-
-  //
-  // Pythia initialisation for selected processes//
-  //
-
+  // Pythia initialisation for selected processes
   switch (process) {
   case kPyMbDefault:
     // All soft QCD processes
@@ -128,6 +92,12 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, StrucFunc_t str
   default:
     AliWarningStream() << "Process '" << process << "' not implemented!!" << std::endl;
     break;
+  }
+
+  // Select structure function
+  if (fStrucFunc >= 0) {
+    ReadString("PDF:useLHAPDF = on");
+    ReadString(Form("PDF:LHAPDFset = %s", AliStructFuncType::PDFsetName((StrucFunc_t)fStrucFunc).Data()));
   }
 
   //  Initialize PYTHIA

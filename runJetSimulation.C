@@ -266,6 +266,8 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     return;
   }
 
+  AliInfoGeneralStream("") << "Setting PYTHIA process to " << proc << " " << std::endl;
+
   OnTheFlySimulationGenerator* sim = new OnTheFlySimulationGenerator(trainName);
   sim->EnableJetQA(kTRUE);
   sim->SetNumberOfEvents(pythiaEvents);

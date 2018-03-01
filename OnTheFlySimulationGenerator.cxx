@@ -376,6 +376,7 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia6Gen(EBeamType_t beam
   genP->SetTune(tune);
 
   if (!lhe.IsNull() && partonEvent == kPowheg) {
+    AliInfoGeneralStream("OnTheFlySimulationGenerator") << "Setting LHE file '" << lhe.Data() << "'" << std::endl;
     genP->SetLHEFile(lhe);
   }
 
