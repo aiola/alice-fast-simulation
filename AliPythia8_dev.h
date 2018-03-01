@@ -5,6 +5,7 @@
 
 #include "AliPythiaBase_dev.h"
 #include "AliTPythia8.h"
+#include <AliStructFuncType.h>
 
 class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
 {
@@ -53,6 +54,8 @@ class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
     virtual Int_t ProcessCode();
 
  protected:
+    static Int_t PYTHIA8PDFsetName(StrucFunc_t s);
+
     Process_t             fProcess;           // Process type
     Int_t                 fItune;
     Float_t               fEcms;              // Centre of mass energy

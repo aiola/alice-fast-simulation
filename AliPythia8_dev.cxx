@@ -18,7 +18,6 @@
 #include <AliStack.h>
 #include <AliPythiaRndm.h>
 #include <Pythia8/Analysis.h>
-#include <AliStructFuncType.h>
 
 #include "AliPythia8_dev.h"
 
@@ -100,12 +99,36 @@ void AliPythia8_dev::ProcInit(Process_t process, Float_t energy, Int_t strucfunc
 
   // Select structure function
   if (fStrucFunc >= 0) {
-    ReadString("PDF:useLHAPDF = on");
-    ReadString(Form("PDF:LHAPDFset = %s", AliStructFuncType::PDFsetName((StrucFunc_t)fStrucFunc).Data()));
+    // In order to use LHAPDF PYTHIA8 must be configured and compiled with the correct settings
+    // This is not the case in AliRoot
+    //ReadString("PDF:useLHAPDF = on");
+    //ReadString(TString::Format("PDF:LHAPDFset = %s", AliStructFuncType::PDFsetName((StrucFunc_t)fStrucFunc).Data()));
+    Int_t pdf_code = PYTHIA8PDFsetName((StrucFunc_t)fStrucFunc);
+    if (pdf_code == 0) {
+      AliErrorStream() << "PDF '" << AliStructFuncType::PDFsetName((StrucFunc_t)fStrucFunc).Data() << "(" << fStrucFunc << ") not available for PYTHIA8" << std::endl;
+    }
+    else {
+      ReadString(TString::Format("PDF:pSet = %d", pdf_code));
+    }
   }
 
   //  Initialize PYTHIA
   Initialize(2212, 2212, fEcms);
+}
+
+Int_t AliPythia8_dev::PYTHIA8PDFsetName(StrucFunc_t s)
+{
+  switch(s) {
+  case kCTEQ5L:
+    return 2;
+    break;
+  case kCTEQ6l:
+    return 7;
+    break;
+  default:
+    return 0;
+    break;
+  }
 }
 
 void AliPythia8_dev::SetDecayOff(const std::set<int>& pdg_codes)

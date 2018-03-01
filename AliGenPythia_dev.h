@@ -105,7 +105,7 @@ protected:
 
   Process_t                fProcess              ; ///<  Process type
   EPythiaTune_t            fItune                ; ///<  Pythia tune > 6.4
-  StrucFunc_t              fStrucFunc            ; ///<  Structure Function
+  Int_t                    fStrucFunc            ; ///<  Structure Function
   Float_t                  fWeightPower          ; ///<  Power for cross section weights; 0 means no reweighting
   Float_t                  fPtHardMin            ; ///<  Lower pT-hard cut
   Float_t                  fPtHardMax            ; ///<  Higher pT-hard cut
