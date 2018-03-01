@@ -162,8 +162,6 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
             jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
         jdlContent += "}; \n"
 
-    requirements = GenerateSiteRequirements()
-    jdlContent += requirements
     return jdlContent
 
 
@@ -308,9 +306,15 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
     # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
-    FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h", "runJetSimulation.C",
-                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "start_simulation.C",
-                   "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx", "Makefile", "powheg_pythia8_conf.cmnd"]
+    FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
+                   "runJetSimulation.C", "start_simulation.C",
+                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
+                   "Makefile",
+                   "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
+                   "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
+                   "AliPythia6_dev.h", "AliPythia6_dev.cxx",
+                   "AliPythia8_dev.h", "AliPythia8_dev.cxx",
+                   "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
     if OldPowhegInit:
         FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
 
