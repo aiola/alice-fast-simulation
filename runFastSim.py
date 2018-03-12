@@ -29,10 +29,6 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
     print "AliRoot: " + alirootPath
     print "Alien: " + alienPath
 
-    if qmass < 0:
-        if proc == "charm": qmass = 1.5
-        elif proc == "beauty": qmass = 4.75
-
     if grid:
         fname = "{0}_{1}".format(gen, proc)
     else:
@@ -56,26 +52,39 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
 
     if runPOWHEG:
         print("Running new POWHEG simulation!")
-        if proc == "dijet":
+        powhegEvents = int(pythiaEvents * 1.1)
+        if proc == "charm_jets" or proc == "beauty_jets":
+            powheg_proc = "dijet"
+            powhegEvents *= 5
+        else:
+            powheg_proc = proc
+
+        if powheg_proc == "dijet":
             powhegExe = "pwhg_main_dijet"
-        elif proc == "charm":
+        elif powheg_proc == "charm":
             powhegExe = "pwhg_main_hvq"
-        elif proc == "beauty":
+        elif powheg_proc == "beauty":
             powhegExe = "pwhg_main_hvq"
         else:
-            print("Process '{}' not recognized!".format(proc))
+            print("Process '{}' not recognized!".format(powheg_proc))
+            exit(1)
+
+        if qmass < 0:
+            if powheg_proc == "charm":
+                qmass = 1.5
+            elif powheg_proc == "beauty":
+                qmass = 4.75
 
         if not grid:
             powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
 
-        powhegEvents = int(pythiaEvents * 1.1)
-        shutil.copy("{0}-powheg.input".format(proc), "powheg.input")
+        shutil.copy("{0}-powheg.input".format(powheg_proc), "powheg.input")
         rnd = random.randint(0, 1073741824)  # 2^30
 
         with open("powheg.input", "a") as myfile:
             myfile.write("iseed {0}\n".format(rnd))
             myfile.write("numevts {0}\n".format(powhegEvents))
-            if proc == "beauty" or proc == "charm":
+            if powheg_proc == "beauty" or powheg_proc == "charm":
                 myfile.write("qmass {0}\n".format(qmass))
                 myfile.write("facscfact {0}\n".format(facscfact))
                 myfile.write("renscfact {0}\n".format(renscfact))

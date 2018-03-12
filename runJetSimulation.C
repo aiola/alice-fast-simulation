@@ -77,22 +77,42 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     }
 
     // Select the PYTHIA process
+    // Trigger on HF particle if required
     if (procStr == "dijet") {
       proc = kPyJetsPWHG;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "charm") {
       proc = kPyCharmPWHG;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "beauty") {
       proc = kPyBeautyPWHG;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
+    else if (procStr == "charm_jets") {
+      proc = kPyJetsPWHG;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_jets") {
+      proc = kPyJetsPWHG;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+/*
+    else if (procStr == "charm_lo") {
+      proc = kPyJetsPWHG;
+      specialPart = OnTheFlySimulationGenerator::kccbar;
+    }
+    else if (procStr == "beauty_lo") {
+      proc = kPyJetsPWHG;
+      specialPart = OnTheFlySimulationGenerator::kbbbar;
+    }
+*/
     else {
       AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
       return;
     }
 
-    // No need to trigger on special particles
-    specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
   }
   else if (partonEvent_str == "pythia6") {
     partonEvent = OnTheFlySimulationGenerator::kPythia6;
