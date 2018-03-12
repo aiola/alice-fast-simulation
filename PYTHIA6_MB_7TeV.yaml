@@ -1,4 +1,4 @@
-name: PYTHIA6_DIJET_7TeV
+name: PYTHIA6_MB_7TeV
 aliphysics: _last_
 numevents: 50000
 numbjobs: 400
