@@ -1,7 +1,7 @@
 name: POWHEG_PYTHIA6_CHARM_7TeV_central
 aliphysics: _last_
-numevents: 50000
-numbjobs: 400
+numevents: 10000
+numbjobs: 800
 gen: powheg+pythia6
 proc: charm_jets
 qmass: -1
