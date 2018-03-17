@@ -305,7 +305,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   if (procStr == "dijet" || procStr == "mb") {
     sim->EnableJetTree();
   }
-  else if (procStr == "charm" || procStr == "beauty") {
+  else if (procStr.Contains("charm") || procStr.Contains("beauty")) {
     sim->EnableDMesonJets();
   }
   if (beamType == "pPb") {
