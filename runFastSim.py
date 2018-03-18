@@ -12,7 +12,7 @@ import sys
 import yaml
 
 
-def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, nPDFset, nPDFerrSet, rejectISR, LHEfile, minpthard, maxpthard, grid, debug_level):
+def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet, rejectISR, LHEfile, minpthard, maxpthard, grid, debug_level):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -92,6 +92,7 @@ def main(pythiaEvents, gen, proc, qmass, facscfact, renscfact, lhans, beamType, 
             myfile.write("lhans2 {0}\n".format(lhans))
             myfile.write("ebeam1 {0}\n".format(ebeam1))
             myfile.write("ebeam2 {0}\n".format(ebeam2))
+            myfile.write("bornktmin {0}\n".format(bornktmin))
             if beamType == "pPb":
                 myfile.write("nPDFset {0}        ! (0:EKS98, 1:EPS08, 2:EPS09LO, 3:EPS09NLO)\n".format(nPDFset))
                 myfile.write("nPDFerrSet {0}     ! (1:central, 2:+1, 3:-1..., 30:+15, 31:-15)\n".format(nPDFerrSet))
@@ -190,6 +191,10 @@ if __name__ == '__main__':
     BeamType = config["beam_type"]
     EBeam1 = config["ebeam1"]
     EBeam2 = config["ebeam2"]
+    if "bornktmin" in config:
+        BornKtMin = config["bornktmin"]
+    else:
+        BornKtMin = 10
     nPDFset = config["nPDFset"]
     nPDFerrSet = config["nPDFerrSet"]
     if "rejectISR" in config:
@@ -197,4 +202,4 @@ if __name__ == '__main__':
     else:
         rejectISR = False
 
-    main(args.numevents, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, nPDFset, nPDFerrSet, rejectISR, args.lhe, args.minpthard, args.maxpthard, args.grid, args.d)
+    main(args.numevents, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, BornKtMin, nPDFset, nPDFerrSet, rejectISR, args.lhe, args.minpthard, args.maxpthard, args.grid, args.d)

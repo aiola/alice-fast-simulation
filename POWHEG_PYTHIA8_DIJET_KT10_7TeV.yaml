@@ -2,7 +2,7 @@ name: POWHEG_PYTHIA6_DIJET_7TeV
 aliphysics: _last_
 numevents: 50000
 numbjobs: 400
-gen: powheg+pythia6
+gen: powheg+pythia8
 proc: dijet
 qmass: -1
 facscfact: 1
@@ -16,3 +16,4 @@ nPDFerrSet: 1
 ttl: 80000
 max_files_per_job: 20
 pthard: no
+bornktmin: 10

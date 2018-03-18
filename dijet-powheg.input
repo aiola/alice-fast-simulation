@@ -4,10 +4,12 @@ ih2  1               ! hadron 2 (1 for protons, -1 for antiprotons)
 !ebeam1 3500          ! energy of beam 1
 !ebeam2 3500          ! energy of beam 2
 
-bornktmin 10         ! (default 0d0) Generation cut: minimum kt in underlying Born
+!bornktmin 10         ! (default 0d0) Generation cut: minimum kt in underlying Born
 #bornsuppfact 100    ! (default 0d0) Mass parameter for Born suppression factor.
                      ! If < 0 suppfact = 1.
-
+#withnegweights 1     ! (default 0). If 1 use negative weights.
+#bornonly 1          ! (default 0). If 1 compute underlying Born using LO
+                     ! cross section only.
 
 ! To be set only if using internal (mlm) pdfs
 ! 131 cteq6m
@@ -48,10 +50,6 @@ nubound 500000       ! No. calls to set up the upper bounding norms for radiatio
                      ! This is performed using only the Born cross section (fast)
 
 ! OPTIONAL PARAMETERS
-
-withnegweights 1     ! (default 0). If 1 use negative weights.
-#bornonly 1          ! (default 0). If 1 compute underlying Born using LO
-                     ! cross section only.
 
 #ptsqmin    0.8      ! (default 0.8 GeV) minimum pt for generation of radiation
 #charmthr   1.5      ! (default 1.5 GeV) charm treshold for gluon splitting 
