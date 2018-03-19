@@ -28,16 +28,16 @@ ih2  1               ! hadron 2 (1 for protons, -1 for antiprotons)
 #facscfact  1d0      ! (default 1d0) fac scale factor: mufact = muref * facscfact 
 
 ! Parameters to allow or not the use of stored data
-use-old-grid    1    ! If 1 use old grid if file pwggrids.dat is present (<> 1 regenerate)
-use-old-ubound  1    ! If 1 use norm of upper bounding function stored
+use-old-grid    0    ! If 1 use old grid if file pwggrids.dat is present (<> 1 regenerate)
+use-old-ubound  0    ! If 1 use norm of upper bounding function stored
                      ! in pwgubound.dat, if present; <> 1 regenerate
 
 ! A typical call uses 1/1400 seconds (1400 calls per second)
-ncall1 20000         ! No. calls for the construction of the importance sampling grid
-itmx1 5              ! No. iterations for grid: total 100000 calls ~ 70 seconds
-ncall2 20000         ! No. calls for the computation of the upper bounding
+!ncall1 20000         ! No. calls for the construction of the importance sampling grid
+!itmx1 5              ! No. iterations for grid: total 100000 calls ~ 70 seconds
+!ncall2 20000         ! No. calls for the computation of the upper bounding
                      ! envelope for the generation of radiation
-itmx2 5              ! No. iterations for the above
+!itmx2 5              ! No. iterations for the above
 
 ! Notice: the total number of calls is ncall2*itmx2*foldcsi*foldy*foldphi
 ! these folding numbers yield a negative fraction of 0.5% with bornktmin=10 GeV.
