@@ -71,11 +71,11 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
 
     if PowhegStage == 1:
         with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
-            if njobs > 20:
-                nseeds = njobs
+            if Jobs > 20:
+                nseeds = Jobs
             else:
                 nseeds = 20
-            for ijob in range(1, nseeds + 1):
+            for iseed in range(1, nseeds + 1):
                 rnd = random.randint(0, 1073741824)  # 2^30
                 myfile.write("{}\n".format(rnd))
     else:
