@@ -10,7 +10,8 @@ import argparse
 import random
 import sys
 
-def main(trainName, xmlFile, grid):
+
+def main(trainName, xmlFile):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -45,13 +46,11 @@ def main(trainName, xmlFile, grid):
     dateNow = datetime.datetime.now()
     print(dateNow)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run fast simulation.')
     parser.add_argument('train_name', metavar='NAME')
     parser.add_argument('--xml', metavar='FILE.XML')
-    parser.add_argument("--grid", action='store_const',
-                        default=False, const=True,
-                        help='Grid analysis.')
     args = parser.parse_args()
 
-    main(args.train_name, args.xml, args.grid)
+    main(args.train_name, args.xml)

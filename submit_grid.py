@@ -180,7 +180,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"{trainName} --xml wn.xml --batch-job grid\"; \n\
+Arguments = \"{trainName} --xml wn.xml\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
