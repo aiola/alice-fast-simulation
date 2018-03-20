@@ -82,20 +82,12 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
     if PowhegStage == 1:
         njobs = 10
     elif PowhegStage == 2:
-        njobs = 100
+        njobs = 20
     elif PowhegStage == 3:
         njobs = 10
     elif PowhegStage == 4:
         njobs = Jobs
     for ijob in range(1, njobs + 1):
-        # JobDir = "{}/Job_Stage_{}_{:03d}".format(LocalDest, PowhegStage, ijob)
-        # os.makedirs(JobDir)
-        # src_files = os.listdir(LocalDest)
-        # for file_name in src_files:
-        #    full_file_name = os.path.join(LocalDest, file_name)
-        #    if (os.path.isfile(full_file_name)):
-        #        shutil.copy(full_file_name, JobDir)
-        # RunJobFileName = "{}/runjob.sh".format(JobDir)
         JobDir = LocalDest
         JobOutput = "{}/JobOutput_Stage_{}_{:03d}.log".format(JobDir, PowhegStage, ijob)
         RunJobFileName = "{}/RunJob_{}_{:03d}.sh".format(JobDir, PowhegStage, ijob)
@@ -141,7 +133,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
         FilesToCopy.extend([ExeFile])
 
         CopyFilesToTheWorkingDir(FilesToCopy, LocalDest)
-        
+
         temp = os.getcwd()
         os.chdir(LocalDest)
         print("Compiling analysis code...")

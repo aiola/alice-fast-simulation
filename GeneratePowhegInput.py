@@ -11,19 +11,27 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, powhegEvents, gen, powh
         myfile.write("numevts {0}\n".format(powhegEvents))
         myfile.write("manyseeds 1\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
-        if powheg_proc == "beauty" or powheg_proc == "charm":
+        if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
             myfile.write("renscfact {0}\n".format(renscfact))
-            myfile.write("ncall1 4000\n")
+            myfile.write("ncall1 2000\n")
             myfile.write("itmx1 5\n")
-            myfile.write("ncall2 4000\n")
+            myfile.write("ncall2 5000\n")
+            myfile.write("itmx2 5\n")
+        elif powheg_proc == "charm":
+            myfile.write("qmass {0}\n".format(qmass))
+            myfile.write("facscfact {0}\n".format(facscfact))
+            myfile.write("renscfact {0}\n".format(renscfact))
+            myfile.write("ncall1 10000\n")
+            myfile.write("itmx1 5\n")
+            myfile.write("ncall2 5000\n")
             myfile.write("itmx2 5\n")
         elif powheg_proc == "dijet":
             myfile.write("bornktmin {0}\n".format(bornktmin))
-            myfile.write("ncall1 10000\n")
+            myfile.write("ncall1 5000\n")
             myfile.write("itmx1 5\n")
-            myfile.write("ncall2 20000\n")
+            myfile.write("ncall2 1000\n")
             myfile.write("itmx2 5\n")
 
         if powheg_stage == 1: myfile.write("xgriditeration 1\n")
@@ -45,19 +53,27 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
     with open("{}/powheg.input".format(outputdir), "a") as myfile:
         myfile.write("iseed {0}\n".format(rnd))
         myfile.write("numevts {0}\n".format(powhegEvents))
-        if powheg_proc == "beauty" or powheg_proc == "charm":
+        if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
             myfile.write("renscfact {0}\n".format(renscfact))
-            myfile.write("ncall1 20000\n")
+            myfile.write("ncall1 10000\n")
             myfile.write("itmx1 5\n")
-            myfile.write("ncall2 2000\n")
+            myfile.write("ncall2 100000\n")
             myfile.write("itmx2 5\n")
-        elif powheg_proc == "dijet":
-            myfile.write("bornktmin {0}\n".format(bornktmin))
+        elif powheg_proc == "charm":
+            myfile.write("qmass {0}\n".format(qmass))
+            myfile.write("facscfact {0}\n".format(facscfact))
+            myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("ncall1 50000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 100000\n")
+            myfile.write("itmx2 5\n")
+        elif powheg_proc == "dijet":
+            myfile.write("bornktmin {0}\n".format(bornktmin))
+            myfile.write("ncall1 20000\n")
+            myfile.write("itmx1 5\n")
+            myfile.write("ncall2 20000\n")
             myfile.write("itmx2 5\n")
         myfile.write("lhans1 {0}\n".format(lhans))
         myfile.write("lhans2 {0}\n".format(lhans))

@@ -6,7 +6,7 @@
 
 !Heavy flavour production parameters
 
-!numevts 1000000   ! number of events to be generated
+!numevts 1000   ! number of events to be generated
 ih1   1        ! hadron 1
 ih2   1        ! hadron 2
 #ndns1 131      ! pdf for hadron 1 (hvqpdf numbering)
@@ -24,7 +24,7 @@ ih2   1        ! hadron 2
 use-old-grid 0    ! if 1 use old grid if file pwggrids.dat is present (# 1: regenerate)
 use-old-ubound 0  ! if 1 use norm of upper bounding function stored in pwgubound.dat, if present; # 1: regenerate
 
-!ncall1 50000   ! number of calls for initializing the integration grid
+!ncall1 10000   ! number of calls for initializing the integration grid
 !itmx1 5        ! number of iterations for initializing the integration grid
 !ncall2 100000  ! number of calls for computing the integral and finding upper bound
 !itmx2 5        ! number of iterations for computing the integral and finding upper bound
