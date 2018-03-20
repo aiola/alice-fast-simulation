@@ -70,7 +70,7 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
         powhegEvents *= 5
 
     if PowhegStage == 1:
-        with open(pwgseeds, "w") as myfile:
+        with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
             if njobs > 20:
                 nseeds = njobs
             else:
