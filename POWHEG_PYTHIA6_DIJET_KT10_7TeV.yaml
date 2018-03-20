@@ -1,7 +1,7 @@
 name: POWHEG_PYTHIA6_DIJET_7TeV
 aliphysics: _last_
-numevents: 50000
-numbjobs: 400
+numevents: 5000
+numbjobs: 4
 gen: powheg+pythia6
 proc: dijet
 qmass: -1

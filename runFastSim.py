@@ -22,44 +22,14 @@ class PowhegResult:
 def RunPowhegParallel(powhegExe, powheg_stage, job_number, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
-    with open("powheg.input", "a") as myfile:
-        myfile.write("numevts {0}\n".format(powhegEvents))
-        myfile.write("manyseeds 1\n")
-        myfile.write("parallelstage {}\n".format(powheg_stage))
-        if powheg_proc == "beauty" or powheg_proc == "charm":
-            myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
-            myfile.write("ncall1 4000\n")
-            myfile.write("itmx1 5\n")
-            myfile.write("ncall2 4000\n")
-            myfile.write("itmx2 5\n")
-        elif powheg_proc == "dijet":
-            myfile.write("bornktmin {0}\n".format(bornktmin))
-            myfile.write("ncall1 10000\n")
-            myfile.write("itmx1 5\n")
-            myfile.write("ncall2 20000\n")
-            myfile.write("itmx2 5\n")
-
-        if powheg_stage == 1: myfile.write("xgriditeration 1\n")
-        myfile.write("lhans1 {0}\n".format(lhans))
-        myfile.write("lhans2 {0}\n".format(lhans))
-        myfile.write("ebeam1 {0}\n".format(ebeam1))
-        myfile.write("ebeam2 {0}\n".format(ebeam2))
-
-        if beamType == "pPb":
-            myfile.write("nPDFset {0}        ! (0:EKS98, 1:EPS08, 2:EPS09LO, 3:EPS09NLO)\n".format(nPDFset))
-            myfile.write("nPDFerrSet {0}     ! (1:central, 2:+1, 3:-1..., 30:+15, 31:-15)\n".format(nPDFerrSet))
-            myfile.write("AA1 208            ! (Atomic number of hadron 1)\n")
-            myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
-
     with open("powheg.input", 'r') as fin:
         powheg_input = fin.read().splitlines()
     for line in powheg_input:
         print(line)
 
     print("Running POWHEG...")
-    with open("powheg.log", "w") as myfile:
+    LogFileName = "Powheg_Stage_{}_Job_{:03d}.log".format(powheg_stage, job_number)
+    with open(LogFileName, "w") as myfile:
         print([powhegExe, str(job_number)])
         p = subprocess.Popen([powhegExe], stdout=myfile, stderr=myfile, stdin=subprocess.PIPE)
         p.communicate(input=str(job_number))
@@ -126,14 +96,14 @@ def main(pythiaEvents, powheg_stage, job_number, gen, proc, qmass, facscfact, re
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
-        alienPath = subprocess.check_output(["which", "alien-token-info"]).rstrip()
+        #alienPath = subprocess.check_output(["which", "alien-token-info"]).rstrip()
     except subprocess.CalledProcessError:
         print "Environment is not configured correctly!"
         exit()
 
     print "Root: " + rootPath
     print "AliRoot: " + alirootPath
-    print "Alien: " + alienPath
+    #print "Alien: " + alienPath
 
     if batch_job == "grid":
         fname = "{0}_{1}".format(gen, proc)
@@ -182,24 +152,23 @@ def main(pythiaEvents, powheg_stage, job_number, gen, proc, qmass, facscfact, re
             print("Process '{}' not recognized!".format(powheg_proc))
             exit(1)
 
-        if batch_job == "local" or batch_job == "lbnl3":
+        if batch_job == "local":
             powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
-
-        shutil.copy("{0}-powheg.input".format(powheg_proc), "powheg.input")
 
         if powheg_stage > 0 and powheg_stage <= 4:
             powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
         else:
+            shutil.copy("{0}-powheg.input".format(powheg_proc), "powheg.input")
             powheg_result = RunPowheg(powhegExe, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
 
         if not powheg_result.events_generated:
-            if powehg_stage > 0 and powehg_stage <= 3:
-                print("POWHEG stage {} completed. Exiting.".format(powehg_stage))
+            if powheg_stage > 0 and powheg_stage <= 3:
+                print("POWHEG stage {} completed. Exiting.".format(powheg_stage))
                 os.unlink("powheg.input")
-                os.rename("powheg.log", "powheg-stage{}-{:03d}.log".format(powehg_stage, job_number))
+                os.rename("powheg.log", "powheg-stage{}-{:03d}.log".format(powheg_stage, job_number))
                 exit(0)
             else:
-                print("POWHEG at stage {} did not produce any event!!!".format(powehg_stage))
+                print("POWHEG at stage {} did not produce any event!!!".format(powheg_stage))
                 exit(1)
 
         if not os.path.isfile(powheg_result.lhe_file):
