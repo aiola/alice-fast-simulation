@@ -64,18 +64,16 @@ def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
 
 
 def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, PowhegStage):
-    if PowhegStage == 1:
-        with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
-            njobs = Jobs
-            if njobs < 200: njobs = 200
-            for ijob in range(1, njobs + 1):
-                rnd = random.randint(0, 1073741824)  # 2^30
-                myfile.write("{}\n".format(rnd))
-
     powhegEvents = int(Events * 1.1)
     if proc == "charm_jets" or proc == "beauty_jets":
         powheg_proc = "dijet"
         powhegEvents *= 5
+
+    pwgseeds = "{}/pwgseeds.dat".format(LocalDest)
+
+    if PowhegStage > 0:
+        os.rename(pwgseeds, "{}/pwgseeds_Stage_{}.dat".format(LocalDest, PowhegStage - 1))
+        os.rename("{}/powheg.input".format(LocalDest), "{}/powheg_Stage_{}.input".format(LocalDest, PowhegStage - 1))
 
     GeneratePowhegInput.main(LocalDest, powhegEvents, PowhegStage, yamlFileName)
 
@@ -87,6 +85,12 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
         njobs = 10
     elif PowhegStage == 4:
         njobs = Jobs
+
+    with open(pwgseeds, "w") as myfile:
+        for ijob in range(1, njobs + 1):
+            rnd = random.randint(0, 1073741824)  # 2^30
+            myfile.write("{}\n".format(rnd))
+
     for ijob in range(1, njobs + 1):
         JobDir = LocalDest
         JobOutput = "{}/JobOutput_Stage_{}_{:03d}.log".format(JobDir, PowhegStage, ijob)
