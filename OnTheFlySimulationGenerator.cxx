@@ -13,7 +13,6 @@
 
 // AliRoot classes
 #include <AliESDInputHandler.h>
-#include <AliAnalysisAlien.h>
 #include <AliAnalysisManager.h>
 #include <AliDummyHandler.h>
 #include <AliMCGenHandler.h>
