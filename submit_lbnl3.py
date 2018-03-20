@@ -81,34 +81,36 @@ def GenerateComments():
     return comments
 
 
-def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName):
+def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName, copy_files, PowhegStage):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
     ExeFile = "runFastSim.py"
-
-    FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
-                   "runJetSimulation.C", "start_simulation.C",
-                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
-                   "Makefile",
-                   "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
-                   "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
-                   "AliPythia6_dev.h", "AliPythia6_dev.cxx",
-                   "AliPythia8_dev.h", "AliPythia8_dev.cxx",
-                   "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
-
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
-    FilesToCopy.extend([ExeFile])
 
-    CopyFilesToTheWorkingDir(FilesToCopy, LocalDest)
+    if copy_files:
+        FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
+                       "runJetSimulation.C", "start_simulation.C",
+                       "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
+                       "Makefile",
+                       "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
+                       "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
+                       "AliPythia6_dev.h", "AliPythia6_dev.cxx",
+                       "AliPythia8_dev.h", "AliPythia8_dev.cxx",
+                       "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
+
+        FilesToCopy.extend([ExeFile])
+
+        CopyFilesToTheWorkingDir(FilesToCopy, LocalDest)
+
     if "powheg" in Gen:
-        SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, Gen, Proc, yamlFileName)
+        SubmitParallelPowheg(LocalDest, ExeFile, PowhegStage, Events, Jobs, Gen, Proc, yamlFileName)
     else:
         SubmitParallel(LocalDest, ExeFile, Events, Jobs, Gen, Proc, yamlFileName)
 
     print "Done."
 
 
-def main(UserConf, yamlFileName):
+def main(UserConf, yamlFileName, powheg_stage, continue_powheg):
     f = open(yamlFileName, 'r')
     config = yaml.load(f)
     f.close()
@@ -146,10 +148,16 @@ def main(UserConf, yamlFileName):
 
     print("Local working directory: {0}".format(LocalPath))
 
-    unixTS = int(time.time())
-    print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
+    if continue_powheg:
+        unixTS = int(time.time())
+        copy_files = False
+        print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
+    else:
+        unixTS = continue_powheg
+        copy_files = True
+        print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
     TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-    SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName)
+    SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName, copy_files, powheg_stage)
 
 
 if __name__ == '__main__':
@@ -158,8 +166,12 @@ if __name__ == '__main__':
                         default="default.yaml", help='YAML configuration file')
     parser.add_argument('--user-conf', metavar='USERCONF',
                         default="userConf.yaml")
+    parser.add_argument('--continue-powheg', metavar='USERCONF',
+                        default=None)
+    parser.add_argument('--powheg-stage', metavar='USERCONF',
+                        default=0, type=int)
     args = parser.parse_args()
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.config)
+    main(userConf, args.config, args.powheg_stage, args.continue_powheg)
