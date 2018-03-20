@@ -20,6 +20,7 @@ import re
 import UserConfiguration
 import datetime
 import random
+import GeneratePowhegInput
 
 
 def subprocessCall(cmd):
@@ -48,54 +49,28 @@ def CopyFilesToTheWorkingDir(Files, LocalDest):
 
 def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
     for ijob in range(0, Jobs):
-        RunJobFileName = "{}/RunJob_{:03d}.sh".format(LocalDest, ijob)
+        JobDir = LocalDest
+        JobOutput = "{}/JobOutput_Stage_{}_{:03d}.log".format(JobDir, PowhegStage, ijob)
+        RunJobFileName = "{}/RunJob_{}_{:03d}.sh".format(JobDir, PowhegStage, ijob)
         with open(RunJobFileName, "w") as myfile:
             myfile.write("#!/bin/bash\n")
+            myfile.write(GenerateComments())
+            myfile.write("#PBS -o %s\n" % (JobOutput))
+            myfile.write("#PBS -j oe\n")
             myfile.write("source /home/salvatore/load_alice.sh\n")
             myfile.write("{LocalDest}/{ExeFile} {yamlFileName} --numevents {Events} --job-number {ijob} --batch-job lbnl3\n".format(LocalDest=LocalDest, ExeFile=ExeFile, yamlFileName=yamlFileName, Events=Events, ijob=ijob))
         output = subprocessCheckOutput(["qsub", RunJobFileName])
         print(output)
 
 
-def SubmitParallelPowheg(LocalDest, ExeFile, PowhegStage, Events, Jobs, yamlFileName):
-    with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
-        for ijob in range(1, Jobs + 1):
-            rnd = random.randint(0, 1073741824)  # 2^30
-            myfile.write("{}\n".format(rnd))
+def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, PowhegStage):
+    if PowhegStage == 1:
+        with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
+            for ijob in range(1, Jobs + 1):
+                rnd = random.randint(0, 1073741824)  # 2^30
+                myfile.write("{}\n".format(rnd))
 
-    powheg_input_file = "{}/powheg.input".format(LocalDest)
-    shutil.copy("{}/{}-powheg.input".format(LocalDest, powheg_proc), powheg_input_file)
-
-    with open("powheg.input", "a") as myfile:
-        myfile.write("numevts {0}\n".format(powhegEvents))
-        myfile.write("manyseeds 1\n")
-        myfile.write("parallelstage {}\n".format(powheg_stage))
-        if powheg_proc == "beauty" or powheg_proc == "charm":
-            myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
-            myfile.write("ncall1 4000\n")
-            myfile.write("itmx1 5\n")
-            myfile.write("ncall2 4000\n")
-            myfile.write("itmx2 5\n")
-        elif powheg_proc == "dijet":
-            myfile.write("bornktmin {0}\n".format(bornktmin))
-            myfile.write("ncall1 10000\n")
-            myfile.write("itmx1 5\n")
-            myfile.write("ncall2 20000\n")
-            myfile.write("itmx2 5\n")
-
-        if powheg_stage == 1: myfile.write("xgriditeration 1\n")
-        myfile.write("lhans1 {0}\n".format(lhans))
-        myfile.write("lhans2 {0}\n".format(lhans))
-        myfile.write("ebeam1 {0}\n".format(ebeam1))
-        myfile.write("ebeam2 {0}\n".format(ebeam2))
-
-        if beamType == "pPb":
-            myfile.write("nPDFset {0}        ! (0:EKS98, 1:EPS08, 2:EPS09LO, 3:EPS09NLO)\n".format(nPDFset))
-            myfile.write("nPDFerrSet {0}     ! (1:central, 2:+1, 3:-1..., 30:+15, 31:-15)\n".format(nPDFerrSet))
-            myfile.write("AA1 208            ! (Atomic number of hadron 1)\n")
-            myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
+    GeneratePowhegInput.main(LocalDest, Events, PowhegStage, yamlFileName)
 
     if PowhegStage == 1:
         njobs = 10
@@ -106,20 +81,21 @@ def SubmitParallelPowheg(LocalDest, ExeFile, PowhegStage, Events, Jobs, yamlFile
     elif PowhegStage == 4:
         njobs = Jobs
     for ijob in range(1, njobs + 1):
-        #JobDir = "{}/Job_Stage_{}_{:03d}".format(LocalDest, PowhegStage, ijob)
-        #os.makedirs(JobDir)
-        #src_files = os.listdir(LocalDest)
-        #for file_name in src_files:
+        # JobDir = "{}/Job_Stage_{}_{:03d}".format(LocalDest, PowhegStage, ijob)
+        # os.makedirs(JobDir)
+        # src_files = os.listdir(LocalDest)
+        # for file_name in src_files:
         #    full_file_name = os.path.join(LocalDest, file_name)
         #    if (os.path.isfile(full_file_name)):
         #        shutil.copy(full_file_name, JobDir)
-        #RunJobFileName = "{}/runjob.sh".format(JobDir)
+        # RunJobFileName = "{}/runjob.sh".format(JobDir)
         JobDir = LocalDest
         JobOutput = "{}/JobOutput_Stage_{}_{:03d}.log".format(JobDir, PowhegStage, ijob)
         RunJobFileName = "{}/RunJob_{}_{:03d}.sh".format(JobDir, PowhegStage, ijob)
         with open(RunJobFileName, "w") as myfile:
             myfile.write("#!/bin/bash\n")
-            myfile.write("#PBS -o %s\n" %(JobOutput))
+            myfile.write(GenerateComments())
+            myfile.write("#PBS -o %s\n" % (JobOutput))
             myfile.write("#PBS -j oe\n")
             myfile.write("source /home/salvatore/load_alice.sh\n")
             myfile.write("{LocalDest}/{ExeFile} {yamlFileName} --numevents {Events} --job-number {ijob} --powheg-stage {PowhegStage} --batch-job lbnl3\n".format(LocalDest=LocalDest, ExeFile=ExeFile, yamlFileName=yamlFileName, Events=Events, ijob=ijob, PowhegStage=PowhegStage))

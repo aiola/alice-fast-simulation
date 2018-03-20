@@ -10,6 +10,7 @@ import argparse
 import random
 import sys
 import yaml
+import GeneratePowhegInput
 
 
 class PowhegResult:
@@ -19,7 +20,7 @@ class PowhegResult:
         self.events_generated = events_generated
 
 
-def RunPowhegParallel(powhegExe, powheg_stage, job_number, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
+def RunPowhegParallel(powhegExe, pythiaEvents, powheg_stage, job_number):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
     with open("powheg.input", 'r') as fin:
@@ -42,37 +43,10 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number, powhegEvents, gen, po
     return result
 
 
-def RunPowheg(powhegExe, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
+def RunPowhegSingle(powhegExe, pythiaEvents, yamlConfigFile):
     print("Running POWHEG simulation!")
 
-    rnd = random.randint(0, 1073741824)  # 2^30
-
-    with open("powheg.input", "a") as myfile:
-        myfile.write("iseed {0}\n".format(rnd))
-        myfile.write("numevts {0}\n".format(powhegEvents))
-        if powheg_proc == "beauty" or powheg_proc == "charm":
-            myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
-            myfile.write("ncall1 20000\n")
-            myfile.write("itmx1 5\n")
-            myfile.write("ncall2 2000\n")
-            myfile.write("itmx2 5\n")
-        elif powheg_proc == "dijet":
-            myfile.write("bornktmin {0}\n".format(bornktmin))
-            myfile.write("ncall1 50000\n")
-            myfile.write("itmx1 5\n")
-            myfile.write("ncall2 100000\n")
-            myfile.write("itmx2 5\n")
-        myfile.write("lhans1 {0}\n".format(lhans))
-        myfile.write("lhans2 {0}\n".format(lhans))
-        myfile.write("ebeam1 {0}\n".format(ebeam1))
-        myfile.write("ebeam2 {0}\n".format(ebeam2))
-        if beamType == "pPb":
-            myfile.write("nPDFset {0}        ! (0:EKS98, 1:EPS08, 2:EPS09LO, 3:EPS09NLO)\n".format(nPDFset))
-            myfile.write("nPDFerrSet {0}     ! (1:central, 2:+1, 3:-1..., 30:+15, 31:-15)\n".format(nPDFerrSet))
-            myfile.write("AA1 208            ! (Atomic number of hadron 1)\n")
-            myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
+    GeneratePowhegInput.main("./", pythiaEvents, 0, yamlConfigFile)
 
     with open("powheg.input", 'r') as fin:
         powheg_input = fin.read().splitlines()
@@ -88,7 +62,7 @@ def RunPowheg(powhegExe, powhegEvents, gen, powheg_proc, qmass, facscfact, rensc
     return result
 
 
-def main(pythiaEvents, powheg_stage, job_number, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet, rejectISR, LHEfile, minpthard, maxpthard, batch_job, debug_level):
+def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, minpthard, maxpthard, debug_level):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -96,14 +70,28 @@ def main(pythiaEvents, powheg_stage, job_number, gen, proc, qmass, facscfact, re
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
-        #alienPath = subprocess.check_output(["which", "alien-token-info"]).rstrip()
     except subprocess.CalledProcessError:
         print "Environment is not configured correctly!"
         exit()
 
     print "Root: " + rootPath
     print "AliRoot: " + alirootPath
-    #print "Alien: " + alienPath
+
+    f = open(args.config, 'r')
+    config = yaml.load(f)
+    f.close()
+
+    gen = config["gen"]
+    proc = config["proc"]
+    beamType = config["beam_type"]
+    ebeam1 = config["ebeam1"]
+    ebeam2 = config["ebeam2"]
+    nPDFset = config["nPDFset"]
+    nPDFerrSet = config["nPDFerrSet"]
+    if "rejectISR" in config:
+        rejectISR = config["rejectISR"]
+    else:
+        rejectISR = False
 
     if batch_job == "grid":
         fname = "{0}_{1}".format(gen, proc)
@@ -129,37 +117,13 @@ def main(pythiaEvents, powheg_stage, job_number, gen, proc, qmass, facscfact, re
         runPOWHEG = False
 
     if runPOWHEG:
-        powhegEvents = int(pythiaEvents * 1.1)
-        if proc == "charm_jets" or proc == "beauty_jets":
-            powheg_proc = "dijet"
-            powhegEvents *= 5
-        else:
-            powheg_proc = proc
-
-        if qmass < 0:
-            if powheg_proc == "charm":
-                qmass = 1.5
-            elif powheg_proc == "beauty":
-                qmass = 4.75
-
-        if powheg_proc == "dijet":
-            powhegExe = "pwhg_main_dijet"
-        elif powheg_proc == "charm":
-            powhegExe = "pwhg_main_hvq"
-        elif powheg_proc == "beauty":
-            powhegExe = "pwhg_main_hvq"
-        else:
-            print("Process '{}' not recognized!".format(powheg_proc))
-            exit(1)
-
         if batch_job == "local":
             powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
 
         if powheg_stage > 0 and powheg_stage <= 4:
-            powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
+            powheg_result = RunPowhegParallel(powhegExe, pythiaEvents, powheg_stage, job_number)
         else:
-            shutil.copy("{0}-powheg.input".format(powheg_proc), "powheg.input")
-            powheg_result = RunPowheg(powhegExe, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
+            powheg_result = RunPowhegSingle(powhegExe, pythiaEvents, yamlConfigFile)
 
         if not powheg_result.events_generated:
             if powheg_stage > 0 and powheg_stage <= 3:
@@ -204,10 +168,7 @@ def main(pythiaEvents, powheg_stage, job_number, gen, proc, qmass, facscfact, re
 
     print("Running PYTHIA simulation...")
     with open("sim_{0}.log".format(fname), "w") as myfile:
-        if batch_job == "lbnl3":
-            subprocess.call(["source /home/salvatore/load_alice.sh; aliroot -b -l -q start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile, shell=True)
-        else:
-            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")
@@ -244,31 +205,4 @@ if __name__ == '__main__':
                         default=0, type=int)
     args = parser.parse_args()
 
-    f = open(args.config, 'r')
-    config = yaml.load(f)
-    f.close()
-
-    Gen = config["gen"]
-    Proc = config["proc"]
-    if "qmass" in config: QMass = config["qmass"]
-    else: QMass = None
-    if "facscfact" in config: FacScFact = config["facscfact"]
-    else: FacScFact = None
-    if "renscfact" in config: RenScFact = config["renscfact"]
-    else: RenScFact = None
-    LHANS = config["lhans"]
-    BeamType = config["beam_type"]
-    EBeam1 = config["ebeam1"]
-    EBeam2 = config["ebeam2"]
-    if "bornktmin" in config:
-        BornKtMin = config["bornktmin"]
-    else:
-        BornKtMin = 10
-    nPDFset = config["nPDFset"]
-    nPDFerrSet = config["nPDFerrSet"]
-    if "rejectISR" in config:
-        rejectISR = config["rejectISR"]
-    else:
-        rejectISR = False
-
-    main(args.numevents, args.powheg_stage, args.job_number, Gen, Proc, QMass, FacScFact, RenScFact, LHANS, BeamType, EBeam1, EBeam2, BornKtMin, nPDFset, nPDFerrSet, rejectISR, args.lhe, args.minpthard, args.maxpthard, args.batch_job, args.d)
+    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.lhe, args.minpthard, args.maxpthard, args.batch_job, args.d)
