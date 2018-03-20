@@ -86,7 +86,7 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def main(outputdir, pythiaEvents, powheg_stage, yamlConfigFile):
+def main(outputdir, powhegEvents, powheg_stage, yamlConfigFile):
     f = open(yamlConfigFile, 'r')
     config = yaml.load(f)
     f.close()
@@ -110,7 +110,6 @@ def main(outputdir, pythiaEvents, powheg_stage, yamlConfigFile):
     nPDFset = config["nPDFset"]
     nPDFerrSet = config["nPDFerrSet"]
 
-    powhegEvents = int(pythiaEvents * 1.1)
     if proc == "charm_jets" or proc == "beauty_jets":
         powheg_proc = "dijet"
         powhegEvents *= 5

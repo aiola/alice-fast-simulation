@@ -28,8 +28,8 @@ ih2  1               ! hadron 2 (1 for protons, -1 for antiprotons)
 #facscfact  1d0      ! (default 1d0) fac scale factor: mufact = muref * facscfact 
 
 ! Parameters to allow or not the use of stored data
-use-old-grid    0    ! If 1 use old grid if file pwggrids.dat is present (<> 1 regenerate)
-use-old-ubound  0    ! If 1 use norm of upper bounding function stored
+use-old-grid    1    ! If 1 use old grid if file pwggrids.dat is present (<> 1 regenerate)
+use-old-ubound  1    ! If 1 use norm of upper bounding function stored
                      ! in pwgubound.dat, if present; <> 1 regenerate
 
 ! A typical call uses 1/1400 seconds (1400 calls per second)

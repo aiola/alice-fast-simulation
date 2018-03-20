@@ -69,10 +69,16 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
         powheg_proc = "dijet"
         powhegEvents *= 5
 
-    pwgseeds = "{}/pwgseeds.dat".format(LocalDest)
-
-    if PowhegStage > 0:
-        os.rename(pwgseeds, "{}/pwgseeds_Stage_{}.dat".format(LocalDest, PowhegStage - 1))
+    if PowhegStage == 1:
+        with open(pwgseeds, "w") as myfile:
+            if njobs > 20:
+                nseeds = njobs
+            else:
+                nseeds = 20
+            for ijob in range(1, nseeds + 1):
+                rnd = random.randint(0, 1073741824)  # 2^30
+                myfile.write("{}\n".format(rnd))
+    else:
         os.rename("{}/powheg.input".format(LocalDest), "{}/powheg_Stage_{}.input".format(LocalDest, PowhegStage - 1))
 
     GeneratePowhegInput.main(LocalDest, powhegEvents, PowhegStage, yamlFileName)
@@ -85,11 +91,6 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
         njobs = 10
     elif PowhegStage == 4:
         njobs = Jobs
-
-    with open(pwgseeds, "w") as myfile:
-        for ijob in range(1, njobs + 1):
-            rnd = random.randint(0, 1073741824)  # 2^30
-            myfile.write("{}\n".format(rnd))
 
     for ijob in range(1, njobs + 1):
         JobDir = LocalDest
