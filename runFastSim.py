@@ -20,7 +20,7 @@ class PowhegResult:
         self.events_generated = events_generated
 
 
-def RunPowhegParallel(powhegExe, pythiaEvents, powheg_stage, job_number):
+def RunPowhegParallel(powhegExe, powheg_stage, job_number):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
     with open("powheg.input", 'r') as fin:
@@ -36,17 +36,17 @@ def RunPowhegParallel(powhegExe, pythiaEvents, powheg_stage, job_number):
         p.communicate(input=str(job_number))
 
     if powheg_stage == 4:
-        result = PowhegResult(True, "pwgevents.lhe")
+        result = PowhegResult(True, "pwgevents-{:03d}.lhe".format(job_number))
     else:
         result = PowhegResult(False, "")
 
     return result
 
 
-def RunPowhegSingle(powhegExe, pythiaEvents, yamlConfigFile):
+def RunPowhegSingle(powhegExe, yamlConfigFile):
     print("Running POWHEG simulation!")
 
-    GeneratePowhegInput.main("./", pythiaEvents, 0, yamlConfigFile)
+    GeneratePowhegInput.main("./", powhegEvents, 0, yamlConfigFile)
 
     with open("powheg.input", 'r') as fin:
         powheg_input = fin.read().splitlines()
@@ -66,6 +66,10 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
+    
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
 
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
@@ -104,9 +108,10 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
     print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
 
     if "powheg" in gen:
-        if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.input") or os.path.isfile("powheg.log"):
-            print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.input, powheg.log")
-            exit(1)
+        if powheg_stage <= 0:
+            if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.input") or os.path.isfile("powheg.log"):
+                print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.input, powheg.log")
+                exit(1)
 
         if LHEfile:
             print("Using previously generated POWHEG events from file {0}!".format(LHEfile))
@@ -117,19 +122,34 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
         runPOWHEG = False
 
     if runPOWHEG:
+        powhegEvents = int(pythiaEvents * 1.1)
+        if proc == "charm_jets" or proc == "beauty_jets":
+            powheg_proc = "dijet"
+            powhegEvents *= 5
+        else:
+            powheg_proc = proc
+    
+        if powheg_proc == "dijet":
+            powhegExe = "pwhg_main_dijet"
+        elif powheg_proc == "charm":
+            powhegExe = "pwhg_main_hvq"
+        elif powheg_proc == "beauty":
+            powhegExe = "pwhg_main_hvq"
+        else:
+            print("Process '{}' not recognized!".format(powheg_proc))
+            exit(1)
+        
         if batch_job == "local":
             powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
 
         if powheg_stage > 0 and powheg_stage <= 4:
-            powheg_result = RunPowhegParallel(powhegExe, pythiaEvents, powheg_stage, job_number)
+            powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number)
         else:
-            powheg_result = RunPowhegSingle(powhegExe, pythiaEvents, yamlConfigFile)
+            powheg_result = RunPowhegSingle(powhegExe, powhegEvents, yamlConfigFile)
 
         if not powheg_result.events_generated:
             if powheg_stage > 0 and powheg_stage <= 3:
                 print("POWHEG stage {} completed. Exiting.".format(powheg_stage))
-                os.unlink("powheg.input")
-                os.rename("powheg.log", "powheg-stage{}-{:03d}.log".format(powheg_stage, job_number))
                 exit(0)
             else:
                 print("POWHEG at stage {} did not produce any event!!!".format(powheg_stage))
@@ -163,8 +183,9 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
     rnd = random.randint(0, 1073741824)  # 2^30
     print("Setting PYTHIA seed to {0}".format(rnd))
 
-    print("Compiling analysis code...")
-    subprocess.call(["make"])
+    if batch_job != "lbnl3":
+        print("Compiling analysis code...")
+        subprocess.call(["make"])
 
     print("Running PYTHIA simulation...")
     with open("sim_{0}.log".format(fname), "w") as myfile:
@@ -205,4 +226,4 @@ if __name__ == '__main__':
                         default=0, type=int)
     args = parser.parse_args()
 
-    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.lhe, args.minpthard, args.maxpthard, args.batch_job, args.d)
+    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.lhe, args.minpthard, args.maxpthard, args.d)

@@ -309,7 +309,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                    "runJetSimulation.C", "start_simulation.C",
                    "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
-                   "Makefile",
+                   "Makefile", "GeneratePowhegInput.py",
                    "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
                    "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
                    "AliPythia6_dev.h", "AliPythia6_dev.cxx",

@@ -7,7 +7,7 @@ import yaml
 
 
 def GenerateParallelPowhegInput(outputdir, powheg_stage, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
-    with open("powheg.input", "a") as myfile:
+    with open("{}/powheg.input".format(outputdir), "a") as myfile:
         myfile.write("numevts {0}\n".format(powhegEvents))
         myfile.write("manyseeds 1\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
@@ -42,7 +42,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, powhegEvents, gen, powh
 def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
     rnd = random.randint(0, 1073741824)  # 2^30
 
-    with open("powheg.input", "a") as myfile:
+    with open("{}/powheg.input".format(outputdir), "a") as myfile:
         myfile.write("iseed {0}\n".format(rnd))
         myfile.write("numevts {0}\n".format(powhegEvents))
         if powheg_proc == "beauty" or powheg_proc == "charm":
@@ -75,22 +75,22 @@ def main(outputdir, pythiaEvents, powheg_stage, yamlConfigFile):
     config = yaml.load(f)
     f.close()
 
-    Gen = config["gen"]
-    Proc = config["proc"]
-    if "qmass" in config: QMass = config["qmass"]
-    else: QMass = None
-    if "facscfact" in config: FacScFact = config["facscfact"]
-    else: FacScFact = None
-    if "renscfact" in config: RenScFact = config["renscfact"]
-    else: RenScFact = None
-    LHANS = config["lhans"]
-    BeamType = config["beam_type"]
-    EBeam1 = config["ebeam1"]
-    EBeam2 = config["ebeam2"]
+    gen = config["gen"]
+    proc = config["proc"]
+    if "qmass" in config: qmass = config["qmass"]
+    else: qmass = None
+    if "facscfact" in config: facscfact = config["facscfact"]
+    else: facscfact = None
+    if "renscfact" in config: renscfact = config["renscfact"]
+    else: renscfact = None
+    lhans = config["lhans"]
+    beamType = config["beam_type"]
+    ebeam1 = config["ebeam1"]
+    ebeam2 = config["ebeam2"]
     if "bornktmin" in config:
-        BornKtMin = config["bornktmin"]
+        bornktmin = config["bornktmin"]
     else:
-        BornKtMin = 10
+        bornktmin = 10
     nPDFset = config["nPDFset"]
     nPDFerrSet = config["nPDFerrSet"]
 

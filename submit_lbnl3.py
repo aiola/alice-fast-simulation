@@ -63,14 +63,21 @@ def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
         print(output)
 
 
-def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, PowhegStage):
+def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, PowhegStage):
     if PowhegStage == 1:
         with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
-            for ijob in range(1, Jobs + 1):
+            njobs = Jobs
+            if njobs < 200: njobs = 200
+            for ijob in range(1, njobs + 1):
                 rnd = random.randint(0, 1073741824)  # 2^30
                 myfile.write("{}\n".format(rnd))
 
-    GeneratePowhegInput.main(LocalDest, Events, PowhegStage, yamlFileName)
+    powhegEvents = int(Events * 1.1)
+    if proc == "charm_jets" or proc == "beauty_jets":
+        powheg_proc = "dijet"
+        powhegEvents *= 5
+
+    GeneratePowhegInput.main(LocalDest, powhegEvents, PowhegStage, yamlFileName)
 
     if PowhegStage == 1:
         njobs = 10
@@ -98,7 +105,7 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, PowhegS
             myfile.write("#PBS -o %s\n" % (JobOutput))
             myfile.write("#PBS -j oe\n")
             myfile.write("source /home/salvatore/load_alice.sh\n")
-            myfile.write("{LocalDest}/{ExeFile} {yamlFileName} --numevents {Events} --job-number {ijob} --powheg-stage {PowhegStage} --batch-job lbnl3\n".format(LocalDest=LocalDest, ExeFile=ExeFile, yamlFileName=yamlFileName, Events=Events, ijob=ijob, PowhegStage=PowhegStage))
+            myfile.write("{LocalDest}/{ExeFile} {LocalDest}/{yamlFileName} --numevents {Events} --job-number {ijob} --powheg-stage {PowhegStage} --batch-job lbnl3\n".format(LocalDest=LocalDest, ExeFile=ExeFile, yamlFileName=yamlFileName, Events=Events, ijob=ijob, PowhegStage=PowhegStage))
         os.chmod(RunJobFileName, 0755)
         output = subprocessCheckOutput(["qsub", RunJobFileName])
         print(output)
@@ -124,7 +131,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
         FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                        "runJetSimulation.C", "start_simulation.C",
                        "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
-                       "Makefile",
+                       "Makefile", "GeneratePowhegInput.py",
                        "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
                        "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
                        "AliPythia6_dev.h", "AliPythia6_dev.cxx",
@@ -134,9 +141,15 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
         FilesToCopy.extend([ExeFile])
 
         CopyFilesToTheWorkingDir(FilesToCopy, LocalDest)
+        
+        temp = os.getcwd()
+        os.chdir(LocalDest)
+        print("Compiling analysis code...")
+        subprocess.call(["make"])
+        os.chdir(temp)
 
     if "powheg" in Gen:
-        SubmitParallelPowheg(LocalDest, ExeFile, PowhegStage, Events, Jobs, yamlFileName)
+        SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, Proc, PowhegStage)
     else:
         SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName)
 
