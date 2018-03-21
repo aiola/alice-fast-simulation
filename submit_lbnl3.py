@@ -65,19 +65,8 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
         powheg_proc = "dijet"
         powhegEvents *= 5
 
-    if PowhegStage == 1:
-        with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
-            if Jobs > 20:
-                nseeds = Jobs
-            else:
-                nseeds = 20
-            for iseed in range(1, nseeds + 1):
-                rnd = random.randint(0, 1073741824)  # 2^30
-                myfile.write("{}\n".format(rnd))
-    else:
-        os.rename("{}/powheg.input".format(LocalDest), "{}/powheg_Stage_{}.input".format(LocalDest, PowhegStage - 1))
-
-    GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, PowhegStage, XGridIter)
+    input_file_name = GeneratePowhegInput.GetParallelInputFileName(PowhegStage, XGridIter)
+    shutil.copy("{}/{}".format(LocalDest, input_file_name), "{}/powheg.input".format(LocalDest))
 
     if PowhegStage == 1:
         njobs = 10
@@ -121,9 +110,25 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
 
     if copy_files:
+        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 1)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 2)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 3)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 2)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 3)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 4)
+
+        with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
+            if Jobs > 20:
+                nseeds = Jobs
+            else:
+                nseeds = 20
+            for iseed in range(1, nseeds + 1):
+                rnd = random.randint(0, 1073741824)  # 2^30
+                myfile.write("{}\n".format(rnd))
+
         FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                        "runJetSimulation.C", "start_simulation.C",
-                       "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
+                       "powheg_pythia8_conf.cmnd",
                        "Makefile", "GeneratePowhegInput.py",
                        "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
                        "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",

@@ -6,8 +6,19 @@ import random
 import yaml
 
 
+def GetParallelInputFileName(powheg_stage, x_grid_iter):
+    if powheg_stage == 1:
+        fname = "powheg_Stage_{}_XGrid_{}.input".format(powheg_stage, x_grid_iter)
+    else:
+        fname = "powheg_Stage_{}.input".format(powheg_stage)
+    return fname
+
+
 def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
-    with open("{}/powheg.input".format(outputdir), "a") as myfile:
+    fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
+    shutil.copy("{}-powheg.input".format(powheg_proc), fname)
+
+    with open(fname, "a") as myfile:
         myfile.write("numevts {0}\n".format(powhegEvents))
         myfile.write("manyseeds 1\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
@@ -48,9 +59,11 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEven
 
 
 def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
-    rnd = random.randint(0, 1073741824)  # 2^30
+    fname = "{}/powheg.input".format(outputdir)
+    shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
-    with open("{}/powheg.input".format(outputdir), "a") as myfile:
+    rnd = random.randint(0, 1073741824)  # 2^30
+    with open(fname, "a") as myfile:
         myfile.write("iseed {0}\n".format(rnd))
         myfile.write("numevts {0}\n".format(powhegEvents))
         if powheg_proc == "beauty":
