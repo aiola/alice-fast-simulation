@@ -1,15 +1,5 @@
 #!/usr/bin/env python
 
-# script to submit fast simulation jobs to the grid
-# submit a processing job using POWHEG charm settings with 100 subjobs, each producing 50k events
-# ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --numevents 50000 --numjobs 100
-# submit a merging job with a maximum of 15 files processed in each subjob (you will need the timestamp number provided after submitting the processing job)
-# ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --merge [TIMESTAMP] --max-files-per-job 15
-# you should keep submitting merging jobs until everything is merged in an acceptable number of files (you can go on until everything is merged in a single file if you like)
-# download your results from the last merging stage (you will need the timestamp number provided after submitting the processing job)
-# ./submit_grid.py --aliphysics vAN-20161101-1 --gen powheg --proc charm --download [TIMESTAMP]
-# you can specify a merging stage if you want to download an intermediate merging stage using the option "--stage [STAGE]"
-
 import os
 import subprocess
 import argparse
@@ -60,11 +50,6 @@ def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
 
 
 def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, PowhegStage, XGridIter):
-    powhegEvents = int(Events * 1.1)
-    if proc == "charm_jets" or proc == "beauty_jets":
-        powheg_proc = "dijet"
-        powhegEvents *= 5
-
     input_file_name = GeneratePowhegInput.GetParallelInputFileName(PowhegStage, XGridIter)
     shutil.copy("{}/{}".format(LocalDest, input_file_name), "{}/powheg.input".format(LocalDest))
 
@@ -110,6 +95,8 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
     LocalDest = "{0}/{1}".format(LocalPath, TrainName)
 
     if copy_files:
+        os.makedirs(LocalDest)
+        powhegEvents = int(Events * 1.1)
         GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 1)
         GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 2)
         GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 3)
@@ -189,7 +176,7 @@ def main(UserConf, yamlFileName, continue_powheg, powheg_stage, XGridIter):
         copy_files = False
         print("Continue job with timestamp {0}.".format(unixTS))
     TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-    SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName, copy_files, powheg_stage)
+    SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName, copy_files, powheg_stage, XGridIter)
 
 
 if __name__ == '__main__':
