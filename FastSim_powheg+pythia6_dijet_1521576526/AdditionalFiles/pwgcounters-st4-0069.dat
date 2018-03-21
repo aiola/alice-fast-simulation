@@ -1,0 +1,16 @@
+
+ Value of counters at end of run:
+ virt time (sec) =    20.936000000002178     
+ real time (sec) =    4404.0629999704461     
+ btilde cross section used: =    3794481499.4238944     
+ btilde cross section estimate: =    3807079343.0515985     
+ btilde cross section estimate num. points: =    23988.000000000000     
+ btilde cross section error estimate: =    16919348.606386892     
+ btilde time (sec) =    4435.7210000000014     
+ vetoed radiation =    10746173.000000000     
+ radiation time (sec) =    608.58499999999594     
+ btilde event =    5500.0000000000000     
+ vetoed calls in inclusive cross section =    18488.000000000000     
+ upper bound failures in generation of radiation =    45.000000000000000     
+ upper bound failure in inclusive cross section =    65.000000000000000     
+
