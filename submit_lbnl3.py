@@ -50,8 +50,8 @@ def CopyFilesToTheWorkingDir(Files, LocalDest):
 def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
     for ijob in range(0, Jobs):
         JobDir = LocalDest
-        JobOutput = "{}/JobOutput_Stage_{}_{:03d}.log".format(JobDir, PowhegStage, ijob)
-        RunJobFileName = "{}/RunJob_{}_{:03d}.sh".format(JobDir, PowhegStage, ijob)
+        JobOutput = "{}/JobOutput_Stage_{}_{:04d}.log".format(JobDir, PowhegStage, ijob)
+        RunJobFileName = "{}/RunJob_{}_{:04d}.sh".format(JobDir, PowhegStage, ijob)
         with open(RunJobFileName, "w") as myfile:
             myfile.write("#!/bin/bash\n")
             myfile.write(GenerateComments())
@@ -94,8 +94,8 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
 
     for ijob in range(1, njobs + 1):
         JobDir = LocalDest
-        JobOutput = "{}/JobOutput_Stage_{}_{:03d}.log".format(JobDir, PowhegStage, ijob)
-        RunJobFileName = "{}/RunJob_{}_{:03d}.sh".format(JobDir, PowhegStage, ijob)
+        JobOutput = "{}/JobOutput_Stage_{}_{:04d}.log".format(JobDir, PowhegStage, ijob)
+        RunJobFileName = "{}/RunJob_{}_{:04d}.sh".format(JobDir, PowhegStage, ijob)
         with open(RunJobFileName, "w") as myfile:
             myfile.write("#!/bin/bash\n")
             myfile.write(GenerateComments())
