@@ -11,8 +11,8 @@ def main(cmd, minjobid, maxjobid):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Local final merging for LEGO train results.')
-    parser.add_argument('minjobid', metavar='jobid')
-    parser.add_argument('maxjobid', metavar='jobid')
+    parser.add_argument('minjobid', metavar='jobid', type=int)
+    parser.add_argument('maxjobid', metavar='jobid', type=int)
     parser.add_argument("-d", action='store_const',
                         default=False, const=True)
     args = parser.parse_args()
