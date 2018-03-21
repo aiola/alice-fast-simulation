@@ -39,10 +39,6 @@ def subprocessCheckOutput(cmd):
 
 
 def CopyFilesToTheWorkingDir(Files, LocalDest):
-    output_dir = "{}/output".format(LocalDest)
-    if not os.path.isdir(output_dir):
-        print("Creating directory {}".format(output_dir))
-        os.makedirs("{}/output".format(output_dir))
     for file in Files:
         shutil.copy(file, LocalDest)
 
