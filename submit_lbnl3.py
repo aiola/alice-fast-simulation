@@ -103,7 +103,7 @@ def GenerateComments():
     return comments
 
 
-def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName, copy_files, PowhegStage):
+def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFileName, copy_files, PowhegStage, XGridIter):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
     ExeFile = "runFastSim.py"
@@ -147,14 +147,14 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
         os.chdir(temp)
 
     if "powheg" in Gen:
-        SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, Proc, PowhegStage)
+        SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, Proc, PowhegStage, XGridIter)
     else:
         SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName)
 
     print "Done."
 
 
-def main(UserConf, yamlFileName, powheg_stage, continue_powheg):
+def main(UserConf, yamlFileName, continue_powheg, powheg_stage, XGridIter):
     f = open(yamlFileName, 'r')
     config = yaml.load(f)
     f.close()
@@ -200,10 +200,12 @@ if __name__ == '__main__':
                         default="userConf.yaml")
     parser.add_argument('--continue-powheg', metavar='USERCONF',
                         default=None)
-    parser.add_argument('--powheg-stage', metavar='USERCONF',
+    parser.add_argument('--powheg-stage',
                         type=int)
+    parser.add_argument('--xgrid-iter',
+                        default=1, type=int)
     args = parser.parse_args()
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.config, args.powheg_stage, args.continue_powheg)
+    main(userConf, args.config, args.continue_powheg, args.powheg_stage, args.xgrid_iter)
