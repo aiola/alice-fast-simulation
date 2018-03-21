@@ -10,7 +10,7 @@ $(LIBRARY): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(OBJECTS:.o=_Dict.o) -o $@
 
 %.o: %.cxx
-	rootcint -f $(@:.o=_Dict.cxx) -c -I`root-config --incdir` -I$$ALICE_ROOT/include $(@:.o=.h)
+	rootcint -f $(@:.o=_Dict.cxx) -rmf AnalysisCode.rootmap -rml AnalysisCode -c -I`root-config --incdir` -I$$ALICE_ROOT/include $(@:.o=.h)
 	$(CC) $(CFLAGS) -I`root-config --incdir` -I$$ALICE_ROOT/include -I$$ALICE_PHYSICS/include -I$$FASTJET/include $(@:.o=_Dict.cxx) $(@:.o=.cxx)
 	
 clean:
