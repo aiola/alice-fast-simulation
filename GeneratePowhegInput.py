@@ -6,7 +6,7 @@ import random
 import yaml
 
 
-def GetParallelInputFileName(powheg_stage, x_grid_iter):
+def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
     if powheg_stage == 1:
         fname = "powheg_Stage_{}_XGrid_{}.input".format(powheg_stage, x_grid_iter)
     else:
