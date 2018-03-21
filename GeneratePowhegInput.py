@@ -6,7 +6,7 @@ import random
 import yaml
 
 
-def GenerateParallelPowhegInput(outputdir, powheg_stage, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
+def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
     with open("{}/powheg.input".format(outputdir), "a") as myfile:
         myfile.write("numevts {0}\n".format(powhegEvents))
         myfile.write("manyseeds 1\n")
@@ -34,7 +34,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, powhegEvents, gen, powh
             myfile.write("ncall2 1000\n")
             myfile.write("itmx2 5\n")
 
-        if powheg_stage == 1: myfile.write("xgriditeration 1\n")
+        if powheg_stage == 1: myfile.write("xgriditeration {}\n".format(x_grid_iter))
         myfile.write("lhans1 {0}\n".format(lhans))
         myfile.write("lhans2 {0}\n".format(lhans))
         myfile.write("ebeam1 {0}\n".format(ebeam1))
@@ -86,7 +86,7 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def main(outputdir, powhegEvents, powheg_stage, yamlConfigFile):
+def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter):
     f = open(yamlConfigFile, 'r')
     config = yaml.load(f)
     f.close()
@@ -125,7 +125,7 @@ def main(outputdir, powhegEvents, powheg_stage, yamlConfigFile):
     shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
 
     if powheg_stage > 0 and powheg_stage <= 4:
-        GenerateParallelPowhegInput(outputdir, powheg_stage, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
+        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
     else:
         GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
 
@@ -142,4 +142,4 @@ if __name__ == '__main__':
                         default=0, type=int)
     args = parser.parse_args()
 
-    main(args.o, args.numevents, args.powheg_stage, args.config)
+    main(args.config, args.o, args.numevents, args.powheg_stage)

@@ -59,7 +59,7 @@ def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
         print(output)
 
 
-def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, PowhegStage):
+def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, PowhegStage, XGridIter):
     powhegEvents = int(Events * 1.1)
     if proc == "charm_jets" or proc == "beauty_jets":
         powheg_proc = "dijet"
@@ -77,7 +77,7 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
     else:
         os.rename("{}/powheg.input".format(LocalDest), "{}/powheg_Stage_{}.input".format(LocalDest, PowhegStage - 1))
 
-    GeneratePowhegInput.main(LocalDest, powhegEvents, PowhegStage, yamlFileName)
+    GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, PowhegStage, XGridIter)
 
     if PowhegStage == 1:
         njobs = 10

@@ -47,7 +47,7 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
 def RunPowhegSingle(powhegExe, yamlConfigFile):
     print("Running POWHEG simulation!")
 
-    GeneratePowhegInput.main("./", powhegEvents, 0, yamlConfigFile)
+    GeneratePowhegInput.main(yamlConfigFile, "./", powhegEvents, 0)
 
     with open("powheg.input", 'r') as fin:
         powheg_input = fin.read().splitlines()
