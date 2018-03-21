@@ -5,30 +5,27 @@ import yaml
 import shutil
 import UserConfiguration
 import GeneratePowhegInput
+import os
+import glob
 
-
-def SubmitProcessingJobs(TrainName, LocalPath):
-    print("Submitting processing jobs for train {0}".format(TrainName))
-
+def CopyFiles(TrainName, LocalPath):
     Dest = "./{}".format(TrainName)
+    DestAdd = "{}/AdditionalFiles".format(Dest)
+    os.makedirs(DestAdd)
 
     Origin = "{0}/{1}".format(LocalPath, TrainName)
-
-    SingleFilesToCopy = [GeneratePowhegInput.GetParallelInputFileName(4)]
-    for f in SingleFilesToCopy: shutil.copy("{}/{}".format(Origin, f), Dest)
 
     EssentialFilesToCopy = ["pwggrid-????.dat", "pwggridinfo-btl-xg?-????.dat", "pwgubound-????.dat"]
 
     for fpattern in EssentialFilesToCopy:
-        for file in glob.glob(fpattern): shutil.copy(file, Dest)
+        for file in glob.glob("{}/{}".format(Origin, fpattern)): shutil.copy(file, Dest)
 
     AdditionalFilesToCopy = ["Powheg_Stage_?_Job_????.log", "powheg_Stage_*.input", "pwg-????-btlgrid.top", "pwg-????-stat.dat"
                              "pwg-st?-????-stat.dat", "pwg-xg?-????-btlgrid.top", "pwgboundviolations-????.dat",
                              "pwgcounters-st?-????.dat"]
 
-    DestAdd = "{}/AdditionalFiles".format(Dest)
     for fpattern in AdditionalFilesToCopy:
-        for file in glob.glob(fpattern): shutil.copy(file, DestAdd)
+        for file in glob.glob("{}/{}".format(Origin, fpattern)): shutil.copy(file, DestAdd)
 
 
 def main(UserConf, yamlFileName, unixTS):
