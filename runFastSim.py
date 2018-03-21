@@ -15,8 +15,9 @@ import GeneratePowhegInput
 
 class PowhegResult:
 
-    def __init__(self, events_generated, lhe_file):
+    def __init__(self, events_generated, lhe_file, log_file):
         self.lhe_file = lhe_file
+        self.log_file = log_file
         self.events_generated = events_generated
 
 
@@ -29,16 +30,16 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
         print(line)
 
     print("Running POWHEG...")
-    LogFileName = "Powheg_Stage_{}_Job_{:03d}.log".format(powheg_stage, job_number)
+    LogFileName = "Powheg_Stage_{}_Job_{:04d}.log".format(powheg_stage, job_number)
     with open(LogFileName, "w") as myfile:
         print([powhegExe, str(job_number)])
         p = subprocess.Popen([powhegExe], stdout=myfile, stderr=myfile, stdin=subprocess.PIPE)
         p.communicate(input=str(job_number))
 
     if powheg_stage == 4:
-        result = PowhegResult(True, "pwgevents-{:03d}.lhe".format(job_number))
+        result = PowhegResult(True, "pwgevents-{:04d}.lhe".format(job_number), LogFileName)
     else:
-        result = PowhegResult(False, "")
+        result = PowhegResult(False, "", LogFileName)
 
     return result
 
@@ -57,7 +58,7 @@ def RunPowhegSingle(powhegExe, yamlConfigFile):
     with open("powheg.log", "w") as myfile:
         subprocess.call([powhegExe], stdout=myfile, stderr=myfile)
 
-    result = PowhegResult(True, "pwgevents.lhe")
+    result = PowhegResult(True, "pwgevents.lhe", "powheg.log")
 
     return result
 
@@ -66,7 +67,7 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
-    
+
     abspath = os.path.abspath(__file__)
     dname = os.path.dirname(abspath)
     os.chdir(dname)
@@ -100,7 +101,7 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
     if batch_job == "grid":
         fname = "{0}_{1}".format(gen, proc)
     elif batch_job == "lbnl3":
-        fname = "{}_{}_{:03d}".format(gen, proc, job_number)
+        fname = "{}_{}_{:04d}".format(gen, proc, job_number)
     else:
         unixTS = int(time.time())
         fname = "{0}_{1}_{2}".format(gen, proc, unixTS)
@@ -128,7 +129,7 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
             powhegEvents *= 5
         else:
             powheg_proc = proc
-    
+
         if powheg_proc == "dijet":
             powhegExe = "pwhg_main_dijet"
         elif powheg_proc == "charm":
@@ -138,7 +139,7 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
         else:
             print("Process '{}' not recognized!".format(powheg_proc))
             exit(1)
-        
+
         if batch_job == "local":
             powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
 
@@ -156,10 +157,10 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
                 exit(1)
 
         if not os.path.isfile(powheg_result.lhe_file):
-            print("Could not find POWHEG output pwgevents.lhe. Something went wrong, aborting...")
-            if os.path.isfile("powheg.log"):
+            print("Could not find POWHEG output {}. Something went wrong, aborting...".format(powheg_result.lhe_file))
+            if os.path.isfile(powheg_result.log_file):
                 print("Check log file below.")
-                with open("powheg.log", "r") as myfile:
+                with open(powheg_result.log_file, "r") as myfile:
                     powheg_log = myfile.read().splitlines()
                 for line in powheg_log:
                     print(line)
@@ -188,8 +189,20 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
         subprocess.call(["make"])
 
     print("Running PYTHIA simulation...")
-    with open("sim_{0}.log".format(fname), "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+    if batch_job == "lbnl3":
+        work_dir = "output/{}".format(fname)
+        os.makedirs(work_dir)
+        shutil.copy("AnalysisCode.*", work_dir)
+        shutil.copy("runJetSimulation.C", work_dir)
+        shutil.copy("start_simulation.C", work_dir)
+        shutil.copy("*.h", work_dir)
+        LHEfile = "../{}".format(LHEfile)
+        os.chdir(work_dir)
+        with open("sim_{0}.log".format(fname), "w") as myfile:
+            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+    else:
+        with open("sim_{0}.log".format(fname), "w") as myfile:
+            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")
