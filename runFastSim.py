@@ -11,6 +11,7 @@ import random
 import sys
 import yaml
 import GeneratePowhegInput
+import glob
 
 
 class PowhegResult:
@@ -192,11 +193,12 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
     if batch_job == "lbnl3":
         work_dir = "output/{}".format(fname)
         os.makedirs(work_dir)
-        shutil.copy("AnalysisCode.*", work_dir)
+        shutil.copy("AnalysisCode.so", work_dir)
+        shutil.copy("AnalysisCode.rootmap", work_dir)
         shutil.copy("runJetSimulation.C", work_dir)
         shutil.copy("start_simulation.C", work_dir)
-        shutil.copy("*.h", work_dir)
-        LHEfile = "../{}".format(LHEfile)
+        for hdr_file in glob.glob(r'./*.h'): shutil.copy(hdr_file, work_dir)
+        LHEfile = "../../{}".format(LHEfile)
         os.chdir(work_dir)
         with open("sim_{0}.log".format(fname), "w") as myfile:
             subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
