@@ -19,6 +19,9 @@ import shutil
 import re
 import UserConfiguration
 import datetime
+import random
+import GeneratePowhegInput
+import glob
 
 
 def AlienDelete(fileName):
@@ -121,7 +124,7 @@ def GenerateComments():
     return comments
 
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard, PowhegStage):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -132,7 +135,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid\"; \n\
+Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number 1 --powheg-stage {PowhegStage}\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -148,7 +151,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL)
+".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -298,17 +301,21 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
     subprocessCall(["ls", LocalDest])
 
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
     ValidationScript = "FastSim_validation.sh"
     ExeFile = "runFastSim.py"
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
-    # "AliAnalysisTaskSEhfcjMCanalysis.cxx", "AliAnalysisTaskSEhfcjMCanalysis.h"
+    powhegEvents = int(Events * 1.1)
+    if Proc == "charm_jets" or Proc == "beauty_jets": powhegEvents *= 5
+
+    FilesToDelete = [JdlFile, "powheg.input"]
+
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                    "runJetSimulation.C", "start_simulation.C",
-                   "beauty-powheg.input", "charm-powheg.input", "dijet-powheg.input", "powheg_pythia8_conf.cmnd",
+                   "powheg_pythia8_conf.cmnd", "powheg.input",
                    "Makefile", "GeneratePowhegInput.py",
                    "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
                    "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
@@ -316,7 +323,31 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "AliPythia8_dev.h", "AliPythia8_dev.cxx",
                    "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
     if OldPowhegInit:
-        FilesToCopy.extend(["pwggrid.dat", "pwggrid.dat", "pwgubound.dat"])
+        if PowhegStage == 0:
+            GeneratePowhegInput.main(yamlFileName, "./", powhegEvents, 0)
+            FilesToCopy.extend(["{}/pwggrid.dat".format(OldPowhegInit), "{}/pwgubound.dat".format(OldPowhegInit)])
+        elif PowhegStage == 4:
+            GeneratePowhegInput.main(yamlFileName, "./", powhegEvents, 4)
+            os.rename(GeneratePowhegInput.GetParallelInputFileName(4), "powheg.input")
+            EssentialFilesToCopy = ["pwggrid-????.dat", "pwggridinfo-btl-xg?-????.dat", "pwgubound-????.dat"]
+
+            for fpattern in EssentialFilesToCopy:
+                for file in glob.glob("{}/{}".format(OldPowhegInit, fpattern)): FilesToCopy.append(file)
+
+            seed_file_name = "pwgseeds.dat"
+            FilesToDelete.append(seed_file_name)
+            FilesToCopy.append(seed_file_name)
+            with open(seed_file_name, "w") as seed_file:
+                seed_file.write(str(random.randint(0, 1073741824)))
+        else:
+            print("Not implemented for POWHEG stage {}".format(PowhegStage))
+            exit(1)
+    else:
+        if PowhegStage != 0:
+            print("Not implemented for POWHEG stage {}".format(PowhegStage))
+            exit(1)
+        else:
+            GeneratePowhegInput.main(yamlFileName, "./", powhegEvents, 0)
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
@@ -338,7 +369,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
             LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
             JobsPtHard = Jobs[ptHardBin]
-        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard)
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard, PowhegStage)
 
         f = open(JdlFile, 'w')
         f.write(JdlContent)
@@ -349,7 +380,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
         CopyFilesToTheGrid(FilesToCopy, AlienDest, LocalDest, Offline, GridUpdate)
         if not Offline:
             subprocessCall(["alien_submit", "alien://{0}/{1}".format(AlienDest, JdlFile)])
-        os.remove(JdlFile)
+        for file in FilesToDelete: os.remove(file)
     print "Done."
 
     subprocessCall(["ls", LocalDest])
@@ -440,7 +471,7 @@ def GetAliPhysicsVersion(ver):
     return ver
 
 
-def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, Merge, Download, MergingStage):
+def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, PowhegStage, Merge, Download, MergingStage):
     f = open(yamlFileName, 'r')
     config = yaml.load(f)
     f.close()
@@ -504,7 +535,7 @@ def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, Merge, Down
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage)
 
 
 if __name__ == '__main__':
@@ -528,11 +559,12 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('--stage', metavar='stage',
                         default=-1, type=int)
-    parser.add_argument("--old-powheg-init", action='store_const',
-                        default=False, const=True,
-                        help='Use old POWHEG init files.')
+    parser.add_argument('--old-powheg-init', metavar='folder',
+                        default=None)
+    parser.add_argument("--powheg-stage",
+                        default=0, type=int)
     args = parser.parse_args()
 
     userConf = UserConfiguration.LoadUserConfiguration(args.user_conf)
 
-    main(userConf, args.config, args.offline, args.update, args.old_powheg_init, args.merge, args.download, args.stage)
+    main(userConf, args.config, args.offline, args.update, args.old_powheg_init, args.powheg_stage, args.merge, args.download, args.stage)

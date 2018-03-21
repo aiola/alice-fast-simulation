@@ -48,8 +48,6 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
 def RunPowhegSingle(powhegExe, yamlConfigFile):
     print("Running POWHEG simulation!")
 
-    GeneratePowhegInput.main(yamlConfigFile, "./", powhegEvents, 0)
-
     with open("powheg.input", 'r') as fin:
         powheg_input = fin.read().splitlines()
     for line in powheg_input:
@@ -124,10 +122,8 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
         runPOWHEG = False
 
     if runPOWHEG:
-        powhegEvents = int(pythiaEvents * 1.1)
         if proc == "charm_jets" or proc == "beauty_jets":
             powheg_proc = "dijet"
-            powhegEvents *= 5
         else:
             powheg_proc = proc
 
@@ -141,13 +137,10 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
             print("Process '{}' not recognized!".format(powheg_proc))
             exit(1)
 
-        if batch_job == "local":
-            powhegExe = "./POWHEG_bins/{0}".format(powhegExe)
-
         if powheg_stage > 0 and powheg_stage <= 4:
             powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number)
         else:
-            powheg_result = RunPowhegSingle(powhegExe, powhegEvents, yamlConfigFile)
+            powheg_result = RunPowhegSingle(powhegExe, yamlConfigFile)
 
         if not powheg_result.events_generated:
             if powheg_stage > 0 and powheg_stage <= 3:

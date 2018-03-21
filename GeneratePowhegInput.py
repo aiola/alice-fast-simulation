@@ -99,7 +99,7 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter):
+def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
     f = open(yamlConfigFile, 'r')
     config = yaml.load(f)
     f.close()
