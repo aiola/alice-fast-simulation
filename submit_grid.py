@@ -110,7 +110,8 @@ def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
         os.makedirs(LocalDest)
     for file in Files:
         if not Offline:
-            AlienCopy(file, "alien://{0}/{1}".format(AlienDest, file), 3, GridUpdate)
+            fname = os.path.basename(file)
+            AlienCopy(file, "alien://{}/{}".format(AlienDest, fname), 3, GridUpdate)
         shutil.copy(file, LocalDest)
 
 
@@ -162,7 +163,7 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
             else:
                 jdlContent += ", \n"
             start = False
-            jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=file)
+            jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=os.path.basename(file))
         jdlContent += "}; \n"
 
     return jdlContent
