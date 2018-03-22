@@ -21,6 +21,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEven
     with open(fname, "a") as myfile:
         myfile.write("numevts {0}\n".format(powhegEvents))
         myfile.write("manyseeds 1\n")
+        myfile.write("maxseeds 500\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
