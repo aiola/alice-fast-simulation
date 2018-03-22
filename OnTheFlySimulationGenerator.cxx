@@ -261,8 +261,10 @@ void OnTheFlySimulationGenerator::AddJetTree()
   AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
   pJetSpectraTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
   pJetSpectraTask->SetCentralityEstimation(AliAnalysisTaskEmcalLight::kNoCentrality);
-  if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pJetSpectraTask->SetMCFilter();
-  pJetSpectraTask->SetJetPtFactor(4);
+  if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) {
+    pJetSpectraTask->SetMCFilter();
+    pJetSpectraTask->SetJetPtFactor(4);
+  }
   pJetSpectraTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pJetSpectraTask->SetVzRange(-999,999);
   pJetSpectraTask->SetIsPythia(kTRUE);
