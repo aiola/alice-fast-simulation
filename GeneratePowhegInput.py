@@ -14,7 +14,7 @@ def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
     return fname
 
 
-def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
+def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet):
     fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
@@ -46,6 +46,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEven
             myfile.write("ncall2 1000\n")
             myfile.write("itmx2 5\n")
 
+        myfile.write("storemintupb {0}\n".format(storemintupb))
         if powheg_stage == 1: myfile.write("xgriditeration {}\n".format(x_grid_iter))
         myfile.write("lhans1 {0}\n".format(lhans))
         myfile.write("lhans2 {0}\n".format(lhans))
@@ -59,7 +60,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEven
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet):
+def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet):
     fname = "{}/powheg.input".format(outputdir)
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
@@ -87,6 +88,7 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 20000\n")
             myfile.write("itmx2 5\n")
+        myfile.write("storemintupb {0}\n".format(storemintupb))
         myfile.write("lhans1 {0}\n".format(lhans))
         myfile.write("lhans2 {0}\n".format(lhans))
         myfile.write("ebeam1 {0}\n".format(ebeam1))
@@ -110,6 +112,7 @@ def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
     if "facscfact" in config: facscfact = config["facscfact"]
     else: facscfact = None
     if "renscfact" in config: renscfact = config["renscfact"]
+    if "storemintupb" in config: storemintupb = config["storemintupb"]
     else: renscfact = None
     lhans = config["lhans"]
     beamType = config["beam_type"]
@@ -137,9 +140,9 @@ def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
     shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
 
     if powheg_stage > 0 and powheg_stage <= 4:
-        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
+        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet)
     else:
-        GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, nPDFset, nPDFerrSet)
+        GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet)
 
 
 if __name__ == '__main__':
