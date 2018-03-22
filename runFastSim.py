@@ -48,6 +48,10 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
 def RunPowhegSingle(powhegExe, yamlConfigFile):
     print("Running POWHEG simulation!")
 
+    with open("powheg.input", "a") as myfile:
+        rnd = random.randint(0, 1073741824)  # 2^30
+        myfile.write("iseed {0}\n".format(rnd))
+
     with open("powheg.input", 'r') as fin:
         powheg_input = fin.read().splitlines()
     for line in powheg_input:

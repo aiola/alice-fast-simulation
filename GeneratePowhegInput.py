@@ -62,9 +62,7 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
     fname = "{}/powheg.input".format(outputdir)
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
-    rnd = random.randint(0, 1073741824)  # 2^30
     with open(fname, "a") as myfile:
-        myfile.write("iseed {0}\n".format(rnd))
         myfile.write("numevts {0}\n".format(powhegEvents))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))

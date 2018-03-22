@@ -135,7 +135,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number 1 --powheg-stage {PowhegStage}\"; \n\
+Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number #alien_counter# --powheg-stage {PowhegStage}\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -338,7 +338,9 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             FilesToDelete.append(seed_file_name)
             FilesToCopy.append(seed_file_name)
             with open(seed_file_name, "w") as seed_file:
-                seed_file.write(str(random.randint(0, 1073741824)))
+                for iseed in range(0, Jobs + 1):
+                    seed_file.write(str(random.randint(0, 1073741824)))
+                    seed_file.write("\n")
         else:
             print("Not implemented for POWHEG stage {}".format(PowhegStage))
             exit(1)
