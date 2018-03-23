@@ -14,12 +14,12 @@ def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
     return fname
 
 
-def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet):
+def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet):
     fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
-        myfile.write("numevts {0}\n".format(powhegEvents))
+        myfile.write("numevts {0}\n".format(events))
         myfile.write("manyseeds 1\n")
         myfile.write("maxseeds 500\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
@@ -60,12 +60,12 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEven
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet):
+def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet):
     fname = "{}/powheg.input".format(outputdir)
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
-        myfile.write("numevts {0}\n".format(powhegEvents))
+        myfile.write("numevts {0}\n".format(events))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
@@ -100,7 +100,7 @@ def GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, 
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
+def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     f = open(yamlConfigFile, 'r')
     config = yaml.load(f)
     f.close()
@@ -113,7 +113,7 @@ def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
     else: facscfact = None
     if "renscfact" in config: renscfact = config["renscfact"]
     if "storemintupb" in config: storemintupb = config["storemintupb"]
-    else: renscfact = None
+    else: storemintupb = 0
     lhans = config["lhans"]
     beamType = config["beam_type"]
     ebeam1 = config["ebeam1"]
@@ -127,7 +127,6 @@ def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
 
     if proc == "charm_jets" or proc == "beauty_jets":
         powheg_proc = "dijet"
-        powhegEvents *= 5
     else:
         powheg_proc = proc
 
@@ -140,9 +139,9 @@ def main(yamlConfigFile, outputdir, powhegEvents, powheg_stage, x_grid_iter=1):
     shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
 
     if powheg_stage > 0 and powheg_stage <= 4:
-        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet)
+        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet)
     else:
-        GenerateSinglePowhegInput(outputdir, powhegEvents, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet)
+        GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, storemintupb, nPDFset, nPDFerrSet)
 
 
 if __name__ == '__main__':

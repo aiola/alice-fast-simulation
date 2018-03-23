@@ -97,9 +97,12 @@ public:
   virtual void FinishRun();
   void         WriteXsection(const Char_t *fname = "pyxsec.root") const;
 
+  AliPythiaBase_dev* GetPythia() { return fPythia; }
+
 protected:
   void     MakeHeader();
   Int_t    GetMother(TParticle* iparticle);
+  void     InhibitAllTasks();
 
   inline static Int_t GetFlavor(Int_t pdg) { return Int_t(pdg / TMath::Power(10, Int_t(TMath::Log10(pdg)))); }
 

@@ -18,11 +18,15 @@
 #include <TParticle.h>
 #include <TTree.h>
 #include <TFile.h>
+#include <TObjArray.h>
 
 #include <AliPythiaRndm.h>
 #include <AliLog.h>
 #include <AliRun.h>
 #include <AliGenPythiaEventHeader.h>
+#include <AliAnalysisManager.h>
+
+#include <AliAnalysisTaskEmcalLight.h>
 
 #include "AliPythiaBase_dev.h"
 
@@ -172,6 +176,19 @@ void AliGenPythia_dev::Init()
   }
 }
 
+void AliGenPythia_dev::InhibitAllTasks()
+{
+  AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
+  if (mgr) {
+    TIter iter(mgr->GetTasks());
+    while (auto obj = iter.Next()) {
+      AliAnalysisTaskEmcalLight* task = dynamic_cast<AliAnalysisTaskEmcalLight*>(obj);
+      if (!task) continue;
+      task->SetInhibit(kTRUE);
+    }
+  }
+}
+
 /**
  * Generate one event
  */
@@ -200,7 +217,17 @@ void AliGenPythia_dev::Generate()
   //  event loop
   do {
     // Produce new event
+    if (fPythia->Version() == 6 && fPythia->EndOfLHEFileReached()) {
+      InhibitAllTasks();
+      break;
+    }
+
     fPythia->GenerateEvent();
+
+    if (fPythia->Version() == 8 && fPythia->EndOfLHEFileReached()) {
+      InhibitAllTasks();
+      break;
+    }
 
     fTrials++;
     fPythia->GetParticles(&fParticles);

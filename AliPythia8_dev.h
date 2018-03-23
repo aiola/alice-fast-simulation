@@ -51,6 +51,8 @@ class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
     virtual Int_t GetNMPI() { return fLastNMPI; }
     virtual Int_t GetNSuperpositions() { return fLastNSuperposition; }
 
+    virtual Bool_t  EndOfLHEFileReached();
+
     virtual Int_t ProcessCode();
 
  protected:

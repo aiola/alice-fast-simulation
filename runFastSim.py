@@ -22,6 +22,16 @@ class PowhegResult:
         self.events_generated = events_generated
 
 
+def GetNumberOfPowhegEvents(lhefile):
+    if os.path.isfile(lhefile):
+        proc = subprocess.Popen(["grep", "-c", "<event", lhefile], stdout=subprocess.PIPE)
+        output = proc.stdout.read()
+        nevents = int(output)
+    else:
+        nevents = 0
+    return nevents
+
+
 def RunPowhegParallel(powhegExe, powheg_stage, job_number):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
@@ -38,9 +48,11 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
         p.communicate(input=str(job_number))
 
     if powheg_stage == 4:
-        result = PowhegResult(True, "pwgevents-{:04d}.lhe".format(job_number), LogFileName)
+        lhefile = "pwgevents-{:04d}.lhe".format(job_number)
+        nevents = GetNumberOfPowhegEvents(lhefile)
+        result = PowhegResult(nevents, lhefile, LogFileName)
     else:
-        result = PowhegResult(False, "", LogFileName)
+        result = PowhegResult(0, "", LogFileName)
 
     return result
 
@@ -61,12 +73,15 @@ def RunPowhegSingle(powhegExe, yamlConfigFile):
     with open("powheg.log", "w") as myfile:
         subprocess.call([powhegExe], stdout=myfile, stderr=myfile)
 
-    result = PowhegResult(True, "pwgevents.lhe", "powheg.log")
+    lhefile = "pwgevents.lhe"
+    nevents = GetNumberOfPowhegEvents(lhefile)
+
+    result = PowhegResult(nevents, lhefile, "powheg.log")
 
     return result
 
 
-def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, minpthard, maxpthard, debug_level):
+def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, minpthard, maxpthard, debug_level):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -113,13 +128,19 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
 
     if "powheg" in gen:
         if powheg_stage <= 0:
-            if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.input") or os.path.isfile("powheg.log"):
-                print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.input, powheg.log")
+            if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.log"):
+                print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.log")
                 exit(1)
 
         if LHEfile:
-            print("Using previously generated POWHEG events from file {0}!".format(LHEfile))
             runPOWHEG = False
+            nevents = GetNumberOfPowhegEvents(LHEfile)
+            if nevents > 0:
+                print("Using previously generated POWHEG events from file {}, where I found {} events!".format(LHEfile, nevents))
+                powheg_result = PowhegResult(nevents, LHEfile, "")
+            else:
+                print("No events found in file {}!".format(LHEfile))
+                exit(1)
         else:
             runPOWHEG = True
     else:
@@ -146,25 +167,23 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
         else:
             powheg_result = RunPowhegSingle(powhegExe, yamlConfigFile)
 
-        if not powheg_result.events_generated:
+        if not os.path.isfile(powheg_result.lhe_file) or powheg_result.events_generated <= 0:
             if powheg_stage > 0 and powheg_stage <= 3:
                 print("POWHEG stage {} completed. Exiting.".format(powheg_stage))
                 exit(0)
             else:
                 print("POWHEG at stage {} did not produce any event!!!".format(powheg_stage))
+                if os.path.isfile(powheg_result.log_file):
+                    print("Check log file below.")
+                    with open(powheg_result.log_file, "r") as myfile:
+                        powheg_log = myfile.read().splitlines()
+                    for line in powheg_log:
+                        print(line)
+                else:
+                    print("No log file was found.")
                 exit(1)
-
-        if not os.path.isfile(powheg_result.lhe_file):
-            print("Could not find POWHEG output {}. Something went wrong, aborting...".format(powheg_result.lhe_file))
-            if os.path.isfile(powheg_result.log_file):
-                print("Check log file below.")
-                with open(powheg_result.log_file, "r") as myfile:
-                    powheg_log = myfile.read().splitlines()
-                for line in powheg_log:
-                    print(line)
-            else:
-                print("No log file was found.")
-            exit(1)
+        else:
+            print("POWHEG generated {} events, stored in {}".format(powheg_result.events_generated, powheg_result.lhe_file))
 
         if batch_job == "grid" or batch_job == "lbnl3":
             LHEfile = powheg_result.lhe_file
@@ -191,17 +210,19 @@ def main(pythiaEvents, powheg_stage, job_number, yamlConfigFile, batch_job, LHEf
         work_dir = "output/{}".format(fname)
         os.makedirs(work_dir)
         shutil.copy("AnalysisCode.so", work_dir)
-        shutil.copy("AnalysisCode.rootmap", work_dir)
+        if os.path.isfile("AnalysisCode.rootmap"): shutil.copy("AnalysisCode.rootmap", work_dir)
         shutil.copy("runJetSimulation.C", work_dir)
         shutil.copy("start_simulation.C", work_dir)
         for hdr_file in glob.glob(r'./*.h'): shutil.copy(hdr_file, work_dir)
-        LHEfile = "../../{}".format(LHEfile)
+        for pcm_file in glob.glob(r'./*.pcm'): shutil.copy(pcm_file, work_dir)
+        if "powheg" in gen: LHEfile = "../../{}".format(LHEfile)
         os.chdir(work_dir)
-        with open("sim_{0}.log".format(fname), "w") as myfile:
-            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
-    else:
-        with open("sim_{0}.log".format(fname), "w") as myfile:
-            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, pythiaEvents, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+
+    if "powheg" in gen and events > powheg_result.events_generated:
+        print("Reducing the number of requested events to match the event found in the LHE file: {}".format(powheg_result.events_generated))
+        events = powheg_result.events_generated
+    with open("sim_{0}.log".format(fname), "w") as myfile:
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")

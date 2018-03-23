@@ -46,6 +46,7 @@ class AliPythiaBase_dev : public AliRndm
     virtual void PrintParticles() = 0;
 
     virtual void SetLHEFile(const char* /*fname*/) = 0;
+    virtual void SetMaxEventsInLHEFile(Int_t /*max*/) {}
 
     // Common Physics Configuration
     virtual void SetWeightPower(Double_t /*p*/);
@@ -60,6 +61,7 @@ class AliPythiaBase_dev : public AliRndm
     virtual Float_t GetPtHard() = 0;
     virtual Int_t   GetNMPI() {return -1;}
     virtual Int_t   GetNSuperpositions() { return 1; }
+    virtual Bool_t  EndOfLHEFileReached() { return kFALSE; }
 
     ClassDef(AliPythiaBase_dev, 0) //ALICE UI to PYTHIA
 };

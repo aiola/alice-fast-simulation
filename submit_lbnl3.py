@@ -96,13 +96,12 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
 
     if copy_files:
         os.makedirs(LocalDest)
-        powhegEvents = int(Events * 1.1)
-        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 1)
-        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 2)
-        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 1, 3)
-        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 2)
-        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 3)
-        GeneratePowhegInput.main(yamlFileName, LocalDest, powhegEvents, 4)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, Events, 1, 1)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, Events, 1, 2)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, Events, 1, 3)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, Events, 2)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, Events, 3)
+        GeneratePowhegInput.main(yamlFileName, LocalDest, Events, 4)
 
         with open("{}/pwgseeds.dat".format(LocalDest), "w") as myfile:
             if Jobs > 20:

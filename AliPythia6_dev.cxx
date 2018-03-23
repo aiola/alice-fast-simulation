@@ -71,7 +71,9 @@ AliPythia6_dev::AliPythia6_dev():
   fEcms(0.),
   fStrucFunc(-1),
   fLHEFile(),
-  fNewMIS(kTRUE)
+  fNewMIS(kTRUE),
+  fCountGenerateEventCalls(0),
+  fMaxEventsInLHE(0)
 {
   // Default Constructor
   //
@@ -243,6 +245,21 @@ void AliPythia6_dev::SetNuclei(Int_t a1, Int_t a2, Int_t pdf)
   SetMSTP(192, a1);
   SetMSTP(193, a2);
   SetMSTP(194, pdf);
+}
+
+void AliPythia6_dev::GenerateEvent()
+{
+  if (EndOfLHEFileReached()) {
+    AliWarningStream() << "No more events in LHE file '" << fLHEFile.Data() << "'. Events " << fCountGenerateEventCalls << std::endl;
+    return;
+  }
+  fCountGenerateEventCalls++;
+  if (fNewMIS) {
+    Pyevnw();
+  }
+  else {
+    Pyevnt();
+  }
 }
 
 void AliPythia6_dev::EventListing()

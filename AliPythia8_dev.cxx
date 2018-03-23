@@ -150,6 +150,13 @@ void AliPythia8_dev::SetNuclei(Int_t /*a1*/, Int_t /*a2*/, Int_t /*pdg*/)
 }
 
 
+Bool_t AliPythia8_dev::EndOfLHEFileReached()
+{
+  if (!fPythia) return kFALSE;
+  if (fLHEFile.IsNull()) return kFALSE;
+  return fPythia->info.atEndOfFile();
+}
+
 void AliPythia8_dev::GenerateEvent()
 {
   // Generate one event

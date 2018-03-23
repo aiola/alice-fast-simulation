@@ -24,7 +24,7 @@ public:
   // Pythia initialisation for selected processes
   virtual void ProcInit(Process_t process, Float_t energy, Int_t strucfunc, Int_t tune);
 
-  virtual void  GenerateEvent()   { if (fNewMIS) Pyevnw(); else Pyevnt(); }
+  virtual void  GenerateEvent();
   virtual Int_t GetNumberOfParticles() { return GetN(); }
   virtual void  SetNumberOfParticles(Int_t i) { SetN(i); }
   virtual void  EditEventList(Int_t i) {Pyedit(i);}
@@ -37,6 +37,8 @@ public:
   virtual void  SetNuclei(Int_t a1, Int_t a2, Int_t pdf);
 
   virtual void SetLHEFile(const char* fname) { fLHEFile = fname; }
+
+  virtual void SetMaxEventsInLHEFile(Int_t max) { fMaxEventsInLHE = max; }
 
   // Print particle properties
   virtual void PrintParticles();
@@ -56,7 +58,8 @@ public:
   virtual Int_t   ProcessCode();
   virtual Float_t GetPtHard();
   virtual Float_t GetEventWeight();
-  virtual Int_t GetNMPI();
+  virtual Int_t   GetNMPI();
+  virtual Bool_t  EndOfLHEFileReached() { return (fMaxEventsInLHE > 0 && fCountGenerateEventCalls >= fMaxEventsInLHE); }
 
   virtual void Pyevnw();
   virtual void Pyshow(Int_t ip1, Int_t ip2, Double_t qmax);
@@ -68,6 +71,8 @@ protected:
   Int_t                 fStrucFunc;         // Structure function
   TString               fLHEFile;         //
   Bool_t                fNewMIS;     //
+  Int_t                 fCountGenerateEventCalls; //
+  Int_t                 fMaxEventsInLHE; //
 private:
   AliPythia6_dev(const AliPythia6_dev& pythia); // not implemented
   AliPythia6_dev & operator=(const AliPythia6_dev & rhs); // not implemented

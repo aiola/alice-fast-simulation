@@ -309,9 +309,6 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     ExeFile = "runFastSim.py"
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
-    powhegEvents = int(Events * 1.1)
-    if Proc == "charm_jets" or Proc == "beauty_jets": powhegEvents *= 5
-
     FilesToDelete = [JdlFile, "powheg.input"]
 
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
@@ -325,10 +322,10 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
     if OldPowhegInit:
         if PowhegStage == 0:
-            GeneratePowhegInput.main(yamlFileName, "./", powhegEvents, 0)
+            GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
             FilesToCopy.extend(["{}/pwggrid.dat".format(OldPowhegInit), "{}/pwgubound.dat".format(OldPowhegInit)])
         elif PowhegStage == 4:
-            GeneratePowhegInput.main(yamlFileName, "./", powhegEvents, 4)
+            GeneratePowhegInput.main(yamlFileName, "./", Events, 4)
             os.rename(GeneratePowhegInput.GetParallelInputFileName(4), "powheg.input")
             EssentialFilesToCopy = ["pwggrid-????.dat", "pwggridinfo-btl-xg?-????.dat", "pwgubound-????.dat"]
 
@@ -350,7 +347,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             print("Not implemented for POWHEG stage {}".format(PowhegStage))
             exit(1)
         else:
-            GeneratePowhegInput.main(yamlFileName, "./", powhegEvents, 0)
+            GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
