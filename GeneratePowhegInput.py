@@ -116,6 +116,11 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     nPDFset = config["nPDFset"]
     nPDFerrSet = config["nPDFerrSet"]
 
+    if proc == "charm_jets" or proc == "beauty_jets":
+        powheg_proc = "dijet"
+    else:
+        powheg_proc = proc
+
     # Optional parameters
     if "qmass" in config:
         qmass = config["qmass"]
@@ -123,9 +128,9 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
         qmass = None
 
     if not qmass or qmass < 0:
-        if "charm" in powheg_proc:
+        if powheg_proc == "charm":
             qmass = 1.5
-        elif "beauty" in powheg_proc:
+        elif powheg_proc == "beauty":
             qmass = 4.75
 
     if "facscfact" in config:
@@ -157,11 +162,6 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
         bornsuppfact = config["bornsuppfact"]
     else:
         bornsuppfact = 0
-
-    if proc == "charm_jets" or proc == "beauty_jets":
-        powheg_proc = "dijet"
-    else:
-        powheg_proc = proc
 
     shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
 
