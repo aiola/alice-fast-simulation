@@ -17,4 +17,4 @@ ttl: 80000
 max_files_per_job: 20
 pthard: no
 bornktmin: 1
-bornsuppfact: 1
+bornsuppfact: 10
