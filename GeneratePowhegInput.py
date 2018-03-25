@@ -19,7 +19,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
-        myfile.write("numevts {0}\n".format(events))
+        myfile.write("numevts {0}\n".format(events * 1.1))
         myfile.write("manyseeds 1\n")
         myfile.write("maxseeds 500\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
@@ -66,7 +66,7 @@ def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscf
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
-        myfile.write("numevts {0}\n".format(events))
+        myfile.write("numevts {0}\n".format(events * 1.1))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))

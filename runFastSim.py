@@ -218,9 +218,11 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
         if "powheg" in gen: LHEfile = "../../{}".format(LHEfile)
         os.chdir(work_dir)
 
-    if "powheg" in gen and events > powheg_result.events_generated:
-        print("Reducing the number of requested events to match the event found in the LHE file: {}".format(powheg_result.events_generated))
-        events = powheg_result.events_generated
+    if "powheg" in gen:
+        max_events = int(powheg_result.events_generated / 1.1)
+        if events > max_events:
+            print("Reducing the number of requested events to match the event found in the LHE file (with a 10% buffer to avoid PYTHIA6 crash): {}".format(max_events))
+            events = max_events
     with open("sim_{0}.log".format(fname), "w") as myfile:
         subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
