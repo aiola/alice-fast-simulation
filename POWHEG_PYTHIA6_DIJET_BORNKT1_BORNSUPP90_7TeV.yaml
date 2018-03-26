@@ -18,3 +18,4 @@ max_files_per_job: 20
 pthard: no
 bornktmin: 1
 bornsuppfact: 90
+powheg_buffer: 0.1

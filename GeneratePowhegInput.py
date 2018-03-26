@@ -4,6 +4,7 @@ import shutil
 import argparse
 import random
 import yaml
+import math
 
 
 def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
@@ -14,12 +15,12 @@ def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
     return fname
 
 
-def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, nPDFset, nPDFerrSet):
+def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
-        myfile.write("numevts {0}\n".format(int(events * 1.1)))
+        myfile.write("numevts {0}\n".format(int(math.ceil(events * (1.0 + powheg_buffer)))))
         myfile.write("manyseeds 1\n")
         myfile.write("maxseeds 500\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
@@ -66,7 +67,7 @@ def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscf
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
-        myfile.write("numevts {0}\n".format(int(events * 1.1)))
+        myfile.write("numevts {0}\n".format(int(math.ceil(events * (1.0 + powheg_buffer)))))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
@@ -163,12 +164,17 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     else:
         bornsuppfact = 0
 
+    if "powheg_buffer" in config:
+        powheg_buffer = config["powheg_buffer"]
+    else:
+        powheg_buffer = 0.1
+
     shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
 
     if powheg_stage > 0 and powheg_stage <= 4:
-        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, nPDFset, nPDFerrSet)
+        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
     else:
-        GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, nPDFset, nPDFerrSet)
+        GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
 
 
 if __name__ == '__main__':

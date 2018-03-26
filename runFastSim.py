@@ -12,6 +12,7 @@ import sys
 import yaml
 import GeneratePowhegInput
 import glob
+import math
 
 
 class PowhegResult:
@@ -116,6 +117,11 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
     else:
         rejectISR = False
 
+    if "powheg_buffer" in config:
+        powheg_buffer = config["powheg_buffer"]
+    else:
+        powheg_buffer = 0.1
+
     if batch_job == "grid":
         fname = "{0}_{1}".format(gen, proc)
     elif batch_job == "lbnl3":
@@ -219,7 +225,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
         os.chdir(work_dir)
 
     if "powheg" in gen:
-        max_events = int(powheg_result.events_generated / 1.1)
+        max_events = int(math.ceil(powheg_result.events_generated / (1.0 + powheg_buffer)))
         if events > max_events:
             print("Reducing the number of requested events to match the event found in the LHE file (with a 10% buffer to avoid PYTHIA6 crash): {}".format(max_events))
             events = max_events
