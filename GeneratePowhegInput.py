@@ -62,7 +62,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, nPDFset, nPDFerrSet):
+def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/powheg.input".format(outputdir)
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
