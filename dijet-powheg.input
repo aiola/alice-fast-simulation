@@ -7,7 +7,7 @@ ih2  1               ! hadron 2 (1 for protons, -1 for antiprotons)
 !bornktmin 10         ! (default 0d0) Generation cut: minimum kt in underlying Born
 #bornsuppfact 100    ! (default 0d0) Mass parameter for Born suppression factor.
                      ! If < 0 suppfact = 1.
-#withnegweights 1     ! (default 0). If 1 use negative weights.
+withnegweights 0     ! (default 0). If 1 use negative weights.
 #bornonly 1          ! (default 0). If 1 compute underlying Born using LO
                      ! cross section only.
 
