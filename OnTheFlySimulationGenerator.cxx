@@ -258,7 +258,7 @@ void OnTheFlySimulationGenerator::AddJetTree()
   pJetTaskFu04->SetVzRange(-999,999);
   pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
 
-  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "");
+  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "", 0, 0, AliAnalysisTaskEmcalJetTreeBase::kJetPPChargedSimulation);
   pJetSpectraTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
   pJetSpectraTask->SetCentralityEstimation(AliAnalysisTaskEmcalLight::kNoCentrality);
   if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) {
