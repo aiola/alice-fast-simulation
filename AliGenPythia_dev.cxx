@@ -206,7 +206,6 @@ void AliGenPythia_dev::Generate()
   //  converts from mm/c to s
   const Float_t kconv = 0.001 / TMath::C();
   //
-  Int_t nt = 0;
   Int_t jev = 0;
   Int_t j = 0, kf = 0;
   fTrials = 0;
@@ -249,7 +248,6 @@ void AliGenPythia_dev::Generate()
 
   } while (true); // event loop
 
-  SetHighWaterMark(nt);
 
   //  get cross-section
   fXsection = fPythia->GetXSection();
