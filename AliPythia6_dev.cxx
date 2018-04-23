@@ -300,6 +300,7 @@ void AliPythia6_dev::Pyshow(Int_t ip1, Int_t ip2, Double_t qmax)
 
 Float_t AliPythia6_dev::GetXSection()
 {
+  AliDebugStream(2) << "GetPARI(1) = " << GetPARI(1) << std::endl;
   return GetPARI(1);
 }
 
@@ -315,12 +316,12 @@ void  AliPythia6_dev::PrintStatistics()
 
 Float_t AliPythia6_dev::GetEventWeight()
 {
-  // Not sure what this is
-  //return GetVINT(97);
+  AliDebugStream(2) << "GetPARI(7) = " << GetPARI(7) << ", GetPARI(10) = " << GetPARI(10) << std::endl;
 
   return GetPARI(7) * GetPARI(10);
-  // PARI(7) is 1 or -1, for weighted generation with accept/reject, e.g. POWHEG
-  // PARI(10) is a weight associated with reweighted generation, using Pyevwt
+  // PARI(7) is the weight coming from the user process, e.g. POWHEG
+  // GetVINT(97) is the same as GetPARI(7);
+  // PARI(10) is a weight coming from PYTHIA when SetMSTP(142, 1) was set
 }
 
 void AliPythia6_dev::SetWeightPower(Double_t pow)
