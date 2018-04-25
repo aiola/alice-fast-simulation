@@ -1,4 +1,4 @@
-name: POWHEG_PYTHIA6_DIJET_BORNKT1_BORNSUPP90_7TeV
+name: POWHEG_PYTHIA6_DIJET_BORNKT1_BORNSUPP20_7TeV
 aliphysics: _last_
 numevents: 50000
 numbjobs: 400
@@ -17,5 +17,5 @@ ttl: 80000
 max_files_per_job: 20
 pthard: no
 bornktmin: 1
-bornsuppfact: 90
-powheg_buffer: 0.1
+bornsuppfact: 20
+powheg_buffer: 0.2
