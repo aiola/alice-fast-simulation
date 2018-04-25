@@ -112,10 +112,10 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
     ebeam2 = config["ebeam2"]
     nPDFset = config["nPDFset"]
     nPDFerrSet = config["nPDFerrSet"]
-    if "rejectISR" in config:
-        rejectISR = config["rejectISR"]
+    if "add_d_mesons" in config:
+        always_d_mesons = config["add_d_mesons"]
     else:
-        rejectISR = False
+        always_d_mesons = False
 
     if "powheg_buffer" in config:
         powheg_buffer = config["powheg_buffer"]
@@ -230,7 +230,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
             print("Reducing the number of requested events to match the event found in the LHE file (with a 10% buffer to avoid PYTHIA6 crash): {}".format(max_events))
             events = max_events
     with open("sim_{0}.log".format(fname), "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(rejectISR), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(always_d_mesons), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")

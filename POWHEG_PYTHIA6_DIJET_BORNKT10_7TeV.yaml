@@ -1,5 +1,5 @@
 name: POWHEG_PYTHIA6_DIJET_BORNKT10_7TeV
-aliphysics: _last_
+aliphysics: vAN-20180425-1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
@@ -17,3 +17,5 @@ ttl: 80000
 max_files_per_job: 20
 pthard: no
 bornktmin: 10
+powheg_buffer: 0.1
+add_d_mesons: yes

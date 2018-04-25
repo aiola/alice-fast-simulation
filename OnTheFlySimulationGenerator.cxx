@@ -163,7 +163,16 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
 
   if (fJetQA) AddJetQA();
   if (fDMesonJets) AddDJet();
-  if (fJetTree) AddJetTree();
+  if (fJetTree) {
+    if (fDMesonJets) {
+      TString fname(AliAnalysisManager::GetCommonFileName());
+      fname.ReplaceAll(".root", "_jets.root");
+      AddJetTree(fname);
+    }
+    else {
+      AddJetTree();
+    }
+  }
 }
 
 //________________________________________________________________________
@@ -193,8 +202,14 @@ void OnTheFlySimulationGenerator::Start(UInt_t debug_level)
 }
 
 //________________________________________________________________________
-void OnTheFlySimulationGenerator::AddJetQA()
+void OnTheFlySimulationGenerator::AddJetQA(const char* file_name)
 {
+  TString fname(file_name);
+  TString old_file_name;
+  if (!fname.IsNull()) {
+    old_file_name = AliAnalysisManager::GetCommonFileName();
+    AliAnalysisManager::SetCommonFileName(fname);
+  }
   AliAnalysisTaskEmcalJetQA* pJetQA = AliAnalysisTaskEmcalJetQA::AddTaskEmcalJetQA("mcparticles","","");
   pJetQA->SetPtHardRange(fMinPtHard, fMaxPtHard);
   if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) pJetQA->SetMCFilter();
@@ -205,11 +220,21 @@ void OnTheFlySimulationGenerator::AddJetQA()
   pJetQA->SetParticleLevel(kTRUE);
   pJetQA->SetIsPythia(kTRUE);
   pJetQA->SetVzRange(-999,999);
+  if (!fname.IsNull()) {
+    AliAnalysisManager::SetCommonFileName(old_file_name);
+  }
 }
 
 //________________________________________________________________________
-void OnTheFlySimulationGenerator::AddDJet()
+void OnTheFlySimulationGenerator::AddDJet(const char* file_name)
 {
+  TString fname(file_name);
+  TString old_file_name;
+  if (!fname.IsNull()) {
+    old_file_name = AliAnalysisManager::GetCommonFileName();
+    AliAnalysisManager::SetCommonFileName(fname);
+  }
+
   UInt_t rejectOrigin = 0;
 
   AliAnalysisTaskDmesonJets* pDMesonJetsTask = AliAnalysisTaskDmesonJets::AddTaskDmesonJets("", "", "usedefault", 2);
@@ -243,11 +268,22 @@ void OnTheFlySimulationGenerator::AddDJet()
   eng = pDMesonJetsTask->AddAnalysisEngine(AliAnalysisTaskDmesonJets::kDstartoKpipi, "", "", AliAnalysisTaskDmesonJets::kMCTruth, AliJetContainer::kFullJet, 0.4);
   eng->SetAcceptedDecayMap(AliAnalysisTaskDmesonJets::EMesonDecayChannel_t::kAnyDecay);
   eng->SetRejectedOriginMap(rejectOrigin);
+
+  if (!fname.IsNull()) {
+    AliAnalysisManager::SetCommonFileName(old_file_name);
+  }
 }
 
 //________________________________________________________________________
-void OnTheFlySimulationGenerator::AddJetTree()
+void OnTheFlySimulationGenerator::AddJetTree(const char* file_name)
 {
+  TString fname(file_name);
+  TString old_file_name;
+  if (!fname.IsNull()) {
+    old_file_name = AliAnalysisManager::GetCommonFileName();
+    AliAnalysisManager::SetCommonFileName(fname);
+  }
+
   AliEmcalJetTask* pJetTaskCh04 = AliEmcalJetTask::AddTaskEmcalJet("mcparticles", "", AliJetContainer::antikt_algorithm, 0.4, AliJetContainer::kChargedJet, 0., 0., 0.1, AliJetContainer::pt_scheme, "Jet", 0., kFALSE, kFALSE);
   pJetTaskCh04->SetVzRange(-999,999);
   pJetTaskCh04->SetNeedEmcalGeom(kFALSE);
@@ -273,6 +309,10 @@ void OnTheFlySimulationGenerator::AddJetTree()
   pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid, "mcparticles", "");
   pJetSpectraTask->AddJetContainer(AliJetContainer::kChargedJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.6, AliJetContainer::kTPCfid, "mcparticles", "");
   pJetSpectraTask->AddJetContainer(AliJetContainer::kFullJet, AliJetContainer::antikt_algorithm, AliJetContainer::pt_scheme, 0.4, AliJetContainer::kTPCfid, "mcparticles", "");
+
+  if (!fname.IsNull()) {
+    AliAnalysisManager::SetCommonFileName(old_file_name);
+  }
 }
 
 //________________________________________________________________________

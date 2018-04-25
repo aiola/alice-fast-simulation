@@ -11,7 +11,7 @@
 #include <iostream>
 
 void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
-    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t rejectISR = kFALSE, Double_t minPtHard = -1, Double_t maxPtHard = -1,
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
   gInterpreter->AddIncludePath("$ALICE_ROOT/include");
@@ -57,7 +57,7 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
 
   TString command = TString::Format(".x runJetSimulation.C+g(\"%s\", %d, \"%s\", \"%s\", %d, \"%s\", \"%s\", %f, %f, %d, %f, %f, %d)",
       name.Data(), pythiaEvents, procStr.Data(), gen.Data(), seed, lhe.Data(),
-      beamType.Data(), ebeam1, ebeam2, rejectISR, minPtHard, maxPtHard, debug_level);
+      beamType.Data(), ebeam1, ebeam2, always_d_mesons, minPtHard, maxPtHard, debug_level);
 
   gROOT->ProcessLine(command.Data());
 }

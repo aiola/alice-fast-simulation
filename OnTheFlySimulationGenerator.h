@@ -91,9 +91,9 @@ public:
   Double_t           GetPtHardMax()          const { return fMaxPtHard      ; }
 
 protected:
-  void               AddJetQA();
-  void               AddJetTree();
-  void               AddDJet();
+  void               AddJetQA(const char* file_name = "");
+  void               AddJetTree(const char* file_name = "");
+  void               AddDJet(const char* file_name = "");
 
   void               CalculateCMSEnergy();
 
