@@ -184,7 +184,7 @@ if __name__ == '__main__':
                         default="default.yaml", help='YAML configuration file')
     parser.add_argument('--user-conf', metavar='USERCONF',
                         default="userConf.yaml")
-    parser.add_argument('--continue-powheg', metavar='USERCONF',
+    parser.add_argument('--continue-powheg', metavar='timestamp',
                         default=None)
     parser.add_argument('--powheg-stage',
                         type=int)
