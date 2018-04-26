@@ -255,6 +255,7 @@ void AliPythia6_dev::GenerateEvent()
   else {
     Pyevnt();
   }
+  // See page 320 of the PYTHIA manual
   if (!fLHEFile.IsNull() && GetN() == 0 && GetMSTI(51) > 0) {
     fEndOfLHEFile = kTRUE;
     AliInfoStream() << "The end of the LHE file was reached. Stopping event generation." << std::endl;
