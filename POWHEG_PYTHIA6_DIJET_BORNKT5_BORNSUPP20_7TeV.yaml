@@ -1,5 +1,5 @@
 name: POWHEG_PYTHIA6_DIJET_BORNKT5_BORNSUPP20_7TeV
-aliphysics: vAN-20180425-1
+aliphysics: vAN-20180426-1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
