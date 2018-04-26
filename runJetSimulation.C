@@ -11,7 +11,7 @@
 #include "OnTheFlySimulationGenerator.h"
 
 void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
-    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Double_t minPtHard = -1, Double_t maxPtHard = -1,
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
   //gSystem->SetFPEMask(kInvalid | kDivByZero | kOverflow | kUnderflow);
@@ -301,6 +301,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   sim->SetEnergyBeam1(ebeam1);
   sim->SetEnergyBeam2(ebeam2);
   sim->SetPtHardRange(minPtHard, maxPtHard);
+  sim->SetExtendedEventInfo(extended_event_info);
   if (always_d_mesons) sim->EnableDMesonJets(kTRUE);
   if (procStr == "dijet" || procStr == "mb") {
     sim->EnableJetTree();

@@ -64,6 +64,7 @@ public:
   void SetPartonEventGenerator(EGenerator_t gen)          { fPartonEvent     = gen           ; }
   void SetHadronization(EGenerator_t gen)                 { fHadronization   = gen           ; }
   void SetDecayer(EGenerator_t gen)                       { fDecayer         = gen           ; }
+  void SetExtendedEventInfo(Bool_t b)                     { fExtendedEventInfo = b           ; }
 
   static AliGenPythia_dev* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax);
   static AliGenPythia_dev* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax);
@@ -119,6 +120,7 @@ protected:
   EGenerator_t         fPartonEvent      ;
   EGenerator_t         fHadronization    ;
   EGenerator_t         fDecayer          ;
+  Bool_t               fExtendedEventInfo;
   std::vector<std::string>
                        fDebugClassNames  ;
 

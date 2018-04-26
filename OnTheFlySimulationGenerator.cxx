@@ -57,6 +57,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
   fDecayer(kPythia6),
+  fExtendedEventInfo(kFALSE),
   fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
@@ -85,6 +86,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
   fDecayer(kPythia6),
+  fExtendedEventInfo(kFALSE),
   fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
@@ -113,6 +115,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fPartonEvent(kPythia6),
   fHadronization(kPythia6),
   fDecayer(kPythia6),
+  fExtendedEventInfo(kFALSE),
   fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
@@ -246,7 +249,12 @@ void OnTheFlySimulationGenerator::AddDJet(const char* file_name)
   pDMesonJetsTask->SetNeedEmcalGeom(kFALSE);
   pDMesonJetsTask->SetForceBeamType(AliAnalysisTaskEmcalLight::kpp);
   pDMesonJetsTask->SetCentralityEstimation(AliAnalysisTaskEmcalLight::kNoCentrality);
-  pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
+  if (fExtendedEventInfo) {
+    pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeExtendedOutput);
+  }
+  else {
+    pDMesonJetsTask->SetOutputType(AliAnalysisTaskDmesonJets::kTreeOutput);
+  }
   pDMesonJetsTask->SetApplyKinematicCuts(kTRUE);
   pDMesonJetsTask->SetRejectISR(fRejectISR);
   AliAnalysisTaskDmesonJets::AnalysisEngine* eng = 0;
@@ -294,7 +302,13 @@ void OnTheFlySimulationGenerator::AddJetTree(const char* file_name)
   pJetTaskFu04->SetVzRange(-999,999);
   pJetTaskFu04->SetNeedEmcalGeom(kFALSE);
 
-  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "", 0, 0, AliAnalysisTaskEmcalJetTreeBase::kJetPPChargedSimulation);
+  AliAnalysisTaskEmcalJetTreeBase* pJetSpectraTask = nullptr;
+  if (fExtendedEventInfo) {
+    pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "", 0, 0, AliAnalysisTaskEmcalJetTreeBase::kJetPPChargedSimulation);
+  }
+  else {
+    pJetSpectraTask = AliAnalysisTaskEmcalJetTreeBase::AddTaskEmcalJetTree("mcparticles", "", 0, 0, AliAnalysisTaskEmcalJetTreeBase::kJetPPCharged);
+  }
   pJetSpectraTask->SetPtHardRange(fMinPtHard, fMaxPtHard);
   pJetSpectraTask->SetCentralityEstimation(AliAnalysisTaskEmcalLight::kNoCentrality);
   if (fMinPtHard > -1 && fMaxPtHard > fMinPtHard) {

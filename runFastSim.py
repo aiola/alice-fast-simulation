@@ -155,7 +155,12 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
     if "powheg_buffer" in config:
         powheg_buffer = config["powheg_buffer"]
     else:
-        powheg_buffer = 0.1
+        powheg_buffer = 0.0
+
+    if "extended_event_info" in config:
+        extended_event_info = config["extended_event_info"]
+    else:
+        extended_event_info = False
 
     if batch_job == "grid":
         fname = "{0}_{1}".format(gen, proc)
@@ -266,7 +271,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
             print("Reducing the number of requested events to match the event found in the LHE file (with a {}% buffer to avoid PYTHIA6 crash): {}".format(powheg_buffer * 100, max_events))
             events = max_events
     with open("sim_{0}.log".format(fname), "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(always_d_mesons), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12}, {13})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")

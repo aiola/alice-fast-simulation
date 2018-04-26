@@ -20,3 +20,4 @@ bornktmin: 5
 bornsuppfact: 20
 powheg_buffer: 0.0
 add_d_mesons: yes
+extended_event_info: yes
