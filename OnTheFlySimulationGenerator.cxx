@@ -330,7 +330,6 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 
   if (fHadronization == kPythia6) {
     genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard);
-    if (!fLHEFile.IsNull()) genHadronization->GetPythia()->SetMaxEventsInLHEFile(fEvents);
     if (fDecayer != kPythia6 && fDecayer != kEvtGen) {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
       return nullptr;

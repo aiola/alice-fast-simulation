@@ -216,14 +216,9 @@ void AliGenPythia_dev::Generate()
   //  event loop
   do {
     // Produce new event
-    if (fPythia->Version() == 6 && fPythia->EndOfLHEFileReached()) {
-      InhibitAllTasks();
-      break;
-    }
-
     fPythia->GenerateEvent();
 
-    if (fPythia->Version() == 8 && fPythia->EndOfLHEFileReached()) {
+    if (fPythia->EndOfLHEFileReached()) {
       InhibitAllTasks();
       break;
     }

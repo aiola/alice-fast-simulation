@@ -38,8 +38,6 @@ public:
 
   virtual void SetLHEFile(const char* fname) { fLHEFile = fname; }
 
-  virtual void SetMaxEventsInLHEFile(Int_t max) { fMaxEventsInLHE = max; }
-
   // Print particle properties
   virtual void PrintParticles();
 
@@ -59,20 +57,20 @@ public:
   virtual Float_t GetPtHard();
   virtual Float_t GetEventWeight();
   virtual Int_t   GetNMPI();
-  virtual Bool_t  EndOfLHEFileReached() { return (fMaxEventsInLHE > 0 && fCountGenerateEventCalls >= fMaxEventsInLHE); }
+  virtual Bool_t  EndOfLHEFileReached() { return fEndOfLHEFile; }
 
   virtual void Pyevnw();
   virtual void Pyshow(Int_t ip1, Int_t ip2, Double_t qmax);
 
 protected:
-  Process_t             fProcess;           // Process type
-  Int_t                 fItune;
-  Float_t               fEcms;              // Centre of mass energy
-  Int_t                 fStrucFunc;         // Structure function
-  TString               fLHEFile;         //
-  Bool_t                fNewMIS;     //
-  Int_t                 fCountGenerateEventCalls; //
-  Int_t                 fMaxEventsInLHE; //
+  Process_t             fProcess;            ///< Process type
+  Int_t                 fItune;              ///< Tune
+  Float_t               fEcms;               ///< Centre of mass energy
+  Int_t                 fStrucFunc;          ///< Structure function
+  TString               fLHEFile;            ///< LHE file name
+  Bool_t                fNewMIS;             ///< Use new MIS
+  Bool_t                fEndOfLHEFile;       //!<!End of LHE was reached
+
 private:
   AliPythia6_dev(const AliPythia6_dev& pythia); // not implemented
   AliPythia6_dev & operator=(const AliPythia6_dev & rhs); // not implemented

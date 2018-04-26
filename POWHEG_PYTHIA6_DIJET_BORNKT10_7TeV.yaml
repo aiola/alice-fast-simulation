@@ -17,5 +17,5 @@ ttl: 80000
 max_files_per_job: 20
 pthard: no
 bornktmin: 10
-powheg_buffer: 0.1
+powheg_buffer: 0.0
 add_d_mesons: yes

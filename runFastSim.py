@@ -33,6 +33,41 @@ def GetNumberOfPowhegEvents(lhefile):
     return nevents
 
 
+def AddEmptyEvent(lhefile):
+    backup_filename = lhefile + ".bak"
+    os.rename(lhefile, backup_filename)
+    with open(backup_filename, 'r') as fin:
+        lhe = fin.read().splitlines()
+    last_event_stop_index = -1
+    last_event_start_index = -1
+    for i, line in reversed(list(enumerate(lhe))):
+        if last_event_stop_index < 0 and line == "</event>":
+            last_event_stop_index = i
+            continue
+        if last_event_stop_index > 0 and line == "<event>":
+            last_event_start_index = i
+            break
+    if last_event_stop_index < 0:
+        print("Could not find </event> in the LHE file '{}'!".format(lhefile))
+        os.rename(backup_filename, lhefile)
+        return
+
+    # Check whether the empty event already exists
+    event_header = lhe[last_event_start_index + 1].strip().split()
+    if int(event_header[0]) == 0:
+        print("Empty event already present in the LHE file '{}'!".format(lhefile))
+        print(lhe[last_event_start_index + 1])
+        os.rename(backup_filename, lhefile)
+
+        return
+    lhe.insert(last_event_stop_index + 1, "<event>")
+    lhe.insert(last_event_stop_index + 2, "      0  10001  1.0  1.0 -1.00000E+00  1.0")
+    lhe.insert(last_event_stop_index + 3, "</event>")
+    with open(lhefile, 'w') as fout:
+        for line in lhe:
+            fout.write(line + "\n")
+
+
 def RunPowhegParallel(powhegExe, powheg_stage, job_number):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
@@ -225,9 +260,10 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
         os.chdir(work_dir)
 
     if "powheg" in gen:
+        AddEmptyEvent(LHEfile)
         max_events = int(math.ceil(powheg_result.events_generated / (1.0 + powheg_buffer)))
         if events > max_events:
-            print("Reducing the number of requested events to match the event found in the LHE file (with a 10% buffer to avoid PYTHIA6 crash): {}".format(max_events))
+            print("Reducing the number of requested events to match the event found in the LHE file (with a {}% buffer to avoid PYTHIA6 crash): {}".format(powheg_buffer * 100, max_events))
             events = max_events
     with open("sim_{0}.log".format(fname), "w") as myfile:
         subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(always_d_mesons), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)

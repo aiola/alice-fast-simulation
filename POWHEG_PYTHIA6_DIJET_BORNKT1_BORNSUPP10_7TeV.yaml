@@ -18,5 +18,5 @@ max_files_per_job: 20
 pthard: no
 bornktmin: 1
 bornsuppfact: 10
-powheg_buffer: 0.2
+powheg_buffer: 0.0
 add_d_mesons: yes

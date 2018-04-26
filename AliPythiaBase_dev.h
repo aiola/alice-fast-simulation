@@ -46,7 +46,6 @@ class AliPythiaBase_dev : public AliRndm
     virtual void PrintParticles() = 0;
 
     virtual void SetLHEFile(const char* /*fname*/) = 0;
-    virtual void SetMaxEventsInLHEFile(Int_t /*max*/) {}
 
     // Common Physics Configuration
     virtual void SetWeightPower(Double_t /*p*/);
