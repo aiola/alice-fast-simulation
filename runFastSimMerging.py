@@ -31,8 +31,7 @@ def main(trainName, xmlFile):
     print("Running merging of {0} on: {1}".format(trainName, " ".join(platform.uname())))
 
     print("Running merging...")
-    output = "AnalysisResults_{0}.root".format(trainName)
-    subprocess.call(["aliroot", "-b", "-l", "-q", "runJetSimulationMergingGrid.C(\"{0}\", \"{1}\")".format(output, xmlFile)])
+    subprocess.call(["aliroot", "-b", "-l", "-q", "start_merging.C(\"{}\")".format(xmlFile)])
 
     print("Done")
     print("...see results in the log files")

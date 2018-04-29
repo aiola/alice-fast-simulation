@@ -278,7 +278,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
         JdlFile = "FastSim_Merging_{0}_{1}.jdl".format(Gen, Proc)
         XmlFile = "FastSim_Merging_{0}_{1}_stage_{2}.xml".format(Gen, Proc, MergingStage)
 
-        FilesToCopy = ["runJetSimulationMergingGrid.C"]
+        FilesToCopy = ["runJetSimulationMergingGrid.C", "start_merging.C"]
         JdlContent = GenerateMergingJDL(ExeFile, XmlFile, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod)
 
         f = open(JdlFile, 'w')

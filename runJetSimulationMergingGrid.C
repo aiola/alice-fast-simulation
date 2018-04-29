@@ -1,3 +1,9 @@
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <vector>
+#include <memory>
+
 #include <TFileMerger.h>
 #include <Riostream.h>
 #include <TGrid.h>
@@ -5,116 +11,154 @@
 #include <TObjArray.h>
 #include <TAlienCollection.h>
 
-#include <string>
-#include <fstream>
+#include <AliLog.h>
 
-void AddFilesToMergerUsingXML(TFileMerger& merger, const TString& strFileList);
-void AddFilesToMergerUsingTXT(TFileMerger& merger, const TString& strFileList);
+std::vector<TString> GetFiles(const TString& strFileList);
+std::vector<TString> GetFilesFromTXT(const TString& strFileList);
+std::vector<TString> GetFilesFromXML(const TString& strFileList);
+std::set<TString> GetFileNames(const std::vector<TString>& file_list);
+void AddFilesToMerger(TFileMerger& merger, const TString& file_name_accept, const std::vector<TString>& file_list);
 
-Int_t runJetSimulationMergingGrid(const char* output, const char* fileList, const char* skipList = "", const char* acceptList = "", Int_t n=2)
+Int_t runJetSimulationMergingGrid(const char* fileList, const char* skipList = "", const char* acceptList = "", Int_t n=2)
 {
   TGrid::Connect("alien://");
 
-  TFileMerger merger(kFALSE);
-  merger.OutputFile(output);
-  merger.SetMaxOpenedFiles(n);
-
   TString strFileList(fileList);
+  auto file_list = GetFiles(strFileList);
 
+  std::set<TString> file_names = GetFileNames(file_list);
+
+  Int_t merge_errors = 0;
+
+  for (auto fname : file_names) {
+    TFileMerger merger(kFALSE);
+    merger.OutputFile(fname.Data());
+    merger.SetMaxOpenedFiles(n);
+
+    AddFilesToMerger(merger, fname, file_list);
+
+    UInt_t mode = TFileMerger::kAllIncremental;
+
+    TString strSkipList(skipList);
+    std::unique_ptr<TObjArray> skipArray(strSkipList.Tokenize(" "));
+
+    TString strAcceptList(acceptList);
+    std::unique_ptr<TObjArray> acceptArray(strAcceptList.Tokenize(" "));
+
+    if (skipArray && skipArray->GetEntriesFast() > 0) {
+      mode = mode | TFileMerger::kSkipListed;
+      if (acceptArray && acceptArray->GetEntriesFast() > 0) {
+        AliInfoGeneralStream("runJetSimulationMergingGrid") << "Accept list is being ignored!!!" << std::endl;
+      }
+
+
+      for (auto iter = skipArray->begin(); iter != skipArray->end(); iter.Next()) {
+        merger.AddObjectNames((*iter)->GetName());
+      }
+    }
+    else if (acceptArray && acceptArray->GetEntriesFast() > 0) {
+      mode = mode | TFileMerger::kOnlyListed;
+
+      for (auto iter = acceptArray->begin(); iter != acceptArray->end(); iter.Next()) {
+        merger.AddObjectNames((*iter)->GetName());
+      }
+    }
+
+    merger.PrintFiles("");
+    Int_t r = merger.PartialMerge(mode);
+
+    if (r) {
+      AliInfoGeneralStream("runJetSimulationMergingGrid") << "Merge of files '" << fname << "' OK!" << std::endl;
+    }
+    else {
+      AliInfoGeneralStream("runJetSimulationMergingGrid") << "Merge error for files '" << fname << "' OK!" << std::endl;
+      merge_errors++;
+    }
+  }
+
+  return merge_errors;
+}
+
+std::vector<TString> GetFiles(const TString& strFileList)
+{
   if (strFileList.EndsWith(".xml")) {
-    AddFilesToMergerUsingXML(merger, strFileList);
+    return GetFilesFromXML(strFileList);
   }
   else {
-    AddFilesToMergerUsingTXT(merger, strFileList);
-  }
-
-  UInt_t mode = TFileMerger::kAllIncremental;
-
-  TObject* obj = 0;
-
-  TString strSkipList(skipList);
-  TObjArray *skipArray = strSkipList.Tokenize(" ");
-
-  TString strAcceptList(acceptList);
-  TObjArray *acceptArray = strAcceptList.Tokenize(" ");
-
-  if (skipArray && skipArray->GetEntriesFast() > 0) {
-    mode = mode | TFileMerger::kSkipListed;
-    if (acceptArray && acceptArray->GetEntriesFast() > 0) {
-      Printf("Accept list is being ignored!!!");
-    }
-    TIter nextSkip(skipArray);
-    
-    while ((obj = nextSkip())) {
-      merger.AddObjectNames(obj->GetName());
-    }
-  }
-  else if (acceptArray && acceptArray->GetEntriesFast() > 0) {
-    mode = mode | TFileMerger::kOnlyListed;
-    TIter nextAccept(acceptArray);
-    while ((obj = nextAccept())) {
-      merger.AddObjectNames(obj->GetName());
-    }
-  }
-
-  delete skipArray; skipArray = 0;
-  delete acceptArray; acceptArray = 0;
-
-  merger.PrintFiles("");
-  Int_t r = merger.PartialMerge(mode);
-
-  if (r) {
-    Printf("Merge OK!");
-    return 0;
-  }
-  else {
-    Printf("Merge error!");
-    return 1;
+    return GetFilesFromTXT(strFileList);
   }
 }
 
-void AddFilesToMergerUsingXML(TFileMerger& merger, const TString& strFileList)
+std::vector<TString> GetFilesFromXML(const TString& strFileList)
 {
-  TGridCollection *coll = TAlienCollection::Open(strFileList);
+  std::vector<TString> file_list;
+
+  std::unique_ptr<TGridCollection> coll(TAlienCollection::Open(strFileList));
   if (!coll) {
-    ::Error("AddFilesToMergerUsingXML", "Cannot create an AliEn collection from %s", strFileList.Data());
-    return;
+    AliErrorGeneralStream("GetFilesFromXML") <<  "Cannot create an AliEn collection from " << strFileList.Data() << std::endl;
+    return file_list;
   }
 
   coll->Reset();
-  Int_t nFiles = 0;
   while (coll->Next()) {
     TString filename = coll->GetTURL();
 
-    Printf("Adding file %s", filename.Data());
-    merger.AddFile(filename);
-    nFiles++;
+    AliInfoGeneralStream("GetFilesFromXML") << "Adding file '" << filename.Data() << "'" << std::endl;
+    file_list.push_back(filename.Data());
   }
 
-  delete coll;
+  AliInfoGeneralStream("GetFilesFromXML") << "Total number of files is " << file_list.size() << std::endl;
 
-  Printf("Total number of files is %d", nFiles);
+  return file_list;
 }
 
-void AddFilesToMergerUsingTXT(TFileMerger& merger, const TString& strFileList)
+std::vector<TString> GetFilesFromTXT(const TString& strFileList)
 {
-  ifstream in(strFileList.Data());
+  std::vector<TString> file_list;
 
-  Int_t nFiles = 0;
+  std::ifstream in(strFileList.Data());
+
   while (in.good()) {
-    std::string f;
+    TString f;
 
     in >> f;
 
-    if (f.length() == 0) continue;
+    if (f.Length() == 0) continue;
 
-    Printf("Adding file %s", f.c_str());
-    merger.AddFile(f.c_str());
+    AliInfoGeneralStream("GetFilesFromTXT") << "Adding file '" << f.Data() << "'" << std::endl;
 
-    nFiles++;
+    file_list.push_back(f);
   }
 
   in.close();
 
-  Printf("Total number of files is %d", nFiles);
+  AliInfoGeneralStream("GetFilesFromTXT") << "Total number of files is " << file_list.size() << std::endl;
+
+  return file_list;
+}
+
+void AddFilesToMerger(TFileMerger& merger, const TString& file_name_accept, const std::vector<TString>& file_list)
+{
+  for (auto file_name : file_list) {
+    if (!file_name.EndsWith(file_name_accept)) continue;
+    merger.AddFile(file_name);
+  }
+}
+
+std::set<TString> GetFileNames(const std::vector<TString>& file_list)
+{
+  std::set<TString> file_names;
+
+  for (auto path : file_list) {
+    std::unique_ptr<TObjArray> tree(path.Tokenize("/"));
+    file_names.insert(tree->Last()->GetName());
+  }
+
+  AliInfoGeneralStream("GetFileNames") << "Found " << file_names.size() << " file names: ";
+  for (auto file_name : file_names) {
+    std::cout << "'" << file_name.Data() << "' ";
+  }
+  std::cout << std::endl;
+
+  return file_names;
 }
