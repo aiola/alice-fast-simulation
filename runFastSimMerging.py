@@ -1,15 +1,9 @@
 #!/usr/bin/env python
 
-import time
 import datetime
 import platform
-import os
-import shutil
 import subprocess
 import argparse
-import random
-import sys
-
 
 def main(trainName, xmlFile):
     print("------------------ job starts ---------------------")

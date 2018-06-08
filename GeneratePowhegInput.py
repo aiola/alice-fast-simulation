@@ -15,16 +15,16 @@ def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
     return fname
 
 
-def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
+def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
-    shutil.copy("{}-powheg.input".format(powheg_proc), fname)
+    shutil.copy("{}-powheg.input".format(proc), fname)
 
     with open(fname, "a") as myfile:
         myfile.write("numevts {0}\n".format(int(math.ceil(events * (1.0 + powheg_buffer)))))
         myfile.write("manyseeds 1\n")
         myfile.write("maxseeds 500\n")
         myfile.write("parallelstage {}\n".format(powheg_stage))
-        if powheg_proc == "beauty":
+        if proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
             myfile.write("renscfact {0}\n".format(renscfact))
@@ -32,7 +32,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 5000\n")
             myfile.write("itmx2 5\n")
-        elif powheg_proc == "charm":
+        elif proc == "charm":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
             myfile.write("renscfact {0}\n".format(renscfact))
@@ -40,7 +40,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 5000\n")
             myfile.write("itmx2 5\n")
-        elif powheg_proc == "dijet":
+        elif proc == "dijet":
             myfile.write("bornktmin {0}\n".format(bornktmin))
             myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
             myfile.write("ncall1 5000\n")
@@ -62,13 +62,13 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
 
-def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
+def GenerateSinglePowhegInput(outputdir, events, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/powheg.input".format(outputdir)
-    shutil.copy("{}-powheg.input".format(powheg_proc), fname)
+    shutil.copy("{}-powheg.input".format(proc), fname)
 
     with open(fname, "a") as myfile:
         myfile.write("numevts {0}\n".format(int(math.ceil(events * (1.0 + powheg_buffer)))))
-        if powheg_proc == "beauty":
+        if proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
             myfile.write("renscfact {0}\n".format(renscfact))
@@ -76,7 +76,7 @@ def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscf
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 100000\n")
             myfile.write("itmx2 5\n")
-        elif powheg_proc == "charm":
+        elif proc == "charm":
             myfile.write("qmass {0}\n".format(qmass))
             myfile.write("facscfact {0}\n".format(facscfact))
             myfile.write("renscfact {0}\n".format(renscfact))
@@ -84,7 +84,7 @@ def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscf
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 100000\n")
             myfile.write("itmx2 5\n")
-        elif powheg_proc == "dijet":
+        elif proc == "dijet":
             myfile.write("bornktmin {0}\n".format(bornktmin))
             myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
             myfile.write("ncall1 20000\n")
@@ -117,11 +117,6 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     nPDFset = config["nPDFset"]
     nPDFerrSet = config["nPDFerrSet"]
 
-    if proc == "charm_jets" or proc == "beauty_jets":
-        powheg_proc = "dijet"
-    else:
-        powheg_proc = proc
-
     # Optional parameters
     if "qmass" in config:
         qmass = config["qmass"]
@@ -129,9 +124,9 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
         qmass = None
 
     if not qmass or qmass < 0:
-        if powheg_proc == "charm":
+        if proc == "charm":
             qmass = 1.5
-        elif powheg_proc == "beauty":
+        elif proc == "beauty":
             qmass = 4.75
 
     if "facscfact" in config:
@@ -169,12 +164,12 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     else:
         powheg_buffer = 0.1
 
-    shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
+    shutil.copy("{}-powheg.input".format(proc), "{}/powheg.input".format(outputdir))
 
     if powheg_stage > 0 and powheg_stage <= 4:
-        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
+        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
     else:
-        GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
+        GenerateSinglePowhegInput(outputdir, events, gen, proc, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
 
 
 if __name__ == '__main__':

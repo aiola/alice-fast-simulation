@@ -2,11 +2,14 @@
 
 #include <iostream>
 
+#include <Rtypes.h>
 #include <TSystem.h>
 #include <TInterpreter.h>
 #include <TROOT.h>
+#include <TString.h>
 
-#include "AliLog.h"
+#include <PythiaProcesses.h>
+#include <AliLog.h>
 
 #include "OnTheFlySimulationGenerator.h"
 
@@ -90,24 +93,18 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       proc = kPyBeautyPWHG;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
-    else if (procStr == "charm_jets") {
+    if (procStr == "dijet_lo") {
       proc = kPyJetsPWHG;
-      specialPart = OnTheFlySimulationGenerator::kccbar;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
-    else if (procStr == "beauty_jets") {
-      proc = kPyJetsPWHG;
-      specialPart = OnTheFlySimulationGenerator::kbbbar;
-    }
-/*
     else if (procStr == "charm_lo") {
-      proc = kPyJetsPWHG;
-      specialPart = OnTheFlySimulationGenerator::kccbar;
+      proc = kPyCharmPWHG;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
     else if (procStr == "beauty_lo") {
-      proc = kPyJetsPWHG;
-      specialPart = OnTheFlySimulationGenerator::kbbbar;
+      proc = kPyBeautyPWHG;
+      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
-*/
     else {
       AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
       return;
@@ -136,14 +133,6 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     else if (procStr == "mb") {
       proc = kPyMbNonDiffr;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "charm_jets") {
-      proc = kPyJets;
-      specialPart = OnTheFlySimulationGenerator::kccbar;
-    }
-    else if (procStr == "beauty_jets") {
-      proc = kPyJets;
-      specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
     else if (procStr == "charm_tot") {
       proc = kPyMbDefault;
@@ -196,14 +185,6 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     else if (procStr == "mb") {
       proc = kPyMbNonDiffr;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "charm_jets") {
-      proc = kPyJets;
-      specialPart = OnTheFlySimulationGenerator::kccbar;
-    }
-    else if (procStr == "beauty_jets") {
-      proc = kPyJets;
-      specialPart = OnTheFlySimulationGenerator::kbbbar;
     }
     else if (procStr == "charm_tot") {
       proc = kPyMbDefault;

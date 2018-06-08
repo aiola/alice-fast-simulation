@@ -8,12 +8,9 @@ import shutil
 import subprocess
 import argparse
 import random
-import sys
-import yaml
-import GeneratePowhegInput
 import glob
 import math
-
+import yaml
 
 class PowhegResult:
 
@@ -21,7 +18,6 @@ class PowhegResult:
         self.lhe_file = lhe_file
         self.log_file = log_file
         self.events_generated = events_generated
-
 
 def GetNumberOfPowhegEvents(lhefile):
     if os.path.isfile(lhefile):
@@ -31,7 +27,6 @@ def GetNumberOfPowhegEvents(lhefile):
     else:
         nevents = 0
     return nevents
-
 
 def AddEmptyEvent(lhefile):
     backup_filename = lhefile + ".bak"
@@ -67,7 +62,6 @@ def AddEmptyEvent(lhefile):
         for line in lhe:
             fout.write(line + "\n")
 
-
 def RunPowhegParallel(powhegExe, powheg_stage, job_number):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
@@ -92,7 +86,6 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
 
     return result
 
-
 def RunPowhegSingle(powhegExe, yamlConfigFile):
     print("Running POWHEG simulation!")
 
@@ -115,7 +108,6 @@ def RunPowhegSingle(powhegExe, yamlConfigFile):
     result = PowhegResult(nevents, lhefile, "powheg.log")
 
     return result
-
 
 def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, minpthard, maxpthard, debug_level):
     print("------------------ job starts ---------------------")
@@ -193,19 +185,14 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
         runPOWHEG = False
 
     if runPOWHEG:
-        if proc == "charm_jets" or proc == "beauty_jets":
-            powheg_proc = "dijet"
-        else:
-            powheg_proc = proc
-
-        if powheg_proc == "dijet":
+        if proc == "dijet":
             powhegExe = "pwhg_main_dijet"
-        elif powheg_proc == "charm":
+        elif proc == "charm":
             powhegExe = "pwhg_main_hvq"
-        elif powheg_proc == "beauty":
+        elif proc == "beauty":
             powhegExe = "pwhg_main_hvq"
         else:
-            print("Process '{}' not recognized!".format(powheg_proc))
+            print("Process '{}' not recognized!".format(proc))
             exit(1)
 
         if powheg_stage > 0 and powheg_stage <= 4:
@@ -284,7 +271,6 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
     print("------------------ job ends ----------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run fast simulation.')
