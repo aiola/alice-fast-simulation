@@ -81,27 +81,15 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
 
     // Select the PYTHIA process
     // Trigger on HF particle if required
-    if (procStr == "dijet") {
+    if (procStr == "dijet" || procStr == "dijet_lo") {
       proc = kPyJetsPWHG;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
-    else if (procStr == "charm") {
+    else if (procStr == "charm" || procStr == "charm_lo") {
       proc = kPyCharmPWHG;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
-    else if (procStr == "beauty") {
-      proc = kPyBeautyPWHG;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    if (procStr == "dijet_lo") {
-      proc = kPyJetsPWHG;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "charm_lo") {
-      proc = kPyCharmPWHG;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "beauty_lo") {
+    else if (procStr == "beauty" || procStr == "beauty_lo") {
       proc = kPyBeautyPWHG;
       specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
     }
@@ -109,7 +97,6 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
       return;
     }
-
   }
   else if (partonEvent_str == "pythia6") {
     partonEvent = OnTheFlySimulationGenerator::kPythia6;
@@ -283,11 +270,10 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   sim->SetEnergyBeam2(ebeam2);
   sim->SetPtHardRange(minPtHard, maxPtHard);
   sim->SetExtendedEventInfo(extended_event_info);
-  if (always_d_mesons) sim->EnableDMesonJets(kTRUE);
-  if (procStr == "dijet" || procStr == "mb") {
+  if (procStr == "dijet" || procStr == "mb" || procStr == "soft") {
     sim->EnableJetTree();
   }
-  else if (procStr.Contains("charm") || procStr.Contains("beauty")) {
+  if (always_d_mesons || procStr.Contains("charm") || procStr.Contains("beauty")) {
     sim->EnableDMesonJets();
   }
   if (beamType == "pPb") {

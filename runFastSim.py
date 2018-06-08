@@ -185,11 +185,11 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
         runPOWHEG = False
 
     if runPOWHEG:
-        if proc == "dijet":
+        if proc == "dijet" or proc == "dijet_lo":
             powhegExe = "pwhg_main_dijet"
-        elif proc == "charm":
+        elif proc == "charm" or proc == "charm_lo":
             powhegExe = "pwhg_main_hvq"
-        elif proc == "beauty":
+        elif proc == "beauty" or proc == "beauty_lo":
             powhegExe = "pwhg_main_hvq"
         else:
             print("Process '{}' not recognized!".format(proc))
