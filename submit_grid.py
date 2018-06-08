@@ -23,7 +23,6 @@ import random
 import GeneratePowhegInput
 import glob
 
-
 def AlienDelete(fileName):
     if fileName.find("alien://") == -1:
         fname = fileName
@@ -476,14 +475,17 @@ def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, PowhegStage
     config = yaml.load(f)
     f.close()
 
-    AliPhysicsVersion = GetAliPhysicsVersion(config["aliphysics"])
+    AliPhysicsVersion = GetAliPhysicsVersion(config["grid_config"]["aliphysics"])
     Events = config["numevents"]
     Jobs = config["numbjobs"]
     Gen = config["gen"]
     Proc = config["proc"]
-    PtHardList = config["pthard"]
-    TTL = config["ttl"]
-    MaxFilesPerJob = config["max_files_per_job"]
+    if "pthard" in config:
+        PtHardList = config["pthard"]
+    else:
+        PtHardList = False
+    TTL = config["grid_config"]["ttl"]
+    MaxFilesPerJob = config["grid_config"]["max_files_per_job"]
 
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()

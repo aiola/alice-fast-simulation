@@ -12,7 +12,6 @@ def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
         fname = "powheg_Stage_{}.input".format(powheg_stage)
     return fname
 
-
 def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
@@ -118,8 +117,12 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     beamType = config["beam_type"]
     ebeam1 = config["ebeam1"]
     ebeam2 = config["ebeam2"]
-    nPDFset = config["nPDFset"]
-    nPDFerrSet = config["nPDFerrSet"]
+    if beamType != "pp":
+        nPDFset = config["nPDFset"]
+        nPDFerrSet = config["nPDFerrSet"]
+    else: # not used but set them to some default value for backward compatibility
+        nPDFset = 3
+        nPDFerrSet = 1
 
     powheg_proc = proc
     sep = powheg_proc.find('_')
@@ -131,8 +134,8 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
         bornonly = False
 
     # Optional parameters
-    if "qmass" in config:
-        qmass = config["qmass"]
+    if "qmass" in config["powheg_config"]:
+        qmass = config["powheg_config"]["qmass"]
     else:
         qmass = None
 
@@ -142,33 +145,33 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
         elif powheg_proc == "beauty":
             qmass = 4.75
 
-    if "facscfact" in config:
-        facscfact = config["facscfact"]
+    if "facscfact" in config["powheg_config"]:
+        facscfact = config["powheg_config"]["facscfact"]
     else:
         facscfact = None
 
-    if "renscfact" in config:
-        renscfact = config["renscfact"]
+    if "renscfact" in config["powheg_config"]:
+        renscfact = config["powheg_config"]["renscfact"]
     else:
         renscfact = None
 
-    if "storemintupb" in config:
-        storemintupb = config["storemintupb"]
+    if "storemintupb" in config["powheg_config"]:
+        storemintupb = config["powheg_config"]["storemintupb"]
     else:
         storemintupb = 0
 
-    if "bornktmin" in config:
-        bornktmin = config["bornktmin"]
+    if "bornktmin" in config["powheg_config"]:
+        bornktmin = config["powheg_config"]["bornktmin"]
     else:
         bornktmin = 10
 
-    if "bornktmin" in config:
-        bornktmin = config["bornktmin"]
+    if "bornktmin" in config["powheg_config"]:
+        bornktmin = config["powheg_config"]["bornktmin"]
     else:
         bornktmin = 10
 
-    if "bornsuppfact" in config:
-        bornsuppfact = config["bornsuppfact"]
+    if "bornsuppfact" in config["powheg_config"]:
+        bornsuppfact = config["powheg_config"]["bornsuppfact"]
     else:
         bornsuppfact = 0
 

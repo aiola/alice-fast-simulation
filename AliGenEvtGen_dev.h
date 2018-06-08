@@ -11,8 +11,8 @@
 //  Origin: Giuseppe.Bruno@ba.infn.it  &  Fiorella.Fionda@ba.infn.it     //
 ///////////////////////////////////////////////////////////////////////////
 
-#include "AliGenerator.h"
-#include "AliDecayerEvtGen.h"
+#include <AliGenerator.h>
+#include <AliDecayerEvtGen.h>
 
 class TParticle;
 

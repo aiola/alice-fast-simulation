@@ -137,8 +137,6 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
     beamType = config["beam_type"]
     ebeam1 = config["ebeam1"]
     ebeam2 = config["ebeam2"]
-    nPDFset = config["nPDFset"]
-    nPDFerrSet = config["nPDFerrSet"]
     if "add_d_mesons" in config:
         always_d_mesons = config["add_d_mesons"]
     else:
