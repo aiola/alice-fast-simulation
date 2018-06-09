@@ -28,6 +28,22 @@ def GetNumberOfPowhegEvents(lhefile):
         nevents = 0
     return nevents
 
+class HerwigResult:
+
+    def __init__(self, events_generated, hep_file, log_file):
+        self.hep_file = hep_file
+        self.log_file = log_file
+        self.events_generated = events_generated
+
+def GetNumberOfHerwigEvents(hepfile):
+    if os.path.isfile(hepfile):
+        proc = subprocess.Popen(["grep", "-c", "E ", hepfile], stdout=subprocess.PIPE)
+        output = proc.stdout.read()
+        nevents = int(output)
+    else:
+        nevents = 0
+    return nevents
+
 def AddEmptyEvent(lhefile):
     backup_filename = lhefile + ".bak"
     os.rename(lhefile, backup_filename)
@@ -86,7 +102,7 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
 
     return result
 
-def RunPowhegSingle(powhegExe, yamlConfigFile):
+def RunPowhegSingle(powhegExe):
     print("Running POWHEG simulation!")
 
     with open("powheg.input", "a") as myfile:
@@ -109,7 +125,107 @@ def RunPowhegSingle(powhegExe, yamlConfigFile):
 
     return result
 
-def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, minpthard, maxpthard, debug_level):
+def Powheg(LHEfile, proc, powheg_stage, job_number):
+    if LHEfile:
+        nevents = GetNumberOfPowhegEvents(LHEfile)
+        if nevents > 0:
+            print("Using previously generated POWHEG events from file {}, where I found {} events!".format(LHEfile, nevents))
+            powheg_result = PowhegResult(nevents, LHEfile, "")
+        else:
+            print("No events found in file {}!".format(LHEfile))
+            exit(1)
+    else:
+        if proc == "dijet" or proc == "dijet_lo":
+            powhegExe = "pwhg_main_dijet"
+        elif proc == "charm" or proc == "charm_lo":
+            powhegExe = "pwhg_main_hvq"
+        elif proc == "beauty" or proc == "beauty_lo":
+            powhegExe = "pwhg_main_hvq"
+        else:
+            print("Process '{}' not recognized!".format(proc))
+            exit(1)
+
+        try:
+            powhegPath = subprocess.check_output(["which", powhegExe]).rstrip()
+        except subprocess.CalledProcessError:
+            print("Powheg executable '{}' not found!".format(powhegExe))
+            exit(1)
+
+        print("Powheg found in '{}'".format(powhegPath))
+
+        if powheg_stage > 0 and powheg_stage <= 4:
+            powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number)
+        else:
+            powheg_result = RunPowhegSingle(powhegExe)
+
+        if not os.path.isfile(powheg_result.lhe_file) or powheg_result.events_generated <= 0:
+            if powheg_stage > 0 and powheg_stage <= 3:
+                print("POWHEG stage {} completed. Exiting.".format(powheg_stage))
+                exit(0)
+            else:
+                print("POWHEG at stage {} did not produce any event!!!".format(powheg_stage))
+                if os.path.isfile(powheg_result.log_file):
+                    print("Check log file below.")
+                    with open(powheg_result.log_file, "r") as myfile:
+                        powheg_log = myfile.read().splitlines()
+                    for line in powheg_log:
+                        print(line)
+                else:
+                    print("No log file was found.")
+                exit(1)
+        else:
+            print("POWHEG generated {} events, stored in {}".format(powheg_result.events_generated, powheg_result.lhe_file))
+
+    AddEmptyEvent(LHEfile)
+    
+    return powheg_result
+
+def RunHerwig(nevents):
+    print("Running HERWIG simulation!")
+
+    rnd = random.randint(0, 1073741824)  # 2^30
+
+    with open("herwig.in", 'r') as fin:
+        herwig_input = fin.read().splitlines()
+    for line in herwig_input:
+        print(line)
+
+    print("Running HERWIG...")
+    with open("herwig_stdout.log", "w") as myfile:
+        subprocess.call(["Herwig", "read", "herwig.in"], stdout=myfile, stderr=myfile)
+        subprocess.call(["Herwig", "run", "herwig.run", "-s", str(rnd), "-N", str(nevents)], stdout=myfile, stderr=myfile)
+
+    hepfile = "events.hepmc"
+    nevents_generated = GetNumberOfHerwigEvents(hepfile)
+
+    result = HerwigResult(nevents_generated, hepfile, "herwig_stdout.log")
+
+    return result
+
+def Herwig(HEPfile, nevents):
+    if HEPfile:
+        nevents_generated = GetNumberOfHerwigEvents(HEPfile)
+        if nevents_generated > 0:
+            print("Using previously generated HERWIG events from file {}, where I found {} events!".format(HEPfile, nevents_generated))
+            herwig_result = HerwigResult(nevents_generated, HEPfile, "")
+        else:
+            print("No events found in file {}!".format(HEPfile))
+            exit(1)
+    else:
+
+        try:
+            herwigPath = subprocess.check_output(["which", "Herwig"]).rstrip()
+        except subprocess.CalledProcessError:
+            print("Herwig executable '{}' not found!".format("Herwig"))
+            exit(1)
+
+        print("Herwig found in '{}'".format(herwigPath))
+
+        herwig_result = RunHerwig(nevents)
+    
+    return herwig_result
+
+def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_events, minpthard, maxpthard, debug_level):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -162,81 +278,40 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
 
     print("Running {0} MC production on: {1}".format(proc, " ".join(platform.uname())))
 
-    if "powheg" in gen:
-        if powheg_stage <= 0:
-            if os.path.isfile("pwgevents.lhe") or os.path.isfile("powheg.log"):
-                print("Before running POWHEG again you must delete or move the following files: pwgevents.lhe, powheg.log")
-                exit(1)
+    LHEfile = ""
+    HEPfile = ""
 
-        if LHEfile:
-            runPOWHEG = False
-            nevents = GetNumberOfPowhegEvents(LHEfile)
-            if nevents > 0:
-                print("Using previously generated POWHEG events from file {}, where I found {} events!".format(LHEfile, nevents))
-                powheg_result = PowhegResult(nevents, LHEfile, "")
-            else:
-                print("No events found in file {}!".format(LHEfile))
-                exit(1)
+    if "powheg" in gen: 
+        powheg_result = Powheg(input_events, proc, powheg_stage, job_number)
+        LHEfile = powheg_result.lhe_file
+        if powheg_buffer > 0:
+            max_events = int(math.floor(powheg_result.events_generated / (1.0 + powheg_buffer) + 0.5))
         else:
-            runPOWHEG = True
-    else:
-        runPOWHEG = False
-
-    if runPOWHEG:
-        if proc == "dijet" or proc == "dijet_lo":
-            powhegExe = "pwhg_main_dijet"
-        elif proc == "charm" or proc == "charm_lo":
-            powhegExe = "pwhg_main_hvq"
-        elif proc == "beauty" or proc == "beauty_lo":
-            powhegExe = "pwhg_main_hvq"
-        else:
-            print("Process '{}' not recognized!".format(proc))
+            max_events = powheg_result.events_generated
+        if max_events == 0:
+            print("Error no events generated by POWHEG!")
             exit(1)
-
-        if powheg_stage > 0 and powheg_stage <= 4:
-            powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number)
-        else:
-            powheg_result = RunPowhegSingle(powhegExe, yamlConfigFile)
-
-        if not os.path.isfile(powheg_result.lhe_file) or powheg_result.events_generated <= 0:
-            if powheg_stage > 0 and powheg_stage <= 3:
-                print("POWHEG stage {} completed. Exiting.".format(powheg_stage))
-                exit(0)
-            else:
-                print("POWHEG at stage {} did not produce any event!!!".format(powheg_stage))
-                if os.path.isfile(powheg_result.log_file):
-                    print("Check log file below.")
-                    with open(powheg_result.log_file, "r") as myfile:
-                        powheg_log = myfile.read().splitlines()
-                    for line in powheg_log:
-                        print(line)
-                else:
-                    print("No log file was found.")
-                exit(1)
-        else:
-            print("POWHEG generated {} events, stored in {}".format(powheg_result.events_generated, powheg_result.lhe_file))
-
-        if batch_job == "grid" or batch_job == "lbnl3":
-            LHEfile = powheg_result.lhe_file
-        else:
-            LHEfile = "pwgevents_{0}.lhe".format(fname)
-            os.rename("powheg.input", "{0}.input".format(fname))
-            print("POWHEG configuration backed up in {0}.input".format(fname))
-            os.rename(powheg_result.lhe_file, LHEfile)
-            print("POWHEG events backed up in {0}".format(LHEfile))
-            os.rename("powheg.log", "{0}.log".format(fname))
-            print("POWHEG log backed up in {0}.log".format(fname))
-            # cleaning the working directory and archiving POWHEG files
-            subprocess.call(["./clean_powheg.sh", "{0}.tar".format(fname)])
+        if events > max_events:
+            print("Reducing the number of requested events to match the event found in the LHE file (with a {}% buffer to avoid PYTHIA6 crash): {}".format(powheg_buffer * 100, max_events))
+            events = max_events
+    
+    if "herwig" in gen: 
+        herwig_result = Herwig(input_events, events)
+        HEPfile = herwig_result.hep_file
+        max_events = herwig_result.events_generated
+        if max_events == 0:
+            print("Error no events generated by HERWIG!")
+            exit(1)
+        if events > max_events:
+            print("Reducing the number of requested events to match the event found in the HEP file: {}".format(max_events))
+            events = max_events
 
     rnd = random.randint(0, 1073741824)  # 2^30
-    print("Setting PYTHIA seed to {0}".format(rnd))
+    print("Setting seed to {0}".format(rnd))
 
-    if batch_job != "lbnl3":
-        print("Compiling analysis code...")
-        subprocess.call(["make"])
+    print("Compiling analysis code...")
+    subprocess.call(["make"])
 
-    print("Running PYTHIA simulation...")
     if batch_job == "lbnl3":
         work_dir = "output/{}".format(fname)
         os.makedirs(work_dir)
@@ -247,16 +322,12 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, LHEfile, m
         for hdr_file in glob.glob(r'./*.h'): shutil.copy(hdr_file, work_dir)
         for pcm_file in glob.glob(r'./*.pcm'): shutil.copy(pcm_file, work_dir)
         if "powheg" in gen: LHEfile = "../../{}".format(LHEfile)
+        if "herwig" in gen: HEPfile = "../../{}".format(HEPfile)
         os.chdir(work_dir)
 
-    if "powheg" in gen:
-        AddEmptyEvent(LHEfile)
-        max_events = int(math.ceil(powheg_result.events_generated / (1.0 + powheg_buffer)))
-        if events > max_events:
-            print("Reducing the number of requested events to match the event found in the LHE file (with a {}% buffer to avoid PYTHIA6 crash): {}".format(powheg_buffer * 100, max_events))
-            events = max_events
+    print("Running simulation...")
     with open("sim_{0}.log".format(fname), "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", {7}, {8}, {9}, {10}, {11}, {12}, {13})".format(fname, events, proc, gen, rnd, LHEfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")
@@ -276,7 +347,7 @@ if __name__ == '__main__':
                         default="default.yaml", help='YAML configuration file')
     parser.add_argument('--numevents', metavar='NEVT',
                         default=50000, type=int)
-    parser.add_argument('--lhe', metavar='LHE',
+    parser.add_argument('--input-events', metavar='file.lhe',
                         default='')
     parser.add_argument('--minpthard', metavar="MINPTHARD",
                         default=-1, type=float)
@@ -292,4 +363,4 @@ if __name__ == '__main__':
                         default=0, type=int)
     args = parser.parse_args()
 
-    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.lhe, args.minpthard, args.maxpthard, args.d)
+    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.input_events, args.minpthard, args.maxpthard, args.d)

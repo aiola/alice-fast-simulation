@@ -21,6 +21,7 @@ import UserConfiguration
 import datetime
 import random
 import GeneratePowhegInput
+import GenerateHerwigInput
 import glob
 
 def AlienDelete(fileName):
@@ -124,7 +125,7 @@ def GenerateComments():
     return comments
 
 
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard, PowhegStage):
+def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ExtraPackages, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard, PowhegStage):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -139,7 +140,7 @@ Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxp
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
-\"VO_ALICE@POWHEG::r3178-alice1-1\", \n\
+{ExtraPackages}\
 \"VO_ALICE@Python-modules::1.0-12\" \n\
 }}; \n\
 # JDL variables \n\
@@ -151,7 +152,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
+".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, ExtraPackages=ExtraPackages, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -308,45 +309,57 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     ExeFile = "runFastSim.py"
     JdlFile = "FastSim_{0}_{1}.jdl".format(Gen, Proc)
 
-    FilesToDelete = [JdlFile, "powheg.input"]
+    FilesToDelete = [JdlFile]
 
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                    "runJetSimulation.C", "start_simulation.C",
-                   "powheg_pythia8_conf.cmnd", "powheg.input",
-                   "Makefile", "GeneratePowhegInput.py",
+                   "powheg_pythia8_conf.cmnd",
+                   "Makefile", "HepMC.tar",
+                   "AliGenExtFile_dev.h", "AliGenExtFile_dev.cxx",
+                   "AliGenReaderHepMC_dev.h", "AliGenReaderHepMC_dev.cxx",
                    "AliGenEvtGen_dev.h", "AliGenEvtGen_dev.cxx",
                    "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
                    "AliPythia6_dev.h", "AliPythia6_dev.cxx",
                    "AliPythia8_dev.h", "AliPythia8_dev.cxx",
                    "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
-    if OldPowhegInit:
-        if PowhegStage == 0:
-            GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
-            FilesToCopy.extend(["{}/pwggrid.dat".format(OldPowhegInit), "{}/pwgubound.dat".format(OldPowhegInit)])
-        elif PowhegStage == 4:
-            GeneratePowhegInput.main(yamlFileName, "./", Events, 4)
-            os.rename(GeneratePowhegInput.GetParallelInputFileName(4), "powheg.input")
-            EssentialFilesToCopy = ["pwggrid-????.dat", "pwggridinfo-btl-xg?-????.dat", "pwgubound-????.dat"]
+    ExtraPackages = ""
+    if "powheg" in Gen:
+        if OldPowhegInit:
+            if PowhegStage == 0:
+                GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
+                FilesToCopy.extend(["{}/pwggrid.dat".format(OldPowhegInit), "{}/pwgubound.dat".format(OldPowhegInit)])
+            elif PowhegStage == 4:
+                GeneratePowhegInput.main(yamlFileName, "./", Events, 4)
+                os.rename(GeneratePowhegInput.GetParallelInputFileName(4), "powheg.input")
+                EssentialFilesToCopy = ["pwggrid-????.dat", "pwggridinfo-btl-xg?-????.dat", "pwgubound-????.dat"]
 
-            for fpattern in EssentialFilesToCopy:
-                for file in glob.glob("{}/{}".format(OldPowhegInit, fpattern)): FilesToCopy.append(file)
+                for fpattern in EssentialFilesToCopy:
+                    for file in glob.glob("{}/{}".format(OldPowhegInit, fpattern)): FilesToCopy.append(file)
 
-            seed_file_name = "pwgseeds.dat"
-            FilesToDelete.append(seed_file_name)
-            FilesToCopy.append(seed_file_name)
-            with open(seed_file_name, "w") as seed_file:
-                for iseed in range(0, Jobs + 1):
-                    seed_file.write(str(random.randint(0, 1073741824)))
-                    seed_file.write("\n")
+                seed_file_name = "pwgseeds.dat"
+                FilesToDelete.append(seed_file_name)
+                FilesToCopy.append(seed_file_name)
+                with open(seed_file_name, "w") as seed_file:
+                    for iseed in range(0, Jobs + 1):
+                        seed_file.write(str(random.randint(0, 1073741824)))
+                        seed_file.write("\n")
+            else:
+                print("Not implemented for POWHEG stage {}".format(PowhegStage))
+                exit(1)
         else:
-            print("Not implemented for POWHEG stage {}".format(PowhegStage))
-            exit(1)
-    else:
-        if PowhegStage != 0:
-            print("Not implemented for POWHEG stage {}".format(PowhegStage))
-            exit(1)
-        else:
-            GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
+            if PowhegStage != 0:
+                print("Not implemented for POWHEG stage {}".format(PowhegStage))
+                exit(1)
+            else:
+                GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
+        FilesToCopy.append("powheg.input")
+        FilesToDelete.append("powheg.input")
+        ExtraPackages += "\"VO_ALICE@POWHEG::r3178-alice1-1\", \n"
+    if "herwig" in Gen:
+        GenerateHerwigInput.main(yamlFileName, "./", Events)
+        FilesToCopy.append("herwig.in")
+        FilesToDelete.append("herwig.in")
+        ExtraPackages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\", \n"
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
@@ -368,7 +381,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
             LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
             JobsPtHard = Jobs[ptHardBin]
-        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard, PowhegStage)
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ExtraPackages, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard, PowhegStage)
 
         f = open(JdlFile, 'w')
         f.write(JdlContent)

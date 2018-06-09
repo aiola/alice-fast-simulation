@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
-import yaml
 import shutil
-import UserConfiguration
-import GeneratePowhegInput
 import os
 import glob
+import yaml
+import UserConfiguration
 
 def CopyFiles(TrainName, LocalPath):
     Dest = "./{}".format(TrainName)

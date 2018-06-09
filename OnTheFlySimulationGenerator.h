@@ -6,6 +6,7 @@
 
 #include "AliGenEvtGen_dev.h"
 #include "AliGenPythia_dev.h"
+#include "AliGenExtFile_dev.h"
 
 #include <TString.h>
 #include <PythiaProcesses.h>
@@ -24,7 +25,6 @@ public:
     kPowheg,
     kPythia6,
     kPythia8,
-    kHerwig6,
     kHerwig7,
     kEvtGen
   };
@@ -42,7 +42,7 @@ public:
 
   OnTheFlySimulationGenerator();
   OnTheFlySimulationGenerator(TString taskname);
-  OnTheFlySimulationGenerator(TString taskname, Int_t numevents, Process_t proc, ESpecialParticle_t specialPart, Bool_t forceHadDecay, Int_t seed, TString lhe);
+  OnTheFlySimulationGenerator(TString taskname, Int_t numevents, Process_t proc, ESpecialParticle_t specialPart, Bool_t forceHadDecay, Int_t seed, TString lhe, TString hep);
 
   void SetName(TString taskname)                          { fName            = taskname      ; }
   void SetNumberOfEvents(Int_t numevents)                 { fEvents          = numevents     ; }
@@ -50,6 +50,7 @@ public:
   void SetSpecialParticle(ESpecialParticle_t specialPart) { fSpecialParticle = specialPart   ; }
   void SetSeed(Int_t seed)                                { fSeed            = seed          ; }
   void SetLHEFile(TString lhe)                            { fLHEFile         = lhe           ; }
+  void SetHepMCFile(TString hep)                          { fHepMCFile       = hep           ; }
   void SetEnergyBeam1(Float_t e)                          { fEnergyBeam1     = e             ; }
   void SetEnergyBeam2(Float_t e)                          { fEnergyBeam2     = e             ; }
   void SetPythia6Tune(EPythiaTune_t tune)                 { fPythia6Tune      = tune         ; }
@@ -68,7 +69,7 @@ public:
 
   static AliGenPythia_dev* CreatePythia6Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax);
   static AliGenPythia_dev* CreatePythia8Gen(EBeamType_t beam, Float_t e_cms, EGenerator_t partonEvent, TString lhe, EPythiaTune_t tune, Process_t proc, ESpecialParticle_t specialPart, Double_t ptHardMin, Double_t ptHardMax);
-
+  static AliGenExtFile_dev* CreateHerwig7Gen(EBeamType_t beam, Float_t e_cms, TString hep, ESpecialParticle_t specialPart);
   static AliGenEvtGen_dev* CreateEvtGen(AliGenEvtGen_dev::DecayOff_t decayOff);
 
   static AliGenCocktail* CreateCocktailGen(EBeamType_t beam, Float_t e_cms);
@@ -83,6 +84,7 @@ public:
   ESpecialParticle_t GetSpecialParticle()    const { return fSpecialParticle; }
   Int_t              GetSeed()               const { return fSeed           ; }
   const TString&     GetLHEFile()            const { return fLHEFile        ; }
+  const TString&     GetHepMCFile()          const { return fHepMCFile      ; }
   Float_t            GetCMSEnergy()                { if (fCMSEnergy < 0) CalculateCMSEnergy(); return fCMSEnergy; }
   Float_t            GetEnergyBeam1()        const { return fEnergyBeam1    ; }
   Float_t            GetEnergyBeam2()        const { return fEnergyBeam2    ; }
@@ -105,6 +107,7 @@ protected:
   ESpecialParticle_t   fSpecialParticle  ;
   Int_t                fSeed             ;
   TString              fLHEFile          ;
+  TString              fHepMCFile        ;
   Float_t              fCMSEnergy        ; // in TeV
   EPythiaTune_t        fPythia6Tune      ;
   EPythiaTune_t        fPythia8Tune      ;

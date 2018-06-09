@@ -13,7 +13,7 @@
 
 #include "OnTheFlySimulationGenerator.h"
 
-void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
+void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString hep,
     TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
@@ -73,28 +73,38 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   if (partonEvent_str == "powheg") {
     partonEvent = OnTheFlySimulationGenerator::kPowheg;
 
-    // POWHEG selection needs an LHE file (POWHEG runs standalone before the execution of this program)
-    if (lhe.IsNull()) {
-      AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator! Aborting." << std::endl;
+    if (hadronization_str == "pythia6" || hadronization_str == "pythia8") {
+      // POWHEG selection needs an LHE file (POWHEG runs standalone before the execution of this program)
+      if (lhe.IsNull()) {
+        AliErrorGeneralStream("") << "Must provide an LHE file if POWHEG is selected as event generator! Aborting." << std::endl;
+        return;
+      }
+
+      // Select the PYTHIA process
+      // Trigger on HF particle if required
+      if (procStr == "dijet" || procStr == "dijet_lo") {
+        proc = kPyJetsPWHG;
+        specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+      }
+      else if (procStr == "charm" || procStr == "charm_lo") {
+        proc = kPyCharmPWHG;
+        specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+      }
+      else if (procStr == "beauty" || procStr == "beauty_lo") {
+        proc = kPyBeautyPWHG;
+        specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
+      }
+      else {
+        AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
+        return;
+      }
+    }
+    else if (hadronization_str == "herwig") {
+      AliErrorGeneralStream("") << "POWHEG+HERWIG not implemented (yet). Aborting." << std::endl;
       return;
     }
-
-    // Select the PYTHIA process
-    // Trigger on HF particle if required
-    if (procStr == "dijet" || procStr == "dijet_lo") {
-      proc = kPyJetsPWHG;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "charm" || procStr == "charm_lo") {
-      proc = kPyCharmPWHG;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
-    else if (procStr == "beauty" || procStr == "beauty_lo") {
-      proc = kPyBeautyPWHG;
-      specialPart = OnTheFlySimulationGenerator::kNoSpecialParticle;
-    }
     else {
-      AliErrorGeneralStream("") << "You choose '" << procStr.Data() << "'. Not clear what process you want to simulate. Aborting." << std::endl;
+      AliErrorGeneralStream("") << "Cannot couple POWHEG with '" << hadronization_str.Data() << "'. Aborting." << std::endl;
       return;
     }
   }
@@ -202,12 +212,15 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
       return;
     }
   }
+  else if (partonEvent_str == "herwig") {
+    partonEvent = OnTheFlySimulationGenerator::kHerwig7;
+  }
   else {
     AliErrorGeneralStream("") << "Parton event generator selection '" << partonEvent_str.Data() << "' is not valid. Aborting." << std::endl;
     return;
   }
 
-  // Hadronization must be either PYTHIA6 or PYTHIA8
+  // Hadronization must be PYTHIA6, PYTHIA8 or HERWIG
   if (hadronization_str == "pythia6") {
     hadronization = OnTheFlySimulationGenerator::kPythia6;
 
@@ -220,6 +233,20 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
     hadronization = OnTheFlySimulationGenerator::kPythia8;
 
     if (partonEvent != OnTheFlySimulationGenerator::kPythia8 && partonEvent != OnTheFlySimulationGenerator::kPowheg) {
+      AliErrorGeneralStream("") << "Hadronization '" << hadronization_str.Data() << "' not compatible with parton event from '" << partonEvent_str.Data() << "'. Aborting." << std::endl;
+      return;
+    }
+  }
+  else if (hadronization_str == "herwig") {
+    hadronization = OnTheFlySimulationGenerator::kHerwig7;
+
+    // HERWIG selection needs an LHE file (POWHEG runs standalone before the execution of this program)
+    if (hep.IsNull()) {
+      AliErrorGeneralStream("") << "Must provide an HepMC file if HERWIG is selected as event generator! Aborting." << std::endl;
+      return;
+    }
+
+    if (partonEvent != OnTheFlySimulationGenerator::kHerwig7 && partonEvent != OnTheFlySimulationGenerator::kPowheg) {
       AliErrorGeneralStream("") << "Hadronization '" << hadronization_str.Data() << "' not compatible with parton event from '" << partonEvent_str.Data() << "'. Aborting." << std::endl;
       return;
     }
@@ -248,13 +275,23 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   }
   else if (decayer_str == "evtgen") {
     decayer = OnTheFlySimulationGenerator::kEvtGen;
+
+    if (hadronization == OnTheFlySimulationGenerator::kHerwig7) {
+      AliErrorGeneralStream("") << "Decayer '" << decayer_str.Data() << "' not compatible with hadronization from '" << hadronization_str.Data() << "'. Aborting." << std::endl;
+      return;
+    }
+  }
+  else if (decayer_str == "herwig") {
+    decayer = OnTheFlySimulationGenerator::kHerwig7;
   }
   else {
     AliErrorGeneralStream("") << "Decayer generator selection '" << decayer_str.Data() << "' is not valid. Aborting." << std::endl;
     return;
   }
 
-  AliInfoGeneralStream("") << "Setting PYTHIA process to " << proc << " " << std::endl;
+  if (hadronization == OnTheFlySimulationGenerator::kPythia6 || hadronization == OnTheFlySimulationGenerator::kPythia8) {
+    AliInfoGeneralStream("") << "Setting PYTHIA process to " << proc << " " << std::endl;
+  }
 
   OnTheFlySimulationGenerator* sim = new OnTheFlySimulationGenerator(trainName);
   sim->EnableJetQA(kTRUE);
@@ -266,6 +303,7 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   sim->SetDecayer(decayer);
   sim->SetSeed(seed);
   sim->SetLHEFile(lhe);
+  sim->SetHepMCFile(hep);
   sim->SetEnergyBeam1(ebeam1);
   sim->SetEnergyBeam2(ebeam2);
   sim->SetPtHardRange(minPtHard, maxPtHard);

@@ -1,0 +1,13 @@
+name: HERWIG_CHARM_7TeV
+numevents: 1000
+numbjobs: 400
+gen: herwig
+proc: charm_lo
+beam_type: pp
+lhans: 11000
+ebeam1: 3500
+ebeam2: 3500
+grid_config:
+  ttl: 7200
+  max_files_per_job: 20
+  aliphysics: vAN-20180426-1

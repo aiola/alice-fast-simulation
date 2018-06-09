@@ -10,7 +10,7 @@
 #include <cstdio>
 #include <iostream>
 
-void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe,
+void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString hep,
     TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
@@ -55,8 +55,8 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
 
   gSystem->Load("AnalysisCode.so");
 
-  TString command = TString::Format(".x runJetSimulation.C+g(\"%s\", %d, \"%s\", \"%s\", %d, \"%s\", \"%s\", %f, %f, %d, %d, %f, %f, %d)",
-      name.Data(), pythiaEvents, procStr.Data(), gen.Data(), seed, lhe.Data(),
+  TString command = TString::Format(".x runJetSimulation.C+g(\"%s\", %d, \"%s\", \"%s\", %d, \"%s\", \"%s\", \"%s\", %f, %f, %d, %d, %f, %f, %d)",
+      name.Data(), pythiaEvents, procStr.Data(), gen.Data(), seed, lhe.Data(), hep.Data(),
       beamType.Data(), ebeam1, ebeam2, always_d_mesons, extended_event_info, minPtHard, maxPtHard, debug_level);
 
   gROOT->ProcessLine(command.Data());

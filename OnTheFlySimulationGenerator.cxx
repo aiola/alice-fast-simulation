@@ -30,6 +30,7 @@
 
 #include "AliPythia6_dev.h"
 #include "AliPythia8_dev.h"
+#include "AliGenReaderHepMC_dev.h"
 
 #include "OnTheFlySimulationGenerator.h"
 
@@ -42,6 +43,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fSpecialParticle(kNoSpecialParticle),
   fSeed(0.),
   fLHEFile(),
+  fHepMCFile(),
   fCMSEnergy(-1),
   fPythia6Tune(AliGenPythia_dev::kPerugia2011),
   fPythia8Tune(AliGenPythia_dev::kMonash2013),
@@ -71,6 +73,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fSpecialParticle(kNoSpecialParticle),
   fSeed(0.),
   fLHEFile(),
+  fHepMCFile(),
   fCMSEnergy(-1),
   fPythia6Tune(AliGenPythia_dev::kPerugia2011),
   fPythia8Tune(AliGenPythia_dev::kMonash2013),
@@ -87,12 +90,12 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fHadronization(kPythia6),
   fDecayer(kPythia6),
   fExtendedEventInfo(kFALSE),
-  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", "AliGenReaderHepMC_dev", "AliGenExtFile_dev"})
 {
 }
 
 //______________________________________________________________________________
-OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t numevents, Process_t proc, ESpecialParticle_t specialPart, Bool_t forceHadDecay, Int_t seed, TString lhe) :
+OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t numevents, Process_t proc, ESpecialParticle_t specialPart, Bool_t forceHadDecay, Int_t seed, TString lhe, TString hep) :
   fName(taskname),
   fAnalysisManager(0),
   fEvents(numevents),
@@ -100,6 +103,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fSpecialParticle(specialPart),
   fSeed(seed),
   fLHEFile(lhe),
+  fHepMCFile(hep),
   fCMSEnergy(-1),
   fPythia6Tune(AliGenPythia_dev::kPerugia2011),
   fPythia8Tune(AliGenPythia_dev::kMonash2013),
@@ -340,7 +344,7 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
 {
   AliGenerator* gen = nullptr;
 
-  AliGenPythia_dev* genHadronization = nullptr;
+  AliGenMC* genHadronization = nullptr;
 
   if (fHadronization == kPythia6) {
     genHadronization = CreatePythia6Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia6Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard);
@@ -353,6 +357,13 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
     genHadronization = CreatePythia8Gen(fBeamType, GetCMSEnergy(), fPartonEvent, fLHEFile, fPythia8Tune, fProcess, fSpecialParticle, fMinPtHard, fMaxPtHard);
     if (fDecayer != kPythia8 && fDecayer != kEvtGen) {
       AliErrorGeneralStream("OnTheFlySimulationGenerator") << "Decayer '" << fDecayer << "' not valid!!!" << std::endl;
+      return nullptr;
+    }
+  }
+  else if (fHadronization == kHerwig7) {
+    genHadronization = CreateHerwig7Gen(fBeamType, GetCMSEnergy(), fHepMCFile, fSpecialParticle);
+    if (fDecayer != kHerwig7) {
+      AliErrorGeneralStream("OnTheFlySimulationGenerator") << "When using Herwig 7 it is not allowed to attach an external decayer!!!" << std::endl;
       return nullptr;
     }
   }
@@ -369,7 +380,7 @@ AliGenerator* OnTheFlySimulationGenerator::CreateGenerator()
     if (fDecayer == kEvtGen) {
       // Assuming you want to use EvtGen to decay beauty
       std::set<int> B_hadrons = {511,521,531,5122,5132,5232,5332};
-      genHadronization->SetDecayOff(B_hadrons);
+      static_cast<AliGenPythia_dev*>(genHadronization)->SetDecayOff(B_hadrons);
       AliGenEvtGen_dev *gene = CreateEvtGen(AliGenEvtGen_dev::kBeautyPart);
       cocktail->AddGenerator(gene,"MC_evtGen", 1.);
     }
@@ -526,4 +537,25 @@ AliGenPythia_dev* OnTheFlySimulationGenerator::CreatePythia8Gen(EBeamType_t beam
 
   genP->Print();
   return genP;
+}
+
+AliGenExtFile_dev* OnTheFlySimulationGenerator::CreateHerwig7Gen(EBeamType_t beam, Float_t e_cms, TString hep, ESpecialParticle_t /*specialPart*/)
+{
+  AliGenExtFile_dev* gen = new AliGenExtFile_dev(-1);  // -1 read all particles
+  gen->SetFileName(hep.Data());
+  gen->SetReader(new AliGenReaderHepMC_dev());
+
+  //   Center of mass energy
+  gen->SetEnergyCMS(e_cms*1000); // in GeV
+
+  if (beam == kpp) {
+    gen->SetProjectile("p", 1, 1);
+    gen->SetTarget(    "p", 1, 1);
+  }
+  else if (beam == kpPb) {
+    gen->SetProjectile("p",208,82);
+    gen->SetTarget("p",1,1);
+  }
+
+  return gen;
 }
