@@ -11,6 +11,8 @@ import random
 import glob
 import math
 import yaml
+from time import sleep
+import lhapdf_utils
 
 class PowhegResult:
 
@@ -180,7 +182,7 @@ def Powheg(LHEfile, proc, powheg_stage, job_number):
     
     return powheg_result
 
-def RunHerwig(nevents):
+def RunHerwig(nevents, pdfid, forceload):
     print("Running HERWIG simulation!")
 
     rnd = random.randint(0, 1073741824)  # 2^30
@@ -190,19 +192,79 @@ def RunHerwig(nevents):
     for line in herwig_input:
         print(line)
 
-    print("Running HERWIG...")
-    with open("herwig_stdout.log", "w") as myfile:
-        subprocess.call(["Herwig", "read", "herwig.in"], stdout=myfile, stderr=myfile)
-        subprocess.call(["Herwig", "run", "herwig.run", "-s", str(rnd), "-N", str(nevents)], stdout=myfile, stderr=myfile)
+    if not "HERWIG_ROOT" in os.environ and "HERWIGPATH" in os.environ:
+        os.environ["HERWIG_ROOT"] = os.environ["HERWIGPATH"]
+
+    pdfname = lhapdf_utils.GetPDFName(pdfid, False)
+    if TestHerwig():
+        print("Running HERWIG...")
+        with open("herwig_stdout.log", "w") as myfile:
+            # Verify that PDF is installed
+            pdfsetlist = subprocess.check_output(["lhapdf", "list", "--installed"]).splitlines()
+            if pdfname in pdfsetlist:
+                print("PDF '{}' already installed.".format(pdfname))
+            else:
+                os.environ["LHAPDF_DATA_PATH"] = "./"
+                subprocess.call(["lhapdf", "--pdfdir=./", "install", pdfname], stdout=myfile, stderr=myfile)
+
+            subprocess.call(["Herwig", "read", "herwig.in"], stdout=myfile, stderr=myfile)
+            if os.path.isfile("herwig.run"):
+                subprocess.call(["Herwig", "run", "herwig.run", "-s", str(rnd), "-N", str(nevents)], stdout=myfile, stderr=myfile)
+            else:
+                print("Something went wrong in the HERWIG run configuration.")
+    elif forceload:
+        print("Herwig not found. Trying to force-load the environment...")
+        with open("herwig_stdout.log", "w") as myfile:
+            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
+            shell.stdin.write("alienv enter VO_ALICE@Herwig::v7.1.2-alice1-1\n")
+            shell.stdin.write("which Herwig\n")
+
+            #shell.stdin.write("env\n")
+
+            # Verify that PDF is installed
+            shell.stdin.write("lhapdf list --installed\n")
+            sleep(5)
+            myfile_read_mode = open("herwig_stdout.log", "r")
+            output = myfile_read_mode.read()
+            myfile_read_mode.close()
+            if pdfname in output:
+                print("PDF '{}' already installed.".format(pdfname))
+            else:
+                #shell.stdin.write("cp pdfsets.index ./\n")
+                shell.stdin.write("export LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH:./\n")
+                shell.stdin.write("export LHAPDF_PDFSETS_ROOT=./\n")
+                shell.stdin.write("lhapdf --pdfdir=./ install {}\n".format(pdfname))
+                shell.stdin.write("pwd\n")
+                shell.stdin.write("ls\n")
+
+            shell.stdin.write("Herwig read --repo=$HERWIG_ROOT/share/Herwig/HerwigDefaults.rpo herwig.in\n")
+            shell.stdin.write("ls\n")
+            shell.stdin.write("Herwig run herwig.run -s {} -N {}\n".format(rnd, nevents))
+            shell.communicate()
+    else:
+        print("HERWIG not found. Aborting...")
 
     hepfile = "events.hepmc"
-    nevents_generated = GetNumberOfHerwigEvents(hepfile)
+    if os.path.isfile(hepfile):
+        nevents_generated = GetNumberOfHerwigEvents(hepfile)
+    else:
+        print("Something went wrong in the HERWIG simulation.")
+        nevents_generated = 0
 
     result = HerwigResult(nevents_generated, hepfile, "herwig_stdout.log")
 
     return result
 
-def Herwig(HEPfile, nevents):
+def TestHerwig():
+    try:
+        herwigPath = subprocess.check_output(["which", "Herwig"]).rstrip()
+    except subprocess.CalledProcessError:
+        print("Herwig executable '{}' not found!".format("Herwig"))
+        return False
+    print("Herwig found in '{}'".format(herwigPath))
+    return True
+
+def Herwig(HEPfile, nevents, pdfid, herwig_force_load):
     if HEPfile:
         nevents_generated = GetNumberOfHerwigEvents(HEPfile)
         if nevents_generated > 0:
@@ -212,20 +274,11 @@ def Herwig(HEPfile, nevents):
             print("No events found in file {}!".format(HEPfile))
             exit(1)
     else:
-
-        try:
-            herwigPath = subprocess.check_output(["which", "Herwig"]).rstrip()
-        except subprocess.CalledProcessError:
-            print("Herwig executable '{}' not found!".format("Herwig"))
-            exit(1)
-
-        print("Herwig found in '{}'".format(herwigPath))
-
-        herwig_result = RunHerwig(nevents)
+        herwig_result = RunHerwig(nevents, pdfid, herwig_force_load)
     
     return herwig_result
 
-def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_events, minpthard, maxpthard, debug_level):
+def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_events, minpthard, maxpthard, debug_level, herwig_force_load):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -281,7 +334,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
     LHEfile = ""
     HEPfile = ""
 
-    if "powheg" in gen: 
+    if "powheg" in gen:
         powheg_result = Powheg(input_events, proc, powheg_stage, job_number)
         LHEfile = powheg_result.lhe_file
         if powheg_buffer > 0:
@@ -295,8 +348,8 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
             print("Reducing the number of requested events to match the event found in the LHE file (with a {}% buffer to avoid PYTHIA6 crash): {}".format(powheg_buffer * 100, max_events))
             events = max_events
     
-    if "herwig" in gen: 
-        herwig_result = Herwig(input_events, events)
+    if "herwig" in gen:
+        herwig_result = Herwig(input_events, events, config["lhans"], herwig_force_load)
         HEPfile = herwig_result.hep_file
         max_events = herwig_result.events_generated
         if max_events == 0:
@@ -361,6 +414,9 @@ if __name__ == '__main__':
                         default=0, type=int)
     parser.add_argument('-d', metavar='debug_level',
                         default=0, type=int)
+    parser.add_argument('--herwig-force-load', action='store_const',
+                        default=False, const=True,
+                        help='Force load Herwig if not found')
     args = parser.parse_args()
 
-    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.input_events, args.minpthard, args.maxpthard, args.d)
+    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.input_events, args.minpthard, args.maxpthard, args.d, args.herwig_force_load)

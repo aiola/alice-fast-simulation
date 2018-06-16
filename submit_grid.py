@@ -136,7 +136,7 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number #alien_counter# --powheg-stage {PowhegStage}\"; \n\
+Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number #alien_counter# --powheg-stage {PowhegStage} --herwig-force-load\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
 \"VO_ALICE@APISCONFIG::V1.1x\", \n\
@@ -313,6 +313,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
 
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                    "runJetSimulation.C", "start_simulation.C",
+                   "lhapdf_utils.py",
                    "powheg_pythia8_conf.cmnd",
                    "Makefile", "HepMC.tar",
                    "AliGenExtFile_dev.h", "AliGenExtFile_dev.cxx",
@@ -360,6 +361,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
         FilesToCopy.append("herwig.in")
         FilesToDelete.append("herwig.in")
         ExtraPackages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\", \n"
+        #ExtraPackages += "\"VO_ALICE@Herwig::v7.0.4-alice1-3\", \n"
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
