@@ -1,5 +1,5 @@
 name: HERWIG_CHARM_7TeV
-numevents: 1000
+numevents: 50000
 numbjobs: 400
 gen: herwig
 proc: charm_lo
