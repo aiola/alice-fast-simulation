@@ -2,7 +2,7 @@
 #include <TParticle.h>
 #include <TVirtualMC.h>
 
-#include <AliGenHepMCEventHeader.h>
+#include <AliGenPythiaEventHeader.h>
 #include <AliLog.h>
 #include <AliRun.h>
 #include <AliStack.h>
@@ -82,33 +82,24 @@ Int_t AliGenReaderHepMC_dev::NextEvent()
         THepMCParser::HeavyIonHeader_t heavyIonHeader;
         THepMCParser::PdfHeader_t pdfHeader;
         THepMCParser::ParseGenEvent2HeaderStructs(fGenEvent, heavyIonHeader, pdfHeader, true, true);
-        fGenEventHeader = new AliGenHepMCEventHeader(
-            heavyIonHeader.Ncoll_hard,
-            heavyIonHeader.Npart_proj,
-            heavyIonHeader.Npart_targ,
-            heavyIonHeader.Ncoll,
-            heavyIonHeader.spectator_neutrons,
-            heavyIonHeader.spectator_protons,
-            heavyIonHeader.N_Nwounded_collisions,
-            heavyIonHeader.Nwounded_N_collisions,
-            heavyIonHeader.Nwounded_Nwounded_collisions,
-            heavyIonHeader.impact_parameter,
-            heavyIonHeader.event_plane_angle,
-            heavyIonHeader.eccentricity,
-            heavyIonHeader.sigma_inel_NN,
-            pdfHeader.id1,
-            pdfHeader.id2,
-            pdfHeader.pdf_id1,
-            pdfHeader.pdf_id2,
-            pdfHeader.x1,
-            pdfHeader.x2,
-            pdfHeader.scalePDF,
-            pdfHeader.pdf1,
-            pdfHeader.pdf2);
+
+        // Here I am going to do a hack. I need an event header that can hold information such as cross section and pt hard
+        AliGenPythiaEventHeader* pythia_header = new AliGenPythiaEventHeader("HepMC");
+        fGenEventHeader = pythia_header;
         // propagate the event weight from HepMC to the event header
         HepMC::WeightContainer weights = fGenEvent->weights();
-        if (!weights.empty()) fGenEventHeader->SetEventWeight(weights.front());
-        AliDebug(1, Form("Parsed event %d with %d particles, weight = %e", fGenEvent->event_number(), fGenEvent->particles_size(), fGenEventHeader->EventWeight()));
+        if (!weights.empty()) pythia_header->SetEventWeight(weights.front());
+        HepMC::GenCrossSection* cross_section = fGenEvent->cross_section();
+        if (cross_section) {
+            pythia_header->SetXsection(cross_section->cross_section() / 1.0e9); // pb -> mb
+            AliDebugStream(2) << "Cross section is " << cross_section->cross_section() << " pb" << std::endl;
+        }
+        else {
+            AliDebugStream(2) << "Cross section object not valid." << std::endl;
+        }
+        pythia_header->SetPtHard(fGenEvent->event_scale()); // careful here: using the "event scale" instead of the pt hard
+        pythia_header->SetTrials(1);
+        AliDebugStream(1) << "Parsed event " << fGenEvent->event_number() << " with " << fGenEvent->particles_size() << " particles, weight = " << fGenEventHeader->EventWeight() << std::endl;
 
         // convert time from [mm/c] to [s]
         const Double_t conv = 0.0001 / 2.99792458e8;
