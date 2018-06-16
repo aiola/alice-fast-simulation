@@ -1,15 +1,8 @@
 #! /usr/bin/env python
 
-import os
 import argparse
 import yaml
-
-def GetPDFName(lhapdf_id):
-    if lhapdf_id == 11000:
-        return "CT10nlo.LHgrid"
-    else:
-        print("LHAPDF ID {} not known.".format(lhapdf_id))
-        exit(1)
+import lhapdf_utils
 
 def GetCMSEnergy(config_params):
     if config_params["beam_type"] != "pp":
@@ -42,7 +35,7 @@ def GenerateHerwigInput(config_params, outputdir, events):
             print("Process '{}' not implemented for HERWIG!".format(config_params["proc"]))
             exit(1)
         myfile.write("create ThePEG::LHAPDF /Herwig/Partons/PDFSet ThePEGLHAPDF.so\n")
-        myfile.write("set /Herwig/Partons/PDFSet:PDFName {}\n".format(GetPDFName(config_params["lhans"])))
+        myfile.write("set /Herwig/Partons/PDFSet:PDFName {}\n".format(lhapdf_utils.GetPDFName(config_params["lhans"])))
         myfile.write("set /Herwig/Partons/PDFSet:RemnantHandler /Herwig/Partons/HadronRemnants\n")
         myfile.write("set /Herwig/Particles/p+:PDF /Herwig/Partons/PDFSet\n")
         myfile.write("set /Herwig/Particles/pbar-:PDF /Herwig/Partons/PDFSet\n")
