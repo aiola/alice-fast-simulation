@@ -1,4 +1,4 @@
-name: HERWIG_CHARM_7TeV
+name: HERWIG_CHARM_LO_7TeV
 numevents: 50000
 numbjobs: 400
 gen: herwig

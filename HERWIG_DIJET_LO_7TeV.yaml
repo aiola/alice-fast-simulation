@@ -1,0 +1,14 @@
+name: HERWIG_DIJET_LO_7TeV
+numevents: 50000
+numbjobs: 400
+gen: herwig
+proc: dijet_lo
+beam_type: pp
+lhans: 11000
+ebeam1: 3500
+ebeam2: 3500
+add_d_mesons: yes
+grid_config:
+  ttl: 50000
+  max_files_per_job: 20
+  aliphysics: vAN-20180426-1
