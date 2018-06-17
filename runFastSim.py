@@ -178,7 +178,7 @@ def Powheg(LHEfile, proc, powheg_stage, job_number):
         else:
             print("POWHEG generated {} events, stored in {}".format(powheg_result.events_generated, powheg_result.lhe_file))
 
-    AddEmptyEvent(LHEfile)
+    AddEmptyEvent(powheg_result.lhe_file)
     
     return powheg_result
 
