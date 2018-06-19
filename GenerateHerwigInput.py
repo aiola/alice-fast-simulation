@@ -34,6 +34,10 @@ def GenerateHerwigInput(config_params, outputdir, events):
         else:
             print("Process '{}' not implemented for HERWIG!".format(config_params["proc"]))
             exit(1)
+        # See: https://arxiv.org/abs/0803.0883
+        # Chapter B.2
+        myfile.write("set JetKtCut:MinKT 0.0*GeV")
+        myfile.write("set QCDCuts:MHatMin 0.0*GeV")
         myfile.write("create ThePEG::LHAPDF /Herwig/Partons/PDFSet ThePEGLHAPDF.so\n")
         myfile.write("set /Herwig/Partons/PDFSet:PDFName {}\n".format(lhapdf_utils.GetPDFName(config_params["lhans"])))
         myfile.write("set /Herwig/Partons/PDFSet:RemnantHandler /Herwig/Partons/HadronRemnants\n")
