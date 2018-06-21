@@ -7,7 +7,8 @@ beam_type: pp
 lhans: 11000
 ebeam1: 3500
 ebeam2: 3500
+extended_event_info: yes
 grid_config:
   ttl: 50000
   max_files_per_job: 20
-  aliphysics: vAN-20180426-1
+  aliphysics: vAN-20180620-1
