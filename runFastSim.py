@@ -14,6 +14,13 @@ import yaml
 from time import sleep
 import lhapdf_utils
 
+def GetAliPhysicsVersion(ver):
+    if ver == "_last_":
+        now = datetime.datetime.now()
+        if now.hour < 18: now -= datetime.timedelta(days=1)
+        ver = now.strftime("vAN-%Y%m%d-1")
+    return ver
+
 class PowhegResult:
 
     def __init__(self, events_generated, lhe_file, log_file):
@@ -80,7 +87,7 @@ def AddEmptyEvent(lhefile):
         for line in lhe:
             fout.write(line + "\n")
 
-def RunPowhegParallel(powhegExe, powheg_stage, job_number):
+def RunPowhegParallel(powhegExe, powheg_stage, job_number, load_packages_separately):
     print("Running POWHEG simulation at stage {}!".format(powheg_stage))
 
     with open("powheg.input", 'r') as fin:
@@ -88,12 +95,21 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
     for line in powheg_input:
         print(line)
 
-    print("Running POWHEG...")
     LogFileName = "Powheg_Stage_{}_Job_{:04d}.log".format(powheg_stage, job_number)
-    with open(LogFileName, "w") as myfile:
-        print([powhegExe, str(job_number)])
-        p = subprocess.Popen([powhegExe], stdout=myfile, stderr=myfile, stdin=subprocess.PIPE)
-        p.communicate(input=str(job_number))
+    if load_packages_separately:
+        with open(LogFileName, "w") as myfile:
+            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
+            shell.stdin.write("alienv enter VO_ALICE@POWHEG::r3178-alice1-1\n")
+            shell.stdin.write("which {}\n".format(powhegExe))
+            shell.stdin.write("{}\n".format(powhegExe))
+            shell.stdin.write("{}\n".format(job_number))
+            shell.communicate()
+    else:
+        print("Running POWHEG...")
+        with open(LogFileName, "w") as myfile:
+            print([powhegExe, str(job_number)])
+            p = subprocess.Popen([powhegExe], stdout=myfile, stderr=myfile, stdin=subprocess.PIPE)
+            p.communicate(input=str(job_number))
 
     if powheg_stage == 4:
         lhefile = "pwgevents-{:04d}.lhe".format(job_number)
@@ -104,7 +120,7 @@ def RunPowhegParallel(powhegExe, powheg_stage, job_number):
 
     return result
 
-def RunPowhegSingle(powhegExe):
+def RunPowhegSingle(powhegExe, load_packages_separately):
     print("Running POWHEG simulation!")
 
     with open("powheg.input", "a") as myfile:
@@ -116,9 +132,17 @@ def RunPowhegSingle(powhegExe):
     for line in powheg_input:
         print(line)
 
-    print("Running POWHEG...")
-    with open("powheg.log", "w") as myfile:
-        subprocess.call([powhegExe], stdout=myfile, stderr=myfile)
+    if load_packages_separately:
+        with open("powheg.log", "w") as myfile:
+            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
+            shell.stdin.write("alienv enter VO_ALICE@POWHEG::r3178-alice1-1\n")
+            shell.stdin.write("which {}\n".format(powhegExe))
+            shell.stdin.write("{}\n".format(powhegExe))
+            shell.communicate()
+    else:
+        print("Running POWHEG...")
+        with open("powheg.log", "w") as myfile:
+            subprocess.call([powhegExe], stdout=myfile, stderr=myfile)
 
     lhefile = "pwgevents.lhe"
     nevents = GetNumberOfPowhegEvents(lhefile)
@@ -127,7 +151,7 @@ def RunPowhegSingle(powhegExe):
 
     return result
 
-def Powheg(LHEfile, proc, powheg_stage, job_number):
+def Powheg(LHEfile, proc, powheg_stage, job_number, load_packages_separately):
     if LHEfile:
         nevents = GetNumberOfPowhegEvents(LHEfile)
         if nevents > 0:
@@ -147,18 +171,19 @@ def Powheg(LHEfile, proc, powheg_stage, job_number):
             print("Process '{}' not recognized!".format(proc))
             exit(1)
 
-        try:
-            powhegPath = subprocess.check_output(["which", powhegExe]).rstrip()
-        except subprocess.CalledProcessError:
-            print("Powheg executable '{}' not found!".format(powhegExe))
-            exit(1)
+        if not load_packages_separately:
+            try:
+                powhegPath = subprocess.check_output(["which", powhegExe]).rstrip()
+            except subprocess.CalledProcessError:
+                print("Powheg executable '{}' not found!".format(powhegExe))
+                exit(1)
 
-        print("Powheg found in '{}'".format(powhegPath))
+            print("Powheg found in '{}'".format(powhegPath))
 
         if powheg_stage > 0 and powheg_stage <= 4:
-            powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number)
+            powheg_result = RunPowhegParallel(powhegExe, powheg_stage, job_number, load_packages_separately)
         else:
-            powheg_result = RunPowhegSingle(powhegExe)
+            powheg_result = RunPowhegSingle(powhegExe, load_packages_separately)
 
         if not os.path.isfile(powheg_result.lhe_file) or powheg_result.events_generated <= 0:
             if powheg_stage > 0 and powheg_stage <= 3:
@@ -182,7 +207,7 @@ def Powheg(LHEfile, proc, powheg_stage, job_number):
     
     return powheg_result
 
-def RunHerwig(nevents, pdfid, forceload):
+def RunHerwig(nevents, pdfid, load_packages_separately):
     print("Running HERWIG simulation!")
 
     rnd = random.randint(0, 1073741824)  # 2^30
@@ -196,30 +221,12 @@ def RunHerwig(nevents, pdfid, forceload):
         os.environ["HERWIG_ROOT"] = os.environ["HERWIGPATH"]
 
     pdfname = lhapdf_utils.GetPDFName(pdfid, False)
-    if TestHerwig():
-        print("Running HERWIG...")
-        with open("herwig_stdout.log", "w") as myfile:
-            # Verify that PDF is installed
-            pdfsetlist = subprocess.check_output(["lhapdf", "list", "--installed"]).splitlines()
-            if pdfname in pdfsetlist:
-                print("PDF '{}' already installed.".format(pdfname))
-            else:
-                os.environ["LHAPDF_DATA_PATH"] = "./"
-                subprocess.call(["lhapdf", "--pdfdir=./", "install", pdfname], stdout=myfile, stderr=myfile)
-
-            subprocess.call(["Herwig", "read", "herwig.in"], stdout=myfile, stderr=myfile)
-            if os.path.isfile("herwig.run"):
-                subprocess.call(["Herwig", "run", "herwig.run", "-s", str(rnd), "-N", str(nevents)], stdout=myfile, stderr=myfile)
-            else:
-                print("Something went wrong in the HERWIG run configuration.")
-    elif forceload:
-        print("Herwig not found. Trying to force-load the environment...")
+    if load_packages_separately:
+        print("Starting a separate shell to load the Herwig package...")
         with open("herwig_stdout.log", "w") as myfile:
             shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
             shell.stdin.write("alienv enter VO_ALICE@Herwig::v7.1.2-alice1-1\n")
             shell.stdin.write("which Herwig\n")
-
-            #shell.stdin.write("env\n")
 
             # Verify that PDF is installed
             shell.stdin.write("lhapdf list --installed\n")
@@ -230,7 +237,6 @@ def RunHerwig(nevents, pdfid, forceload):
             if pdfname in output:
                 print("PDF '{}' already installed.".format(pdfname))
             else:
-                #shell.stdin.write("cp pdfsets.index ./\n")
                 shell.stdin.write("export LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH:./\n")
                 shell.stdin.write("export LHAPDF_PDFSETS_ROOT=./\n")
                 shell.stdin.write("lhapdf --pdfdir=./ install {}\n".format(pdfname))
@@ -242,7 +248,24 @@ def RunHerwig(nevents, pdfid, forceload):
             shell.stdin.write("Herwig run herwig.run -s {} -N {}\n".format(rnd, nevents))
             shell.communicate()
     else:
-        print("HERWIG not found. Aborting...")
+        if TestHerwig():
+            print("Running HERWIG...")
+            with open("herwig_stdout.log", "w") as myfile:
+                # Verify that PDF is installed
+                pdfsetlist = subprocess.check_output(["lhapdf", "list", "--installed"]).splitlines()
+                if pdfname in pdfsetlist:
+                    print("PDF '{}' already installed.".format(pdfname))
+                else:
+                    os.environ["LHAPDF_DATA_PATH"] = "./"
+                    subprocess.call(["lhapdf", "--pdfdir=./", "install", pdfname], stdout=myfile, stderr=myfile)
+
+                subprocess.call(["Herwig", "read", "herwig.in"], stdout=myfile, stderr=myfile)
+                if os.path.isfile("herwig.run"):
+                    subprocess.call(["Herwig", "run", "herwig.run", "-s", str(rnd), "-N", str(nevents)], stdout=myfile, stderr=myfile)
+                else:
+                    print("Something went wrong in the HERWIG run configuration.")
+        else:
+            print("HERWIG not found. Aborting...")
 
     hepfile = "events.hepmc"
     if os.path.isfile(hepfile):
@@ -264,7 +287,7 @@ def TestHerwig():
     print("Herwig found in '{}'".format(herwigPath))
     return True
 
-def Herwig(HEPfile, nevents, pdfid, herwig_force_load):
+def Herwig(HEPfile, nevents, pdfid, load_packages_separately):
     if HEPfile:
         nevents_generated = GetNumberOfHerwigEvents(HEPfile)
         if nevents_generated > 0:
@@ -274,11 +297,11 @@ def Herwig(HEPfile, nevents, pdfid, herwig_force_load):
             print("No events found in file {}!".format(HEPfile))
             exit(1)
     else:
-        herwig_result = RunHerwig(nevents, pdfid, herwig_force_load)
+        herwig_result = RunHerwig(nevents, pdfid, load_packages_separately)
     
     return herwig_result
 
-def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_events, minpthard, maxpthard, debug_level, herwig_force_load):
+def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_events, minpthard, maxpthard, debug_level):
     print("------------------ job starts ---------------------")
     dateNow = datetime.datetime.now()
     print(dateNow)
@@ -287,19 +310,28 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
     dname = os.path.dirname(abspath)
     os.chdir(dname)
 
-    try:
-        rootPath = subprocess.check_output(["which", "root"]).rstrip()
-        alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
-    except subprocess.CalledProcessError:
-        print "Environment is not configured correctly!"
-        exit()
-
-    print "Root: " + rootPath
-    print "AliRoot: " + alirootPath
-
     f = open(args.config, 'r')
     config = yaml.load(f)
     f.close()
+
+    if "load_packages_separately" in config["grid_config"]:
+        load_packages_separately = config["grid_config"]["load_packages_separately"]
+    else:
+        load_packages_separately = False
+    
+    if batch_job != "grid":
+        load_packages_separately = False
+
+    if not load_packages_separately:
+        try:
+            rootPath = subprocess.check_output(["which", "root"]).rstrip()
+            alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
+        except subprocess.CalledProcessError:
+            print "Environment is not configured correctly!"
+            exit()
+
+        print "Root: " + rootPath
+        print "AliRoot: " + alirootPath
 
     gen = config["gen"]
     proc = config["proc"]
@@ -335,7 +367,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
     HEPfile = ""
 
     if "powheg" in gen:
-        powheg_result = Powheg(input_events, proc, powheg_stage, job_number)
+        powheg_result = Powheg(input_events, proc, powheg_stage, job_number, load_packages_separately)
         LHEfile = powheg_result.lhe_file
         if powheg_buffer > 0:
             max_events = int(math.floor(powheg_result.events_generated / (1.0 + powheg_buffer) + 0.5))
@@ -349,7 +381,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
             events = max_events
     
     if "herwig" in gen:
-        herwig_result = Herwig(input_events, events, config["lhans"], herwig_force_load)
+        herwig_result = Herwig(input_events, events, config["lhans"], load_packages_separately)
         HEPfile = herwig_result.hep_file
         max_events = herwig_result.events_generated
         if max_events == 0:
@@ -362,25 +394,35 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
     rnd = random.randint(0, 1073741824)  # 2^30
     print("Setting seed to {0}".format(rnd))
 
-    print("Compiling analysis code...")
-    subprocess.call(["make"])
+    if load_packages_separately:
+        AliPhysicsVersion = GetAliPhysicsVersion(config["grid_config"]["aliphysics"])
+        with open("sim_{0}.log".format(fname), "w") as myfile:
+            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
+            shell.stdin.write("alienv enter VO_ALICE@AliPhysics::{aliphysics}\n".format(AliPhysicsVersion))
+            shell.stdin.write("which aliroot\n")
+            shell.stdin.write("make\n")
+            shell.stdin.write("aliroot -b -l -q start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})\n".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level))
+            shell.communicate()
+    else:
+        print("Compiling analysis code...")
+        subprocess.call(["make"])
 
-    if batch_job == "lbnl3":
-        work_dir = "output/{}".format(fname)
-        os.makedirs(work_dir)
-        shutil.copy("AnalysisCode.so", work_dir)
-        if os.path.isfile("AnalysisCode.rootmap"): shutil.copy("AnalysisCode.rootmap", work_dir)
-        shutil.copy("runJetSimulation.C", work_dir)
-        shutil.copy("start_simulation.C", work_dir)
-        for hdr_file in glob.glob(r'./*.h'): shutil.copy(hdr_file, work_dir)
-        for pcm_file in glob.glob(r'./*.pcm'): shutil.copy(pcm_file, work_dir)
-        if "powheg" in gen: LHEfile = "../../{}".format(LHEfile)
-        if "herwig" in gen: HEPfile = "../../{}".format(HEPfile)
-        os.chdir(work_dir)
+        if batch_job == "lbnl3":
+            work_dir = "output/{}".format(fname)
+            os.makedirs(work_dir)
+            shutil.copy("AnalysisCode.so", work_dir)
+            if os.path.isfile("AnalysisCode.rootmap"): shutil.copy("AnalysisCode.rootmap", work_dir)
+            shutil.copy("runJetSimulation.C", work_dir)
+            shutil.copy("start_simulation.C", work_dir)
+            for hdr_file in glob.glob(r'./*.h'): shutil.copy(hdr_file, work_dir)
+            for pcm_file in glob.glob(r'./*.pcm'): shutil.copy(pcm_file, work_dir)
+            if "powheg" in gen: LHEfile = "../../{}".format(LHEfile)
+            if "herwig" in gen: HEPfile = "../../{}".format(HEPfile)
+            os.chdir(work_dir)
 
-    print("Running simulation...")
-    with open("sim_{0}.log".format(fname), "w") as myfile:
-        subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+        print("Running simulation...")
+        with open("sim_{0}.log".format(fname), "w") as myfile:
+            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")
@@ -414,9 +456,6 @@ if __name__ == '__main__':
                         default=0, type=int)
     parser.add_argument('-d', metavar='debug_level',
                         default=0, type=int)
-    parser.add_argument('--herwig-force-load', action='store_const',
-                        default=False, const=True,
-                        help='Force load Herwig if not found')
     args = parser.parse_args()
 
-    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.input_events, args.minpthard, args.maxpthard, args.d, args.herwig_force_load)
+    main(args.numevents, args.powheg_stage, args.job_number, args.config, args.batch_job, args.input_events, args.minpthard, args.maxpthard, args.d)

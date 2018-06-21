@@ -32,7 +32,6 @@ def AlienDelete(fileName):
 
     subprocessCall(["alien_rm", fname])
 
-
 def AlienDeleteDir(fileName):
     if fileName.find("alien://") == -1:
         fname = fileName
@@ -40,7 +39,6 @@ def AlienDeleteDir(fileName):
         fname = fileName[8:]
 
     subprocessCall(["alien_rmdir", fname])
-
 
 def AlienFileExists(fileName):
     if fileName.find("alien://") == -1:
@@ -55,7 +53,6 @@ def AlienFileExists(fileName):
         fileExists = False
 
     return fileExists
-
 
 def AlienCopy(source, destination, attempts=3, overwrite=False):
     i = 0
@@ -84,21 +81,17 @@ def AlienCopy(source, destination, attempts=3, overwrite=False):
 
     return fileExists
 
-
 def subprocessCall(cmd):
     print(cmd)
     return subprocess.call(cmd)
-
 
 def subprocessCheckCall(cmd):
     print(cmd)
     return subprocess.check_call(cmd)
 
-
 def subprocessCheckOutput(cmd):
     print(cmd)
     return subprocess.check_output(cmd, universal_newlines=True)
-
 
 def CopyFilesToTheGrid(Files, AlienDest, LocalDest, Offline, GridUpdate):
     if not Offline:
@@ -124,8 +117,7 @@ def GenerateComments():
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
 
-
-def GenerateProcessingJDL(Exe, AlienDest, AliPhysicsVersion, ExtraPackages, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard, PowhegStage):
+def GenerateProcessingJDL(Exe, AlienDest, Packages, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard, PowhegStage):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
 Executable = \"{dest}/{executable}\"; \n\
@@ -136,12 +128,9 @@ Output = {{ \n\
 \"log_archive.zip:stderr,stdout,*.log@disk=1\", \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
-Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number #alien_counter# --powheg-stage {PowhegStage} --herwig-force-load\"; \n\
+Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number #alien_counter# --powheg-stage {PowhegStage}\"; \n\
 Packages = {{ \n\
-\"VO_ALICE@AliPhysics::{aliphysics}\", \n\
-\"VO_ALICE@APISCONFIG::V1.1x\", \n\
-{ExtraPackages}\
-\"VO_ALICE@Python-modules::1.0-12\" \n\
+{Packages} \
 }}; \n\
 # JDL variables \n\
 JDLVariables = \n\
@@ -152,7 +141,7 @@ JDLVariables = \n\
 Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, aliphysics=AliPhysicsVersion, ExtraPackages=ExtraPackages, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
+".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, Packages=Packages, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
@@ -168,10 +157,8 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
 
     return jdlContent
 
-
 def GenerateXMLCollection(Path, XmlName):
     return subprocessCheckOutput(["alien_find", "-x", XmlName, Path, "*/AnalysisResults*.root"])
-
 
 def GenerateMergingJDL(Exe, Xml, AlienDest, TrainName, AliPhysicsVersion, ValidationScript, FilesToCopy, TTL, MaxFilesPerJob, SplitMethod):
     comments = GenerateComments()
@@ -219,7 +206,6 @@ ValidationCommand = \"{dest}/{validationScript}\"; \n\
 
     return jdlContent
 
-
 def DetermineMergingStage(AlienPath, TrainName):
     AlienOutput = "{0}/{1}".format(AlienPath, TrainName)
     if not AlienFileExists(AlienOutput):
@@ -237,7 +223,6 @@ def DetermineMergingStage(AlienPath, TrainName):
     MergingStages = [string for string in AlienOuputContent if re.match(regex, string)]
     MergingStage = len(MergingStages)
     return MergingStage
-
 
 def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, MaxFilesPerJob, Gen, Proc, PtHardList, MergingStage):
     if PtHardList and len(PtHardList) > 1:
@@ -301,8 +286,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage, LoadPackagesSeparately):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
     ValidationScript = "FastSim_validation.sh"
@@ -323,7 +307,12 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "AliPythia6_dev.h", "AliPythia6_dev.cxx",
                    "AliPythia8_dev.h", "AliPythia8_dev.cxx",
                    "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
-    ExtraPackages = ""
+    
+    Packages = "\"VO_ALICE@Python-modules::1.0-12\""
+    if not LoadPackagesSeparately:
+        Packages += ",\n\"VO_ALICE@AliPhysics::{aliphysics}\"".format(AliPhysicsVersion)
+        #Packages += ",\n\"\"VO_ALICE@APISCONFIG::V1.1x\""
+
     if "powheg" in Gen:
         if OldPowhegInit:
             if PowhegStage == 0:
@@ -355,13 +344,14 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                 GeneratePowhegInput.main(yamlFileName, "./", Events, 0)
         FilesToCopy.append("powheg.input")
         FilesToDelete.append("powheg.input")
-        ExtraPackages += "\"VO_ALICE@POWHEG::r3178-alice1-1\", \n"
+        if not LoadPackagesSeparately:
+            Packages += "\"VO_ALICE@POWHEG::r3178-alice1-1\", \n"
     if "herwig" in Gen:
         GenerateHerwigInput.main(yamlFileName, "./", Events)
         FilesToCopy.append("herwig.in")
         FilesToDelete.append("herwig.in")
-        ExtraPackages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\", \n"
-        #ExtraPackages += "\"VO_ALICE@Herwig::v7.0.4-alice1-3\", \n"
+        if not LoadPackagesSeparately:
+            Packages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\", \n"
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
@@ -383,7 +373,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             AlienDest = "{0}/{1}/{2}".format(AlienPath, TrainName, ptHardBin)
             LocalDest = "{0}/{1}/{2}".format(LocalPath, TrainName, ptHardBin)
             JobsPtHard = Jobs[ptHardBin]
-        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, AliPhysicsVersion, ExtraPackages, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard, PowhegStage)
+        JdlContent = GenerateProcessingJDL(ExeFile, AlienDest, Packages, ValidationScript, FilesToCopy, TTL, Events, JobsPtHard, yamlFileName, minPtHard, maxPtHard, PowhegStage)
 
         f = open(JdlFile, 'w')
         f.write(JdlContent)
@@ -398,7 +388,6 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     print "Done."
 
     subprocessCall(["ls", LocalDest])
-
 
 def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, MergingStage):
     if PtHardList and len(PtHardList) > 1:
@@ -462,7 +451,6 @@ def DownloadResults(TrainName, LocalPath, AlienPath, Gen, Proc, PtHardList, Merg
                     print("ERROR ***** Downloading of {0} failed!".format(FileOrig))
                     os.remove(FileDestTemp)
 
-
 def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName = "FastSim_{0}_{1}".format(Gen, Proc)
     AlienPathContent = subprocessCheckOutput(["alien_ls", AlienPath]).splitlines()
@@ -476,7 +464,6 @@ def GetLastTrainName(AlienPath, Gen, Proc):
     TrainName += "_{0}".format(max(Timestamps))
     return TrainName
 
-
 def GetAliPhysicsVersion(ver):
     if ver == "_last_":
         now = datetime.datetime.now()
@@ -484,12 +471,15 @@ def GetAliPhysicsVersion(ver):
         ver = now.strftime("vAN-%Y%m%d-1")
     return ver
 
-
 def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, PowhegStage, Merge, Download, MergingStage):
     f = open(yamlFileName, 'r')
     config = yaml.load(f)
     f.close()
 
+    if "load_packages_separately" in config["grid_config"]:
+        LoadPackagesSeparately = config["grid_config"]["load_packages_separately"]
+    else:
+        LoadPackagesSeparately = False
     AliPhysicsVersion = GetAliPhysicsVersion(config["grid_config"]["aliphysics"])
     Events = config["numevents"]
     Jobs = config["numbjobs"]
@@ -552,13 +542,9 @@ def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, PowhegStage
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage)
-
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage, LoadPackagesSeparately)
 
 if __name__ == '__main__':
-    # FinalMergeLocal.py executed as script
-
-
     parser = argparse.ArgumentParser(description='Local final merging for LEGO train results.')
     parser.add_argument('config', metavar='config.yaml',
                         default="default.yaml", help='YAML configuration file')

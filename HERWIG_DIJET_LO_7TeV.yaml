@@ -10,6 +10,7 @@ ebeam2: 3500
 add_d_mesons: yes
 extended_event_info: yes
 grid_config:
+  load_packages_separately: yes
   ttl: 50000
   max_files_per_job: 20
   aliphysics: vAN-20180620-1
