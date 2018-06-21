@@ -36,8 +36,8 @@ def GenerateHerwigInput(config_params, outputdir, events):
             exit(1)
         # See: https://arxiv.org/abs/0803.0883
         # Chapter B.2
-        myfile.write("set JetKtCut:MinKT 0.0*GeV")
-        myfile.write("set QCDCuts:MHatMin 0.0*GeV")
+        myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
+        myfile.write("set /Herwig/Cuts/Cuts:MHatMin 0.0*GeV\n")
         myfile.write("create ThePEG::LHAPDF /Herwig/Partons/PDFSet ThePEGLHAPDF.so\n")
         myfile.write("set /Herwig/Partons/PDFSet:PDFName {}\n".format(lhapdf_utils.GetPDFName(config_params["lhans"])))
         myfile.write("set /Herwig/Partons/PDFSet:RemnantHandler /Herwig/Partons/HadronRemnants\n")
