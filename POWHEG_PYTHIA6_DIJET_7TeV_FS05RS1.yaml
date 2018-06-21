@@ -1,4 +1,4 @@
-name: POWHEG_PYTHIA6_DIJET_BORNKT1_BORNSUPP60_7TeV
+name: POWHEG_PYTHIA6_DIJET_7TeV_FS05RS1
 numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
