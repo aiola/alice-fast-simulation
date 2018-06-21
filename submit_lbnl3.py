@@ -29,8 +29,8 @@ def CopyFilesToTheWorkingDir(Files, LocalDest):
 def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
     for ijob in range(0, Jobs):
         JobDir = LocalDest
-        JobOutput = "{}/JobOutput_Stage_{}_{:04d}.log".format(JobDir, PowhegStage, ijob)
-        RunJobFileName = "{}/RunJob_{}_{:04d}.sh".format(JobDir, PowhegStage, ijob)
+        JobOutput = "{}/JobOutput_{:04d}.log".format(JobDir, ijob)
+        RunJobFileName = "{}/RunJob_{:04d}.sh".format(JobDir, ijob)
         with open(RunJobFileName, "w") as myfile:
             myfile.write("#!/bin/bash\n")
             myfile.write(GenerateComments())
@@ -41,7 +41,7 @@ def SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName):
         output = subprocessCheckOutput(["qsub", RunJobFileName])
         print(output)
 
-def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, PowhegStage, XGridIter):
+def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, PowhegStage, XGridIter):
     input_file_name = GeneratePowhegInput.GetParallelInputFileName(PowhegStage, XGridIter)
     shutil.copy("{}/{}".format(LocalDest, input_file_name), "{}/powheg.input".format(LocalDest))
 
@@ -56,8 +56,12 @@ def SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, proc, P
 
     for ijob in range(1, njobs + 1):
         JobDir = LocalDest
-        JobOutput = "{}/JobOutput_Stage_{}_{:04d}.log".format(JobDir, PowhegStage, ijob)
-        RunJobFileName = "{}/RunJob_{}_{:04d}.sh".format(JobDir, PowhegStage, ijob)
+        if PowhegStage == 1:
+            JobOutput = "{}/JobOutput_Stage_{}_XGridIter_{}_{:04d}.log".format(JobDir, PowhegStage, XGridIter, ijob)
+            RunJobFileName = "{}/RunJob_Stage_{}_XGridIter_{}_{:04d}.sh".format(JobDir, PowhegStage, XGridIter, ijob)
+        else:
+            JobOutput = "{}/JobOutput_Stage_{}_{:04d}.log".format(JobDir, PowhegStage, ijob)
+            RunJobFileName = "{}/RunJob_{}_{:04d}.sh".format(JobDir, PowhegStage, ijob)
         with open(RunJobFileName, "w") as myfile:
             myfile.write("#!/bin/bash\n")
             myfile.write(GenerateComments())
@@ -126,7 +130,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, Events, Jobs, Gen, Proc, yamlFile
         os.chdir(temp)
 
     if "powheg" in Gen:
-        SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, Proc, PowhegStage, XGridIter)
+        SubmitParallelPowheg(LocalDest, ExeFile, Events, Jobs, yamlFileName, PowhegStage, XGridIter)
     else:
         SubmitParallel(LocalDest, ExeFile, Events, Jobs, yamlFileName)
 
