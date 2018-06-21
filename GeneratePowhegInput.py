@@ -38,6 +38,8 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
             myfile.write("ncall2 5000\n")
             myfile.write("itmx2 5\n")
         elif powheg_proc == "dijet":
+            myfile.write("facscfact {0}\n".format(facscfact))
+            myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("bornktmin {0}\n".format(bornktmin))
             myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
             myfile.write("ncall1 5000\n")
@@ -148,12 +150,12 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     if "facscfact" in config["powheg_config"]:
         facscfact = config["powheg_config"]["facscfact"]
     else:
-        facscfact = None
+        facscfact = 1
 
     if "renscfact" in config["powheg_config"]:
         renscfact = config["powheg_config"]["renscfact"]
     else:
-        renscfact = None
+        renscfact = 1
 
     if "storemintupb" in config["powheg_config"]:
         storemintupb = config["powheg_config"]["storemintupb"]
