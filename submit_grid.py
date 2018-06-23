@@ -310,7 +310,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     
     Packages = "\"VO_ALICE@Python-modules::1.0-12\""
     if not LoadPackagesSeparately:
-        Packages += ",\n\"VO_ALICE@AliPhysics::{aliphysics}\"".format(AliPhysicsVersion)
+        Packages += ",\n\"VO_ALICE@AliPhysics::{aliphysics}\"".format(aliphysics=AliPhysicsVersion)
         #Packages += ",\n\"\"VO_ALICE@APISCONFIG::V1.1x\""
 
     if "powheg" in Gen:
@@ -345,13 +345,13 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
         FilesToCopy.append("powheg.input")
         FilesToDelete.append("powheg.input")
         if not LoadPackagesSeparately:
-            Packages += "\"VO_ALICE@POWHEG::r3178-alice1-1\", \n"
+            Packages += ",\n\"VO_ALICE@POWHEG::r3178-alice1-1\""
     if "herwig" in Gen:
         GenerateHerwigInput.main(yamlFileName, "./", Events)
         FilesToCopy.append("herwig.in")
         FilesToDelete.append("herwig.in")
         if not LoadPackagesSeparately:
-            Packages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\", \n"
+            Packages += ",\n\"VO_ALICE@Herwig::v7.1.2-alice1-1\""
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
