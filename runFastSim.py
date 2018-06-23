@@ -14,6 +14,19 @@ import yaml
 from time import sleep
 import lhapdf_utils
 
+ALIENV = "/cvmfs/alice.cern.ch/bin/alienv"
+
+def alienv_exec(cmd, pkg):
+    if isinstance(cmd, list):
+        cmd = " ".join(cmd)
+    cmd = "'" + cmd + "'"
+    cmd = [ ALIENV, "setenv", pkg, "-c", cmd ]
+    print("ALIENV> executing %s" % " ".join(cmd))
+    cmd = " ".join(cmd)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    out, err = proc.communicate()
+    return proc.returncode, out, err
+
 def GetAliPhysicsVersion(ver):
     if ver == "_last_":
         now = datetime.datetime.now()
@@ -222,31 +235,60 @@ def RunHerwig(nevents, pdfid, load_packages_separately):
 
     pdfname = lhapdf_utils.GetPDFName(pdfid, False)
     if load_packages_separately:
+        herwig_pkg = "VO_ALICE@Herwig::v7.1.2-alice1-1"
         print("Starting a separate shell to load the Herwig package...")
         with open("herwig_stdout.log", "w") as myfile:
-            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
-            shell.stdin.write("alienv enter VO_ALICE@Herwig::v7.1.2-alice1-1\n")
-            shell.stdin.write("which Herwig\n")
+            cmd = "which Herwig"
+            rc,out,err = alienv_exec(cmd, herwig_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
 
             # Verify that PDF is installed
-            shell.stdin.write("lhapdf list --installed\n")
-            sleep(5)
-            myfile_read_mode = open("herwig_stdout.log", "r")
-            output = myfile_read_mode.read()
-            myfile_read_mode.close()
-            if pdfname in output:
+            cmd = "lhapdf list --installed"
+            rc,out,err = alienv_exec(cmd, herwig_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
+            if pdfname in out:
                 print("PDF '{}' already installed.".format(pdfname))
             else:
-                shell.stdin.write("export LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH:./\n")
-                shell.stdin.write("export LHAPDF_PDFSETS_ROOT=./\n")
-                shell.stdin.write("lhapdf --pdfdir=./ install {}\n".format(pdfname))
-                shell.stdin.write("pwd\n")
-                shell.stdin.write("ls\n")
-
-            shell.stdin.write("Herwig read --repo=$HERWIG_ROOT/share/Herwig/HerwigDefaults.rpo herwig.in\n")
-            shell.stdin.write("ls\n")
-            shell.stdin.write("Herwig run herwig.run -s {} -N {}\n".format(rnd, nevents))
-            shell.communicate()
+                if "LHAPDF_DATA_PATH" in os.environ:
+                    os.environ["LHAPDF_DATA_PATH"] = "./:" + os.environ["LHAPDF_DATA_PATH"]
+                else:
+                    os.environ["LHAPDF_DATA_PATH"] = "./"
+                os.environ["LHAPDF_PDFSETS_ROOT"] = "./"
+                cmd = "lhapdf --pdfdir=./ install {}".format(pdfname)
+                rc, out, err = alienv_exec(cmd, herwig_pkg)
+                myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+                myfile.write(out)
+                myfile.write("\n")
+                myfile.write(err)
+                myfile.write("\n")
+                out = subprocess.check_output(["ls"])
+                myfile.write(out)
+                myfile.write("\n")
+            cmd = "export LHAPDF_DATA_PATH=./:$LHAPDF_DATA_PATH;export LHAPDF_PDFSETS_ROOT=./;Herwig read --repo=$HERWIG_ROOT/share/Herwig/HerwigDefaults.rpo herwig.in"
+            rc, out, err = alienv_exec(cmd, herwig_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
+            out = subprocess.check_output(["ls"])
+            myfile.write(out)
+            myfile.write("\n")
+            cmd = "export LHAPDF_DATA_PATH=./:$LHAPDF_DATA_PATH;export LHAPDF_PDFSETS_ROOT=./;Herwig run herwig.run -s {} -N {}\n".format(rnd, nevents)
+            rc, out, err = alienv_exec(cmd, herwig_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
     else:
         if TestHerwig():
             print("Running HERWIG...")
@@ -327,11 +369,11 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
             rootPath = subprocess.check_output(["which", "root"]).rstrip()
             alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
         except subprocess.CalledProcessError:
-            print "Environment is not configured correctly!"
+            print("Environment is not configured correctly!")
             exit()
 
-        print "Root: " + rootPath
-        print "AliRoot: " + alirootPath
+        print("Root: " + rootPath)
+        print("AliRoot: " + alirootPath)
 
     gen = config["gen"]
     proc = config["proc"]
@@ -396,13 +438,34 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
 
     if load_packages_separately:
         AliPhysicsVersion = GetAliPhysicsVersion(config["grid_config"]["aliphysics"])
+        aliphysics_pkg = "VO_ALICE@AliPhysics::{aliphysics}".format(aliphysics=AliPhysicsVersion)
         with open("sim_{0}.log".format(fname), "w") as myfile:
-            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
-            shell.stdin.write("alienv enter VO_ALICE@AliPhysics::{aliphysics}\n".format(AliPhysicsVersion))
-            shell.stdin.write("which aliroot\n")
-            shell.stdin.write("make\n")
-            shell.stdin.write("aliroot -b -l -q start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})\n".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level))
-            shell.communicate()
+            cmd = "which aliroot"
+            rc,out,err = alienv_exec(cmd, aliphysics_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
+
+            cmd = "make"
+            rc,out,err = alienv_exec(cmd, aliphysics_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
+            
+            cmd = "aliroot -b -l -q start_simulation.C\
+\(\\\"{0}\\\", {1}, \\\"{2}\\\", \\\"{3}\\\", {4}, \\\"{5}\\\", \\\"{6}\\\", \\\"{7}\\\", \
+{8}, {9}, {10}, {11}, {12}, {13}, {14}\)".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, 
+            ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)
+            rc,out,err = alienv_exec(cmd, aliphysics_pkg)
+            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
+            myfile.write(out)
+            myfile.write("\n")
+            myfile.write(err)
+            myfile.write("\n")
     else:
         print("Compiling analysis code...")
         subprocess.call(["make"])

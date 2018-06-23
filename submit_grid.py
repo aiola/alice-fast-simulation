@@ -117,6 +117,13 @@ def GenerateComments():
 ".format(branch=branch.strip('\n'), hash=hash.strip('\n'))
     return comments
 
+# JDL variables \n\
+#JDLVariables = \n\
+#{{ \n\
+#\"Packages\", \n\
+#\"OutputDir\" \n\
+#}}; \n\
+
 def GenerateProcessingJDL(Exe, AlienDest, Packages, ValidationScript, FilesToCopy, TTL, Events, Jobs, yamlFileName, MinPtHard, MaxPtHard, PowhegStage):
     comments = GenerateComments()
     jdlContent = "{comments} \n\
@@ -129,30 +136,28 @@ Output = {{ \n\
 \"root_archive.zip:AnalysisResults*.root@disk=2\" \n\
 }}; \n\
 Arguments = \"{yamlFileName} --numevents {Events} --minpthard {MinPtHard} --maxpthard {MaxPtHard} --batch-job grid --job-number #alien_counter# --powheg-stage {PowhegStage}\"; \n\
-Packages = {{ \n\
+".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, Packages=Packages, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
+
+    if Packages:
+        jdlContent += "Packages = {{ \n\
 {Packages} \
-}}; \n\
-# JDL variables \n\
-JDLVariables = \n\
-{{ \n\
-\"Packages\", \n\
-\"OutputDir\" \n\
-}}; \n\
-Split=\"production:1-{Jobs}\"; \n\
+}};\n".format(Packages=Packages)
+
+    jdlContent += "Split=\"production:1-{Jobs}\"; \n\
 ValidationCommand = \"{dest}/{validationScript}\"; \n\
 # List of input files to be uploaded to workers \n\
-".format(yamlFileName=yamlFileName, MinPtHard=MinPtHard, MaxPtHard=MaxPtHard, comments=comments, executable=Exe, dest=AlienDest, Packages=Packages, validationScript=ValidationScript, Jobs=Jobs, Events=Events, TTL=TTL, PowhegStage=PowhegStage)
+".format(dest=AlienDest, validationScript=ValidationScript, Jobs=Jobs)
 
     if len(FilesToCopy) > 0:
         jdlContent += "InputFile = {"
         start = True
-        for file in FilesToCopy:
+        for myfile in FilesToCopy:
             if start:
                 jdlContent += "\n"
             else:
                 jdlContent += ", \n"
             start = False
-            jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=os.path.basename(file))
+            jdlContent += "\"LF:{dest}/{f}\"".format(dest=AlienDest, f=os.path.basename(myfile))
         jdlContent += "}; \n"
 
     return jdlContent
@@ -308,10 +313,10 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "AliPythia8_dev.h", "AliPythia8_dev.cxx",
                    "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
     
-    Packages = "\"VO_ALICE@Python-modules::1.0-12\""
+    Packages = "\"VO_ALICE@Python-modules::1.0-12\",\n"
     if not LoadPackagesSeparately:
-        Packages += ",\n\"VO_ALICE@AliPhysics::{aliphysics}\"".format(aliphysics=AliPhysicsVersion)
-        #Packages += ",\n\"\"VO_ALICE@APISCONFIG::V1.1x\""
+        Packages += "\"VO_ALICE@AliPhysics::{aliphysics}\",\n".format(aliphysics=AliPhysicsVersion)
+        #Packages += "\"\"VO_ALICE@APISCONFIG::V1.1x\",\n"
 
     if "powheg" in Gen:
         if OldPowhegInit:
@@ -345,13 +350,13 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
         FilesToCopy.append("powheg.input")
         FilesToDelete.append("powheg.input")
         if not LoadPackagesSeparately:
-            Packages += ",\n\"VO_ALICE@POWHEG::r3178-alice1-1\""
+            Packages += "\"VO_ALICE@POWHEG::r3178-alice1-1\",\n"
     if "herwig" in Gen:
         GenerateHerwigInput.main(yamlFileName, "./", Events)
         FilesToCopy.append("herwig.in")
         FilesToDelete.append("herwig.in")
         if not LoadPackagesSeparately:
-            Packages += ",\n\"VO_ALICE@Herwig::v7.1.2-alice1-1\""
+            Packages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\",\n"
 
     if PtHardList and len(PtHardList) > 1:
         minPtHardBin = 0
@@ -360,6 +365,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
         minPtHardBin = -1
         maxPtHardBin = 0
 
+    Packages = Packages[:-2] # remove trailing ",\n"
     for ptHardBin in range(minPtHardBin, maxPtHardBin):
         if ptHardBin < 0:
             AlienDest = "{0}/{1}".format(AlienPath, TrainName)
