@@ -440,32 +440,12 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
         AliPhysicsVersion = GetAliPhysicsVersion(config["grid_config"]["aliphysics"])
         aliphysics_pkg = "VO_ALICE@AliPhysics::{aliphysics}".format(aliphysics=AliPhysicsVersion)
         with open("sim_{0}.log".format(fname), "w") as myfile:
-            cmd = "which aliroot"
-            rc,out,err = alienv_exec(cmd, aliphysics_pkg)
-            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
-            myfile.write(out)
-            myfile.write("\n")
-            myfile.write(err)
-            myfile.write("\n")
-
-            cmd = "make"
-            rc,out,err = alienv_exec(cmd, aliphysics_pkg)
-            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
-            myfile.write(out)
-            myfile.write("\n")
-            myfile.write(err)
-            myfile.write("\n")
-            
-            cmd = "aliroot -b -l -q start_simulation.C\
-\(\\\"{0}\\\", {1}, \\\"{2}\\\", \\\"{3}\\\", {4}, \\\"{5}\\\", \\\"{6}\\\", \\\"{7}\\\", \
-{8}, {9}, {10}, {11}, {12}, {13}, {14}\)".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, 
-            ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)
-            rc,out,err = alienv_exec(cmd, aliphysics_pkg)
-            myfile.write("Command '{}' exited with return code '{}'\n".format(cmd, rc))
-            myfile.write(out)
-            myfile.write("\n")
-            myfile.write(err)
-            myfile.write("\n")
+            shell = subprocess.Popen(["bash"], stdin=subprocess.PIPE, stdout=myfile, stderr=myfile)
+            shell.stdin.write("alienv enter {}\n".format(aliphysics_pkg))
+            shell.stdin.write("which aliroot\n")
+            shell.stdin.write("make\n")
+            shell.stdin.write("aliroot -b -l -q 'start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})'\n".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level))
+            shell.communicate()
     else:
         print("Compiling analysis code...")
         subprocess.call(["make"])
