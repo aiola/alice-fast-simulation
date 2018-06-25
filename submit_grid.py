@@ -316,7 +316,6 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     Packages = "\"VO_ALICE@Python-modules::1.0-12\",\n"
     if not LoadPackagesSeparately:
         Packages += "\"VO_ALICE@AliPhysics::{aliphysics}\",\n".format(aliphysics=AliPhysicsVersion)
-        #Packages += "\"\"VO_ALICE@APISCONFIG::V1.1x\",\n"
 
     if "powheg" in Gen:
         if OldPowhegInit:
