@@ -1,4 +1,5 @@
 name: POWHEG_PYTHIA6_DIJET_7TeV_PDF21200
+numevents: 50000
 numbjobs: 400
 gen: powheg+pythia6
 proc: dijet
