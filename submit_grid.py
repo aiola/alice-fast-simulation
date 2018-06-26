@@ -179,7 +179,6 @@ Output = {{ \n\
 Arguments = \"{trainName} --xml wn.xml\"; \n\
 Packages = {{ \n\
 \"VO_ALICE@AliPhysics::{aliphysics}\", \n\
-\"VO_ALICE@APISCONFIG::V1.1x\", \n\
 \"VO_ALICE@Python-modules::1.0-12\" \n\
 }}; \n\
 # JDL variables \n\
