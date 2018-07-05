@@ -1,6 +1,6 @@
 name: POWHEG_PYTHIA6_DIJET_BORNKT1_BORNSUPP60_7TeV
-numevents: 50000
-numbjobs: 400
+numevents: 250000
+numbjobs: 750
 gen: powheg+pythia6
 proc: dijet
 lhans: 11000
@@ -13,6 +13,6 @@ powheg_config:
   bornktmin: 1
   bornsuppfact: 60
 grid_config:
-  ttl: 80000
+  ttl: 86400
   max_files_per_job: 20
-  aliphysics: vAN-20180426-1
+  aliphysics: vAN-20180620-1
