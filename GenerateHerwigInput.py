@@ -15,34 +15,44 @@ def GetCMSEnergy(config_params):
         return config_params["ebeam1"] * 2
 
 def GenerateHerwigInput(config_params, outputdir, events):
+    # See (minimum-bias): http://mcplots.cern.ch/dat/pp/jets/pt/atlas3-akt4/7000/herwig++/2.7.1/default.params
+    # See (jet): http://mcplots.cern.ch/dat/pp/jets/pt/cms2011-y0.5/7000/herwig++/2.7.1/default.params
+    # See also for minimum-bias: Chapter B.2 https://arxiv.org/abs/0803.0883
     fname = "{}/herwig.in".format(outputdir)
-
+    cms_energy = GetCMSEnergy(config_params)
     with open(fname, "w") as myfile:
-        myfile.write("read snippets/PPCollider.in\n")
-        myfile.write("set /Herwig/Generators/EventGenerator:EventHandler:LuminosityFunction:Energy {}.0\n".format(GetCMSEnergy(config_params)))
+        myfile.write("read PPCollider.in\n")
+        myfile.write("set /Herwig/Generators/EventGenerator:EventHandler:LuminosityFunction:Energy {}.0\n".format(cms_energy))
         if config_params["proc"] == "beauty_lo":
             myfile.write("set /Herwig/MatrixElements/MEHeavyQuark:QuarkType 5\n")
             myfile.write("insert /Herwig/MatrixElements/SubProcess:MatrixElements[0] /Herwig/MatrixElements/MEHeavyQuark\n")
+            myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
         elif config_params["proc"] == "charm_lo":
             myfile.write("set /Herwig/MatrixElements/MEHeavyQuark:QuarkType 4\n")
             myfile.write("insert /Herwig/MatrixElements/SubProcess:MatrixElements[0] /Herwig/MatrixElements/MEHeavyQuark\n")
+            myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
         elif config_params["proc"] == "dijet_lo":
             myfile.write("insert /Herwig/MatrixElements/SubProcess:MatrixElements[0] /Herwig/MatrixElements/MEQCD2to2\n")
+            myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 5.0*GeV\n")
         elif config_params["proc"] == "mb":
-            myfile.write("read snippets/MB.in\n")
-            myfile.write("read snippets/SoftTune.in\n")
+            myfile.write("read MB.in\n")
+            myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
         else:
             print("Process '{}' not implemented for HERWIG!".format(config_params["proc"]))
             exit(1)
-        # See: https://arxiv.org/abs/0803.0883
-        # Chapter B.2
-        myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
+        myfile.write("read SoftTune.in\n")
+        myfile.write("set /Herwig/Cuts/JetKtCut:MaxKT {}.0*GeV\n".format(cms_energy))
+        myfile.write("set /Herwig/Cuts/Cuts:MHatMax {}.0*GeV\n".format(cms_energy))
         myfile.write("set /Herwig/Cuts/Cuts:MHatMin 0.0*GeV\n")
+
+        # PDF selection
         myfile.write("create ThePEG::LHAPDF /Herwig/Partons/PDFSet ThePEGLHAPDF.so\n")
         myfile.write("set /Herwig/Partons/PDFSet:PDFName {}\n".format(lhapdf_utils.GetPDFName(config_params["lhans"])))
         myfile.write("set /Herwig/Partons/PDFSet:RemnantHandler /Herwig/Partons/HadronRemnants\n")
         myfile.write("set /Herwig/Particles/p+:PDF /Herwig/Partons/PDFSet\n")
-        myfile.write("set /Herwig/Particles/pbar-:PDF /Herwig/Partons/PDFSet\n")
+        #myfile.write("set /Herwig/Particles/p:PDF /Herwig/Partons/PDFSet\n")
+
+        #HEP MC writer
         myfile.write("read snippets/HepMC.in\n")
         myfile.write("set /Herwig/Analysis/HepMC:Filename events.hepmc\n")
         myfile.write("set /Herwig/Analysis/HepMC:PrintEvent {}\n".format(events))

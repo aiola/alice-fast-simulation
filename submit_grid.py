@@ -302,7 +302,6 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     FilesToCopy = [yamlFileName, "OnTheFlySimulationGenerator.cxx", "OnTheFlySimulationGenerator.h",
                    "runJetSimulation.C", "start_simulation.C",
                    "lhapdf_utils.py",
-                   "powheg_pythia8_conf.cmnd",
                    "Makefile", "HepMC.tar",
                    "AliGenExtFile_dev.h", "AliGenExtFile_dev.cxx",
                    "AliGenReaderHepMC_dev.h", "AliGenReaderHepMC_dev.cxx",
@@ -315,6 +314,9 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     Packages = "\"VO_ALICE@Python-modules::1.0-12\",\n"
     if not LoadPackagesSeparately:
         Packages += "\"VO_ALICE@AliPhysics::{aliphysics}\",\n".format(aliphysics=AliPhysicsVersion)
+
+    if "pythia8" in Gen:
+        FilesToCopy.append("powheg_pythia8_conf.cmnd")
 
     if "powheg" in Gen:
         if OldPowhegInit:
@@ -351,7 +353,7 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
             Packages += "\"VO_ALICE@POWHEG::r3178-alice1-1\",\n"
     if "herwig" in Gen:
         GenerateHerwigInput.main(yamlFileName, "./", Events)
-        FilesToCopy.append("herwig.in")
+        FilesToCopy.extend(["herwig.in", "MB.in", "PPCollider.in", "SoftModel.in", "SoftTune.in"])
         FilesToDelete.append("herwig.in")
         if not LoadPackagesSeparately:
             Packages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\",\n"
