@@ -33,7 +33,7 @@ class AliPythiaBase_dev : public AliRndm
     virtual void  GenerateEvent() = 0;
     virtual Int_t GetNumberOfParticles() = 0;
     virtual void  EditEventList(Int_t /*i*/);
-    virtual Int_t GetParticles(TClonesArray */*particles*/) = 0;
+    virtual Int_t GetParticles(TClonesArray*) = 0;
     virtual void  PrintStatistics() = 0;
     virtual void  EventListing() = 0;
 

@@ -48,6 +48,7 @@ class AliPythia8_dev : public AliTPythia8, public AliPythiaBase_dev
     virtual void    GetXandQ(Float_t& x1, Float_t& x2, Float_t& q);
     virtual Float_t GetXSection();
     virtual Float_t GetPtHard();
+    virtual Float_t GetEventWeight();
     virtual Int_t GetNMPI() { return fLastNMPI; }
     virtual Int_t GetNSuperpositions() { return fLastNSuperposition; }
 

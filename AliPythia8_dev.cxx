@@ -231,6 +231,13 @@ Float_t AliPythia8_dev::GetPtHard()
   return Pythia8()->info.pTHat();
 }
 
+Float_t AliPythia8_dev::GetEventWeight()
+{
+  // Get the event weight
+  Float_t w = Pythia8()->info.weight();
+  return  w;
+}
+
 void AliPythia8_dev::PrintParticles()
 {
   // Print list of particl properties
