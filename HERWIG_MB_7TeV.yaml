@@ -1,8 +1,8 @@
-name: HERWIG_DIJET_LO_7TeV
+name: HERWIG_MB_7TeV
 numevents: 50000
 numbjobs: 400
 gen: herwig
-proc: dijet_lo
+proc: mb
 beam_type: pp
 lhans: 11000
 ebeam1: 3500

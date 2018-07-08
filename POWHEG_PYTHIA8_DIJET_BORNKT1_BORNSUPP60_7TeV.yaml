@@ -15,4 +15,4 @@ powheg_config:
 grid_config:
   ttl: 80000
   max_files_per_job: 20
-  aliphysics: vAN-20180620-1
+  aliphysics: vAN-20180706-1
