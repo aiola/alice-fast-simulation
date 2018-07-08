@@ -13,7 +13,6 @@
 #include <AliGenReader.h>
 
 #if !(defined(__CINT__) || defined(__MAKECINT__) || defined(__CLING__))
-#include <THepMCParser.h>
 namespace HepMC {
 class IO_BaseClass;
 class GenEvent;

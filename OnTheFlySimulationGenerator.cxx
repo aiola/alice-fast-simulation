@@ -60,7 +60,12 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fHadronization(kPythia6),
   fDecayer(kPythia6),
   fExtendedEventInfo(kFALSE),
-  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", "AliAnalysisTaskDmesonJets::AnalysisEngine"})
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", 
+  "AliGenEvtGen_dev", "AliGenExtFile_dev", "AliGenReaderHepMC_dev", "THepMCParser_dev",
+  "AliMCGenHandler", 
+  "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", 
+  "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", 
+  "AliAnalysisTaskDmesonJets::AnalysisEngine"})
 {
 }
 
@@ -90,7 +95,12 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fHadronization(kPythia6),
   fDecayer(kPythia6),
   fExtendedEventInfo(kFALSE),
-  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", "AliGenReaderHepMC_dev", "AliGenExtFile_dev", "AliAnalysisTaskDmesonJets::AnalysisEngine"})
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", 
+  "AliGenEvtGen_dev", "AliGenExtFile_dev", "AliGenReaderHepMC_dev", "THepMCParser_dev",
+  "AliMCGenHandler", 
+  "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", 
+  "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", 
+  "AliAnalysisTaskDmesonJets::AnalysisEngine"})
 {
 }
 

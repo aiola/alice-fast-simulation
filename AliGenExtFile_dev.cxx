@@ -102,15 +102,13 @@ void AliGenExtFile_dev::Generate()
 {
     // Generate particles
 
-    Double_t polar[3] = { 0, 0, 0 };
-    //
-    Double_t origin[3] = { 0, 0, 0 };
+    Double_t polar[3] = {0., 0., 0.};
+    Double_t origin[3] = {0., 0., 0.};
     Double_t time = 0.;
-    Double_t p[4];
-    Float_t random[6];
-    Int_t i = 0, j, nt;
-    //
-    //
+    Double_t p[4] = {0., 0., 0., 0.};
+    Float_t random[6] = {0., 0., 0., 0., 0., 0.};
+    Int_t nt = 0;
+
     // Fast forward up to start Event
     for (Int_t ie = 0; ie < fStartEvent; ++ie) {
         Int_t nTracks = fReader->NextEvent();
@@ -119,7 +117,7 @@ void AliGenExtFile_dev::Generate()
             InhibitAllTasks();
             return;
         }
-        for (i = 0; i < nTracks; ++i) {
+        for (int i = 0; i < nTracks; ++i) {
             if (fReader->NextParticle() == nullptr) {
                 AliWarningStream() << "Error while skipping tracks. Stopping event generation.\n";
                 InhibitAllTasks();
@@ -244,7 +242,7 @@ void AliGenExtFile_dev::Generate()
         };
         SelectorLogic selector;
         selector.init();
-        for (i = 0; i < nTracks; i++) {
+        for (int i = 0; i < nTracks; i++) {
             TParticle* jparticle = fReader->NextParticle();
             selector.setData(i,
                 jparticle->GetFirstMother(),
@@ -254,18 +252,17 @@ void AliGenExtFile_dev::Generate()
         selector.reselectCuttedMothersAndRemapIDs();
         fReader->RewindEvent();
 
-        //
         // Stack filling loop
-        //
         fNprimaries = 0;
-        for (i = 0; i < nTracks; i++) {
+        AliDebugStream(3) << "Initial mother particle assignment" << std::endl;
+        for (int i = 0; i < nTracks; i++) {
             TParticle* jparticle = fReader->NextParticle();
             Bool_t selected = selector.isSelected(i);
             if (!selected) {
                 continue;
             }
             Int_t parent = selector.newId(jparticle->GetFirstMother());
-            //       printf("particle %d -> %d, with mother %d -> %d\n", i, selector.newId(i), jparticle->GetFirstMother(), parent);
+            AliDebugStream(3) << "particle " << i << " -> " << selector.newId(i) << ", with mother " << jparticle->GetFirstMother() << " -> " << parent << std::endl;
 
             p[0] = jparticle->Px();
             p[1] = jparticle->Py();
@@ -275,7 +272,7 @@ void AliGenExtFile_dev::Generate()
             Int_t idpart = jparticle->GetPdgCode();
             if (fVertexSmear == kPerTrack) {
                 Rndm(random, 6);
-                for (j = 0; j < 3; j++) {
+                for (int j = 0; j < 3; j++) {
                     origin[j] = fOrigin[j] + fOsigma[j] * TMath::Cos(2 * random[2 * j] * TMath::Pi()) * TMath::Sqrt(-2 * TMath::Log(random[2 * j + 1]));
                 }
                 Rndm(random, 2);
@@ -297,6 +294,90 @@ void AliGenExtFile_dev::Generate()
             fNprimaries++;
         } // track loop
 
+        fReader->RewindEvent();
+        AliDebugStream(3) << "Final mother particle assignment" << std::endl;
+        for (int iold = 0; iold < nTracks; iold++) {
+            TParticle* orig_particle = fReader->NextParticle();
+            if (!orig_particle) continue;
+            Bool_t selected = selector.isSelected(iold);
+            AliDebugStream(3) << "Particle " << iold << " with PDG = " << orig_particle->GetPdgCode() << std::endl;
+            AliDebugStream(3) << orig_particle->Px() << " " << orig_particle->Py() << " " << orig_particle->Pz() << " " << orig_particle->Energy() << std::endl;
+            if (!selected) {
+                AliDebugStream(3) << "Particle rejected." << std::endl;
+                continue;
+            }
+            Int_t inew = selector.newId(iold);
+            TParticle* particle = fStack->Particle(inew);
+            if (!particle) {
+                AliErrorStream() << "Could not find particle " << inew << std::endl;
+                continue;
+            }
+            else {
+                AliDebugStream(3) << "New index is " << inew << std::endl;
+            }
+            Int_t iparent1 = selector.newId(orig_particle->GetFirstMother());
+            Int_t iparent2 = selector.newId(orig_particle->GetSecondMother());
+            TParticle* parent1 = nullptr;
+            TParticle* parent2 = nullptr;
+
+            if (iparent1 >= 0) parent1 = fStack->Particle(iparent1);
+            if (iparent2 >= 0) parent2 = fStack->Particle(iparent2);
+
+            if (parent1 && !parent2) {
+                // Only the first mother exists, nothing to be done
+                AliDebugStream(3) << "Only first mother exists. Confirm parent 1 with index " << iparent1
+                << " and PDG = " << parent1->GetPdgCode() << std::endl;
+            }
+            else if (parent2 && !parent1) {
+                // Only the second mother exists
+                AliDebugStream(3) << "Only second mother exists. Using mother 2 with index " << iparent2
+                << " and PDG = " << parent2->GetPdgCode() << std::endl;
+                particle->SetFirstMother(iparent2);
+            }
+            else if (parent1 && parent2) {
+                // Both mothers exist. Select the mother with the larger PDG code
+                AliDebugStream(3) << "Both mothers exist"
+                << ". Mother 1 with index " << iparent1
+                << " and PDG = " << parent1->GetPdgCode()
+                << ". Mother 2 with index " << iparent2
+                << " and PDG = " << parent2->GetPdgCode()
+                << std::endl;
+                Bool_t confirmParent1 = kTRUE;
+                // The criterion is the following:
+                // if one of the mother is a beam particle, prefer the other mother;
+                // if one of the mother is a charm or beauty quark prefer it
+                // if one of the mother is a MC special code (81-100), prefer it
+                UInt_t abdPdg1 = TMath::Abs(parent1->GetPdgCode());
+                UInt_t abdPdg2 = TMath::Abs(parent2->GetPdgCode());
+                if (iparent1 <= 1 && iparent2 > 1) {
+                    AliDebugStream(3) << "Parent 1 is a beam particle." << std::endl;
+                    confirmParent1 = kFALSE;
+                }
+                else if (abdPdg2 == 5 && abdPdg1 != 5) {
+                    AliDebugStream(3) << "Parent 2 is a beauty quark." << std::endl;
+                    confirmParent1 = kFALSE;
+                }
+                else if (abdPdg2 == 4 && abdPdg1 != 4 && abdPdg1 != 5) {
+                    AliDebugStream(3) << "Parent 2 is a charm quark." << std::endl;
+                    confirmParent1 = kFALSE;
+                }
+                else if ((abdPdg2 >= 81 && abdPdg2 <= 100) && (abdPdg1 < 81 || abdPdg1 > 100)) {
+                    AliDebugStream(3) << "Parent 2 is a cluster." << std::endl;
+                    confirmParent1 = kFALSE;
+                }
+                if (!confirmParent1) {
+                    particle->SetFirstMother(iparent2);
+                    AliDebugStream(3) << "Using mother 2." << std::endl;
+                }
+                else {
+                    AliDebugStream(3) << "Confirming mother 1." << std::endl;
+                }
+            }
+            else {
+                AliDebugStream(3) << "No mother found." << std::endl;
+            }
+        }
+
         // Generated event header
         AliGenEventHeader* header = fReader->GetGenEventHeader();
         if (!header)
@@ -309,6 +390,8 @@ void AliGenExtFile_dev::Generate()
         break;
 
     } while (true); // event loop
+
+    
 
     SetHighWaterMark(nt);
     CdEventFile();

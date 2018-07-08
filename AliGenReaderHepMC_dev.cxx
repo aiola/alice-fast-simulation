@@ -11,6 +11,7 @@
 #include "HepMC/IO_BaseClass.h"
 #include "HepMC/IO_GenEvent.h"
 
+#include "THepMCParser_dev.h"
 #include "AliGenReaderHepMC_dev.h"
 
 ClassImp(AliGenReaderHepMC_dev)
@@ -77,11 +78,16 @@ Int_t AliGenReaderHepMC_dev::NextEvent()
     if (fGenEvent) delete fGenEvent;
     // Read the next event
     if ((fGenEvent = fEventsHandle->read_next_event())) {
-        THepMCParser::ParseGenEvent2TCloneArray(fGenEvent, fParticleArray, "GEV", "MM", false);
+        std::string err_mess = THepMCParser_dev::ParseGenEvent2TCloneArray(fGenEvent, fParticleArray, "GEV", "MM", false);
+        if (!err_mess.empty()) {
+            AliErrorStream() << "Unable to parse event: " << err_mess << std::endl <<
+            "Skipping to the next event." << std::endl;
+            return NextEvent();
+        }
         fParticleIterator->Reset();
-        THepMCParser::HeavyIonHeader_t heavyIonHeader;
-        THepMCParser::PdfHeader_t pdfHeader;
-        THepMCParser::ParseGenEvent2HeaderStructs(fGenEvent, heavyIonHeader, pdfHeader, true, true);
+        THepMCParser_dev::HeavyIonHeader_t heavyIonHeader;
+        THepMCParser_dev::PdfHeader_t pdfHeader;
+        THepMCParser_dev::ParseGenEvent2HeaderStructs(fGenEvent, heavyIonHeader, pdfHeader, true, true);
 
         // Here I am going to do a hack. I need an event header that can hold information such as cross section and pt hard
         AliGenPythiaEventHeader* pythia_header = new AliGenPythiaEventHeader("HepMC");

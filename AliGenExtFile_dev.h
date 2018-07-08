@@ -10,7 +10,6 @@
 #include <AliGenMC.h>
 
 class AliGenReader;
-
 class TTree;
 
 class AliGenExtFile_dev : public AliGenMC {
