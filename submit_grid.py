@@ -309,7 +309,8 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
                    "AliGenPythia_dev.h", "AliGenPythia_dev.cxx",
                    "AliPythia6_dev.h", "AliPythia6_dev.cxx",
                    "AliPythia8_dev.h", "AliPythia8_dev.cxx",
-                   "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx"]
+                   "AliPythiaBase_dev.h", "AliPythiaBase_dev.cxx",
+                   "THepMCParser_dev.h", "THepMCParser_dev.cxx"]
     
     Packages = "\"VO_ALICE@Python-modules::1.0-12\",\n"
     if not LoadPackagesSeparately:
