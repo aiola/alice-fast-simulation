@@ -23,29 +23,26 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
         myfile.write("parallelstage {}\n".format(powheg_stage))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("ncall1 2000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 5000\n")
             myfile.write("itmx2 5\n")
         elif powheg_proc == "charm":
             myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("ncall1 10000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 5000\n")
             myfile.write("itmx2 5\n")
         elif powheg_proc == "dijet":
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
-            myfile.write("bornktmin {0}\n".format(bornktmin))
-            myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
             myfile.write("ncall1 5000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 1000\n")
             myfile.write("itmx2 5\n")
+
+        myfile.write("facscfact {0}\n".format(facscfact))
+        myfile.write("renscfact {0}\n".format(renscfact))
+        myfile.write("bornktmin {0}\n".format(bornktmin))
+        myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
 
         if bornonly:
             myfile.write("bornonly 1\n")
@@ -71,27 +68,26 @@ def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, bornonly, qma
         myfile.write("numevts {0}\n".format(int(math.ceil(events * (1.0 + powheg_buffer)))))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("ncall1 10000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 100000\n")
             myfile.write("itmx2 5\n")
         elif powheg_proc == "charm":
             myfile.write("qmass {0}\n".format(qmass))
-            myfile.write("facscfact {0}\n".format(facscfact))
-            myfile.write("renscfact {0}\n".format(renscfact))
             myfile.write("ncall1 50000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 100000\n")
             myfile.write("itmx2 5\n")
         elif powheg_proc == "dijet":
-            myfile.write("bornktmin {0}\n".format(bornktmin))
-            myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
             myfile.write("ncall1 20000\n")
             myfile.write("itmx1 5\n")
             myfile.write("ncall2 20000\n")
             myfile.write("itmx2 5\n")
+
+        myfile.write("facscfact {0}\n".format(facscfact))
+        myfile.write("renscfact {0}\n".format(renscfact))
+        myfile.write("bornktmin {0}\n".format(bornktmin))
+        myfile.write("bornsuppfact {0}\n".format(bornsuppfact))
 
         if bornonly:
             myfile.write("bornonly 1\n")
@@ -165,12 +161,7 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     if "bornktmin" in config["powheg_config"]:
         bornktmin = config["powheg_config"]["bornktmin"]
     else:
-        bornktmin = 10
-
-    if "bornktmin" in config["powheg_config"]:
-        bornktmin = config["powheg_config"]["bornktmin"]
-    else:
-        bornktmin = 10
+        bornktmin = 0
 
     if "bornsuppfact" in config["powheg_config"]:
         bornsuppfact = config["powheg_config"]["bornsuppfact"]
