@@ -1,5 +1,5 @@
 name: POWHEG_PYTHIA6_DIJET_BORNKT1_BORNSUPP60_7TeV
-numevents: 100000
+numevents: 50000
 numbjobs: 1500
 gen: powheg+pythia6
 proc: dijet
