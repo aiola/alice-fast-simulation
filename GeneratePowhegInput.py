@@ -12,14 +12,14 @@ def GetParallelInputFileName(powheg_stage, x_grid_iter=1):
         fname = "powheg_Stage_{}.input".format(powheg_stage)
     return fname
 
-def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
+def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, jobs, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/{}".format(outputdir, GetParallelInputFileName(powheg_stage, x_grid_iter))
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
     with open(fname, "a") as myfile:
         myfile.write("numevts {0}\n".format(int(math.ceil(events * (1.0 + powheg_buffer)))))
         myfile.write("manyseeds 1\n")
-        myfile.write("maxseeds 500\n")
+        myfile.write("maxseeds {}}\n".format(jobs))
         myfile.write("parallelstage {}\n".format(powheg_stage))
         if powheg_proc == "beauty":
             myfile.write("qmass {0}\n".format(qmass))
@@ -60,7 +60,7 @@ def GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, ge
             myfile.write("AA1 208            ! (Atomic number of hadron 1)\n")
             myfile.write("AA2 1              ! (Atomic number of hadron 2)\n")
 
-def GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
+def GenerateSinglePowhegInput(outputdir, events, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet):
     fname = "{}/powheg.input".format(outputdir)
     shutil.copy("{}-powheg.input".format(powheg_proc), fname)
 
@@ -109,10 +109,10 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     config = yaml.load(f)
     f.close()
 
-    gen = config["gen"]
     proc = config["proc"]
     lhans = config["lhans"]
     beamType = config["beam_type"]
+    jobs = config["numjobs"]
     ebeam1 = config["ebeam1"]
     ebeam2 = config["ebeam2"]
     if beamType != "pp":
@@ -124,7 +124,8 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
 
     powheg_proc = proc
     sep = powheg_proc.find('_')
-    if sep >= 0: powheg_proc = powheg_proc[0:sep]
+    if sep >= 0:
+        powheg_proc = powheg_proc[0:sep]
 
     if proc.endswith("_lo"):
         bornonly = True
@@ -176,9 +177,9 @@ def main(yamlConfigFile, outputdir, events, powheg_stage, x_grid_iter=1):
     shutil.copy("{}-powheg.input".format(powheg_proc), "{}/powheg.input".format(outputdir))
 
     if powheg_stage > 0 and powheg_stage <= 4:
-        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, gen, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
+        GenerateParallelPowhegInput(outputdir, powheg_stage, x_grid_iter, events, jobs, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
     else:
-        GenerateSinglePowhegInput(outputdir, events, gen, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
+        GenerateSinglePowhegInput(outputdir, events, powheg_proc, bornonly, qmass, facscfact, renscfact, lhans, beamType, ebeam1, ebeam2, bornktmin, bornsuppfact, storemintupb, powheg_buffer, nPDFset, nPDFerrSet)
 
 
 if __name__ == '__main__':
