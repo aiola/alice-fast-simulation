@@ -1,6 +1,6 @@
 name: POWHEG_PYTHIA6_DIJET_7TeV_FS2RS1
-numevents: 250000
-numbjobs: 750
+numevents: 50000
+numbjobs: 1500
 gen: powheg+pythia6
 proc: dijet
 lhans: 11000
@@ -17,4 +17,4 @@ powheg_config:
 grid_config:
   ttl: 86400
   max_files_per_job: 20
-  aliphysics: vAN-20180620-1
+  aliphysics: vAN-20180706-1
