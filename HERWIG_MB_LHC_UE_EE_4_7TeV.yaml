@@ -1,0 +1,18 @@
+name: HERWIG_MB_LHC_UE_EE_4_7TeV
+numevents: 50000
+numbjobs: 400
+gen: herwig
+proc: mb
+beam_type: pp
+lhans: 11000
+ebeam1: 3500
+ebeam2: 3500
+add_d_mesons: yes
+extended_event_info: yes
+herwig_config:
+  tune: LHC-UE-EE-4.in
+grid_config:
+  load_packages_separately: yes
+  ttl: 50000
+  max_files_per_job: 20
+  aliphysics: vAN-20180706-1

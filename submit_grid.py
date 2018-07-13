@@ -290,7 +290,7 @@ def SubmitMergingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offlin
 
     subprocessCall(["ls", LocalDest])
 
-def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage, LoadPackagesSeparately):
+def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage, HerwigTune, LoadPackagesSeparately):
     print("Submitting processing jobs for train {0}".format(TrainName))
 
     ValidationScript = "FastSim_validation.sh"
@@ -355,6 +355,8 @@ def SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Off
     if "herwig" in Gen:
         GenerateHerwigInput.main(yamlFileName, "./", Events)
         FilesToCopy.extend(["herwig.in", "MB.in", "PPCollider.in", "SoftModel.in", "SoftTune.in"])
+        if HerwigTune:
+            FilesToCopy.append(HerwigTune)
         FilesToDelete.append("herwig.in")
         if not LoadPackagesSeparately:
             Packages += "\"VO_ALICE@Herwig::v7.1.2-alice1-1\",\n"
@@ -499,6 +501,11 @@ def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, PowhegStage
     TTL = config["grid_config"]["ttl"]
     MaxFilesPerJob = config["grid_config"]["max_files_per_job"]
 
+    if "herwig_config" in config and "tune" in config["herwig_config"]:
+        HerwigTune = config["herwig_config"]["tune"]
+    else:
+        HerwigTune = None
+
     try:
         rootPath = subprocess.check_output(["which", "root"]).rstrip()
         alirootPath = subprocess.check_output(["which", "aliroot"]).rstrip()
@@ -549,7 +556,7 @@ def main(UserConf, yamlFileName, Offline, GridUpdate, OldPowhegInit, PowhegStage
         unixTS = int(time.time())
         print("The timestamp for this job is {0}. You will need it to submit merging jobs and download you final results.".format(unixTS))
         TrainName = "FastSim_{0}_{1}_{2}".format(Gen, Proc, unixTS)
-        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage, LoadPackagesSeparately)
+        SubmitProcessingJobs(TrainName, LocalPath, AlienPath, AliPhysicsVersion, Offline, GridUpdate, TTL, Events, Jobs, Gen, Proc, yamlFileName, PtHardList, OldPowhegInit, PowhegStage, HerwigTune, LoadPackagesSeparately)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Local final merging for LEGO train results.')

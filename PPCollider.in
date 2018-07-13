@@ -33,5 +33,3 @@ read SoftModel.in
 # Make particles with c*tau > 10 mm stable:
 set /Herwig/Decays/DecayHandler:MaxLifeTime 10*mm
 set /Herwig/Decays/DecayHandler:LifeTimeOption Average
-
-set /Herwig/UnderlyingEvent/MPIHandler:IdenticalToUE 0

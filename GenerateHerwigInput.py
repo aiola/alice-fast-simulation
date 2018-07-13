@@ -27,23 +27,27 @@ def GenerateHerwigInput(config_params, outputdir, events):
             myfile.write("set /Herwig/MatrixElements/MEHeavyQuark:QuarkType 5\n")
             myfile.write("insert /Herwig/MatrixElements/SubProcess:MatrixElements[0] /Herwig/MatrixElements/MEHeavyQuark\n")
             myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
+            myfile.write("set /Herwig/UnderlyingEvent/MPIHandler:IdenticalToUE -1\n")
         elif config_params["proc"] == "charm_lo":
             myfile.write("set /Herwig/MatrixElements/MEHeavyQuark:QuarkType 4\n")
             myfile.write("insert /Herwig/MatrixElements/SubProcess:MatrixElements[0] /Herwig/MatrixElements/MEHeavyQuark\n")
             myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
+            myfile.write("set /Herwig/UnderlyingEvent/MPIHandler:IdenticalToUE -1\n")
         elif config_params["proc"] == "dijet_lo":
             myfile.write("insert /Herwig/MatrixElements/SubProcess:MatrixElements[0] /Herwig/MatrixElements/MEQCD2to2\n")
             myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 5.0*GeV\n")
+            myfile.write("set /Herwig/UnderlyingEvent/MPIHandler:IdenticalToUE -1\n")
         elif config_params["proc"] == "mb":
             myfile.write("read MB.in\n")
             myfile.write("set /Herwig/Cuts/JetKtCut:MinKT 0.0*GeV\n")
+            myfile.write("set /Herwig/UnderlyingEvent/MPIHandler:IdenticalToUE 0\n")
         else:
             print("Process '{}' not implemented for HERWIG!".format(config_params["proc"]))
             exit(1)
-        myfile.write("read SoftTune.in\n")
         myfile.write("set /Herwig/Cuts/JetKtCut:MaxKT {}.0*GeV\n".format(cms_energy))
         myfile.write("set /Herwig/Cuts/Cuts:MHatMax {}.0*GeV\n".format(cms_energy))
         myfile.write("set /Herwig/Cuts/Cuts:MHatMin 0.0*GeV\n")
+        myfile.write("read SoftTune.in\n")
 
         # PDF selection
         myfile.write("create ThePEG::LHAPDF /Herwig/Partons/PDFSet ThePEGLHAPDF.so\n")
@@ -51,6 +55,9 @@ def GenerateHerwigInput(config_params, outputdir, events):
         myfile.write("set /Herwig/Partons/PDFSet:RemnantHandler /Herwig/Partons/HadronRemnants\n")
         myfile.write("set /Herwig/Particles/p+:PDF /Herwig/Partons/PDFSet\n")
         #myfile.write("set /Herwig/Particles/p:PDF /Herwig/Partons/PDFSet\n")
+
+        if "herwig_config" in config_params and "tune" in config_params["herwig_config"]:
+            myfile.write("read {}\n".format(config_params["herwig_config"]["tune"]))
 
         #HEP MC writer
         myfile.write("read snippets/HepMC.in\n")

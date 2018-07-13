@@ -1,0 +1,30 @@
+# tune 'LHC-UE-EE-4' parameters: -------------------
+#%tuneFile%
+# LHC-UE-EE-4 underlying-event tune (MRST LO** PDF set)
+# Source: Herwig++ SVN (http://herwig.hepforge.org/trac/export/7360/trunk/src/LHC-UE-EE-4.in)
+# More info: Herwig++ wiki (http://herwig.hepforge.org/trac/wiki/MB_UE_tunes)
+
+# Running of alpha_s
+cd /Herwig
+create Herwig::O2AlphaS O2AlphaS
+set Model:QCD/RunningAlphaS O2AlphaS
+
+# MPI energy extrapolation settings
+set /Herwig/UnderlyingEvent/MPIHandler:EnergyExtrapolation Power
+set /Herwig/UnderlyingEvent/MPIHandler:ReferenceScale 7000.*GeV
+set /Herwig/UnderlyingEvent/MPIHandler:Power 0.21
+set /Herwig/UnderlyingEvent/MPIHandler:pTmin0 3.11*GeV
+
+# Energy-independent MPI parameters
+# Colour reconnection settings
+set /Herwig/Hadronization/ColourReconnector:ColourReconnection Yes
+set /Herwig/Hadronization/ColourReconnector:ReconnectionProbability 0.54 
+# Colour Disrupt settings
+set /Herwig/Partons/RemnantDecayer:colourDisrupt 0.80
+# inverse hadron radius
+set /Herwig/UnderlyingEvent/MPIHandler:InvRadius 1.11
+# MPI model settings
+set /Herwig/UnderlyingEvent/MPIHandler:softInt Yes
+set /Herwig/UnderlyingEvent/MPIHandler:twoComp Yes
+set /Herwig/UnderlyingEvent/MPIHandler:DLmode 2
+# ---------------------------------------------
