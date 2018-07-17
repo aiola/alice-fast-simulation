@@ -4,7 +4,7 @@ def GetPDFName(lhapdf_id, add_extension=True):
     elif lhapdf_id == 10550:
         pdfname = "cteq66"
     elif lhapdf_id == 10042:
-        pdfname = "CTEQ6L1"
+        pdfname = "cteq6l1"
     else:
         print("LHAPDF ID {} not known.".format(lhapdf_id))
         exit(1)
