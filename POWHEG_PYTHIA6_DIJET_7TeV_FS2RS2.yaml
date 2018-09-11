@@ -1,6 +1,6 @@
 name: POWHEG_PYTHIA6_DIJET_7TeV_FS2RS2
-numevents: 250000
-numbjobs: 750
+numevents: 50000
+numbjobs: 1500
 gen: powheg+pythia6
 proc: dijet
 lhans: 11000
