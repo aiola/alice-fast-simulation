@@ -9,6 +9,8 @@
 #include <TArrayI.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TH1F.h>
+#include <TH1D.h>
 #include <TMath.h>
 
 // AliRoot classes
@@ -31,6 +33,8 @@
 #include "AliPythia6_dev.h"
 #include "AliPythia8_dev.h"
 #include "AliGenReaderHepMC_dev.h"
+#include <AliAnalysisHFCorrOnFlySim.h>
+#include <AliAnalysisDataContainer.h>
 
 #include "OnTheFlySimulationGenerator.h"
 
@@ -53,6 +57,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fJetQA(kFALSE),
   fJetTree(kFALSE),
   fDMesonJets(kFALSE),
+  fDMesonHadrCorr(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500),
   fRejectISR(kFALSE),
@@ -63,7 +68,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator() :
   fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", 
   "AliGenEvtGen_dev", "AliGenExtFile_dev", "AliGenReaderHepMC_dev", "THepMCParser_dev",
   "AliMCGenHandler", 
-  "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", 
+  "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisHFCorrOnFlySim", 
   "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", 
   "AliAnalysisTaskDmesonJets::AnalysisEngine"})
 {
@@ -88,6 +93,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fJetQA(kFALSE),
   fJetTree(kFALSE),
   fDMesonJets(kFALSE),
+  fDMesonHadrCorr(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500),
   fRejectISR(kFALSE),
@@ -98,7 +104,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname) :
   fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", 
   "AliGenEvtGen_dev", "AliGenExtFile_dev", "AliGenReaderHepMC_dev", "THepMCParser_dev",
   "AliMCGenHandler", 
-  "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", 
+  "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisHFCorrOnFlySim",
   "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>", 
   "AliAnalysisTaskDmesonJets::AnalysisEngine"})
 {
@@ -123,6 +129,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fJetQA(kFALSE),
   fJetTree(kFALSE),
   fDMesonJets(kFALSE),
+  fDMesonHadrCorr(kFALSE),
   fEnergyBeam1(3500),
   fEnergyBeam2(3500),
   fRejectISR(kFALSE),
@@ -130,7 +137,7 @@ OnTheFlySimulationGenerator::OnTheFlySimulationGenerator(TString taskname, Int_t
   fHadronization(kPythia6),
   fDecayer(kPythia6),
   fExtendedEventInfo(kFALSE),
-  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
+  fDebugClassNames({"AliGenPythia_dev", "AliPythia6_dev", "AliPythia8_dev", "AliGenEvtGen_dev", "AliGenPythia", "AliPythia", "AliPythia8", "AliGenEvtGen", "AliMCGenHandler", "AliEmcalMCTrackSelector", "AliAnalysisTaskEmcalJetQA", "AliAnalysisTaskDmesonJets", "AliEmcalJetTask", "AliAnalysisHFCorrOnFlySim", "AliAnalysisTaskEmcalJetTree<AliEmcalJetInfoSummaryPP, AliEmcalJetEventInfoSummaryPP>"})
 {
 }
 
@@ -180,6 +187,7 @@ void OnTheFlySimulationGenerator::PrepareAnalysisManager()
 
   if (fJetQA) AddJetQA();
   if (fDMesonJets) AddDJet();
+  if (fDMesonHadrCorr) AddDhcorr();
   if (fJetTree) {
     if (fDMesonJets) {
       TString fname(AliAnalysisManager::GetCommonFileName());
@@ -295,6 +303,77 @@ void OnTheFlySimulationGenerator::AddDJet(const char* file_name)
     AliAnalysisManager::SetCommonFileName(old_file_name);
   }
 }
+
+//________________________________________________________________________
+void OnTheFlySimulationGenerator::AddDhcorr(const char* file_name)
+{
+  TString fname(file_name);
+  TString old_file_name;
+  if (!fname.IsNull()) {
+    old_file_name = AliAnalysisManager::GetCommonFileName();
+    AliAnalysisManager::SetCommonFileName(old_file_name);
+  }
+
+   AliAnalysisHFCorrOnFlySim* clus = new  AliAnalysisHFCorrOnFlySim("");
+   clus->SetEtaRange(-20.0, 20.0);
+   clus->SetPtRange(0.3, 1000.0);
+   clus->SetYRange(-20., 20.);
+   clus->SetMultRange(0,5000);
+   clus->SetEventProperties(kTRUE);
+   clus->SetPartProperties(kTRUE);
+   clus->SetHFCorrelations(kTRUE);
+   clus->SetHHCorrelations(kFALSE);
+   clus->SetQQbarCorrBetween("c", 1, "c", -1);
+   clus->SetQQbarCorrelations(kTRUE);
+
+/* DISABLED WEIGHTING
+   if (useweights) {
+     TFile *f = TFile::Open(namefile.Data());
+     TH1D* hwgt = (TH1D*)f->Get(namehistowgt.Data());
+     clus->SetUsePtWeights(kTRUE);
+     clus->SetHistoWeights(hwgt);
+   }
+*/
+
+   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
+   if (!mgr) {
+     Printf("AliAnalysisHFCorrOnFlySim, No analysis manager to connect to.");
+     return;
+   }
+  
+   if(!mgr->GetMCtruthEventHandler()){
+     Printf("AliAnalysisHFCorrOnFlySim; This task requires an input MC event handler");
+     return;
+   }
+   
+   mgr->AddTask(clus);
+  
+  // Create containers for input/output
+  TString finDirname   = "DhTemplate";
+  TString inname       = "cinput";
+  TString outBasic     = "BasicPlots";
+  TString Specific     = "Specific";
+  
+  inname           +=   finDirname.Data();
+  outBasic         +=   finDirname.Data();
+  Specific         +=   finDirname.Data();
+   
+
+  //Input and Output Slots:
+  AliAnalysisDataContainer *cinputSim = mgr->CreateContainer(inname,TChain::Class(), AliAnalysisManager::kInputContainer);
+  TString outputfile = AliAnalysisManager::GetCommonFileName();
+  outputfile += ":KineSimulations";
+  //TString outputfile = "AnaKineResults.root";
+
+  AliAnalysisDataContainer *coutputSim1 = mgr->CreateContainer(outBasic,TList::Class(),AliAnalysisManager::kOutputContainer,outputfile.Data());
+  AliAnalysisDataContainer *coutputSim2 = mgr->CreateContainer(Specific,TList::Class(),AliAnalysisManager::kOutputContainer,outputfile.Data());
+
+  mgr->ConnectInput(clus,0,mgr->GetCommonInputContainer());
+  mgr->ConnectOutput(clus,1,coutputSim1);
+  mgr->ConnectOutput(clus,2,coutputSim2);
+
+}
+
 
 //________________________________________________________________________
 void OnTheFlySimulationGenerator::AddJetTree(const char* file_name)

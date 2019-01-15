@@ -11,12 +11,16 @@
 #include <iostream>
 
 void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString hep,
-    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t always_d_h_corr, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
   gInterpreter->AddIncludePath("$ALICE_ROOT/include");
   gInterpreter->AddIncludePath("$ALICE_PHYSICS/include");
   gInterpreter->AddIncludePath("$FASTJET/include");
+  gInterpreter->AddIncludePath("$ALICE_PHYSICS/PWGHF");
+  gInterpreter->AddIncludePath("$ALICE_PHYSICS/PWGHF/base");
+  gInterpreter->AddIncludePath("$ALICE_PHYSICS/PWGHF/vertexingHF");
+  gInterpreter->AddIncludePath("$ALICE_PHYSICS/PWGHF/correlationHF");
 
   //load fastjet libraries 3.x
   gSystem->Load("libCGAL");
@@ -52,12 +56,15 @@ void start_simulation(TString name, Int_t pythiaEvents, TString procStr, TString
   gSystem->Load("libAOD");
   gSystem->Load("libPWGEMCALtasks");
   gSystem->Load("libPWGJEEMCALJetTasks");
+  gSystem->Load("libPWGHFbase");
+  gSystem->Load("libPWGHFvertexingHF");
+  gSystem->Load("libPWGHFcorrelationHF");
 
   gSystem->Load("AnalysisCode.so");
 
-  TString command = TString::Format(".x runJetSimulation.C+g(\"%s\", %d, \"%s\", \"%s\", %d, \"%s\", \"%s\", \"%s\", %f, %f, %d, %d, %f, %f, %d)",
+  TString command = TString::Format(".x runJetSimulation.C+g(\"%s\", %d, \"%s\", \"%s\", %d, \"%s\", \"%s\", \"%s\", %f, %f, %d, %d, %d, %f, %f, %d)",
       name.Data(), pythiaEvents, procStr.Data(), gen.Data(), seed, lhe.Data(), hep.Data(),
-      beamType.Data(), ebeam1, ebeam2, always_d_mesons, extended_event_info, minPtHard, maxPtHard, debug_level);
+      beamType.Data(), ebeam1, ebeam2, always_d_mesons, always_d_h_corr, extended_event_info, minPtHard, maxPtHard, debug_level);
 
   gROOT->ProcessLine(command.Data());
 }

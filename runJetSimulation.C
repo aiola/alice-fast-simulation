@@ -14,7 +14,7 @@
 #include "OnTheFlySimulationGenerator.h"
 
 void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString gen, UInt_t seed, TString lhe, TString hep,
-    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
+    TString beamType, Double_t ebeam1, Double_t ebeam2, Bool_t always_d_mesons, Bool_t always_d_h_corr, Bool_t extended_event_info, Double_t minPtHard = -1, Double_t maxPtHard = -1,
     UInt_t debug_level = 0)
 {
   //gSystem->SetFPEMask(kInvalid | kDivByZero | kOverflow | kUnderflow);
@@ -314,6 +314,9 @@ void runJetSimulation(TString name, Int_t pythiaEvents, TString procStr, TString
   if (always_d_mesons || procStr.Contains("charm") || procStr.Contains("beauty")) {
     sim->EnableDMesonJets();
   }
+  if (always_d_h_corr) {
+    sim->EnableDMesonHadrCorr();
+  }  
   if (beamType == "pPb") {
     sim->SetBeamType(OnTheFlySimulationGenerator::kpPb);
   }

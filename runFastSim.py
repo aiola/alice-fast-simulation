@@ -385,6 +385,11 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
     else:
         always_d_mesons = False
 
+    if "add_d_h_corr" in config:
+        always_d_h_corr = config["add_d_h_corr"]
+    else:
+        always_d_h_corr = False
+
     if "powheg_buffer" in config:
         powheg_buffer = config["powheg_buffer"]
     else:
@@ -444,7 +449,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
             shell.stdin.write("alienv enter {}\n".format(aliphysics_pkg))
             shell.stdin.write("which aliroot\n")
             shell.stdin.write("make\n")
-            shell.stdin.write("aliroot -b -l -q 'start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})'\n".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level))
+            shell.stdin.write("aliroot -b -l -q 'start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15})'\n".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(always_d_h_corr), int(extended_event_info), minpthard, maxpthard, debug_level))
             shell.communicate()
     else:
         print("Compiling analysis code...")
@@ -465,7 +470,7 @@ def main(events, powheg_stage, job_number, yamlConfigFile, batch_job, input_even
 
         print("Running simulation...")
         with open("sim_{0}.log".format(fname), "w") as myfile:
-            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14})".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
+            subprocess.call(["aliroot", "-b", "-l", "-q", "start_simulation.C(\"{0}\", {1}, \"{2}\", \"{3}\", {4}, \"{5}\", \"{6}\", \"{7}\", {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15})".format(fname, events, proc, gen, rnd, LHEfile, HEPfile, beamType, ebeam1, ebeam2, int(always_d_mesons), int(always_d_h_corr), int(extended_event_info), minpthard, maxpthard, debug_level)], stdout=myfile, stderr=myfile)
 
     print("Done")
     print("...see results in the log files")
